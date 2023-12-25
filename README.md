@@ -1,4 +1,4 @@
-# FastAPI SQLModel Async Boilerplate 🚀
+# FastAPI Async SQLModel Boilerplate 🚀
 
 🚧 _Note: This project is currently under development and is a work in progress._ 🚧
 

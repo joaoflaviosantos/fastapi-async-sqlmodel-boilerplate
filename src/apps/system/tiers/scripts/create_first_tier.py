@@ -1,9 +1,9 @@
 import asyncio
 from sqlalchemy import select
 
-from src.app.core.config import config
-from src.app.core.db.database import AsyncSession, local_session
-from src.app.models.tier import Tier
+from src.core.config import config
+from src.core.db.database import AsyncSession, local_session
+from src.apps.system.tiers.models import Tier
 
 async def create_first_tier(session: AsyncSession) -> None:
     tier_name = config("TIER_NAME", default="free")

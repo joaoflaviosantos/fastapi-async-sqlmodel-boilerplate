@@ -26,11 +26,19 @@ from src.core.config import (
 )
 from src.core.middlewares.client_cache_middleware import ClientCacheMiddleware
 from src.core.utils import cache, rate_limit
+from src.apps.system.users.scripts import create_first_superuser
+from src.apps.system.tiers.scripts import create_first_tier
+
 
 # -------------- database --------------
 async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+async def run_seed_scripts() -> None:
+    await create_first_superuser.main()
+    await create_first_tier.main()
 
 
 # -------------- cache --------------
@@ -154,6 +162,7 @@ def create_application(
 
     if isinstance(settings, DatabaseSettings):
         application.add_event_handler("startup", create_tables)
+        application.add_event_handler("startup", run_seed_scripts)
     
     if isinstance(settings, RedisCacheSettings):
         application.add_event_handler("startup", create_redis_cache_pool)
