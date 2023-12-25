@@ -1,5 +1,5 @@
 # External Dependencies
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_core.core_schema import ValidationInfo
 from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
 from starlette.config import Config
@@ -41,7 +41,7 @@ class PostgresSettings(DatabaseSettings):
     POSTGRES_ASYNC_URI: PostgresDsn | str = ""
     
     @field_validator("POSTGRES_ASYNC_URI", mode="after")
-    def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
+    def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
             if v == "":
                 return PostgresDsn.build(
