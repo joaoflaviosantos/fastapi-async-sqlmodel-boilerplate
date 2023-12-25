@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from src.app.main import app
-from src.app.core.config import settings
+from src.main import app
+from src.core.config import settings
 from .helper import _get_token
 
 test_name = settings.TEST_NAME
@@ -16,7 +16,7 @@ client = TestClient(app)
 
 def test_post_user(client: TestClient) -> None:
     response = client.post(
-        "/api/v1/user",
+        "/api/v1/system/user",
         json = {
             "name": test_name,
             "username": test_username,
@@ -28,13 +28,13 @@ def test_post_user(client: TestClient) -> None:
 
 def test_get_user(client: TestClient) -> None:
     response = client.get(
-        f"/api/v1/user/{test_username}"
+        f"/api/v1/system/user/{test_username}"
     )
     assert response.status_code == 200
 
 def test_get_multiple_users(client: TestClient) -> None:
     response = client.get(
-        "/api/v1/users"
+        "/api/v1/system/users"
     )
     assert response.status_code == 200
 
@@ -46,7 +46,7 @@ def test_update_user(client: TestClient) -> None:
     )
     
     response = client.patch(
-        f"/api/v1/user/{test_username}",
+        f"/api/v1/system/user/{test_username}",
         json={
             "name": f"Updated {test_name}"
         },
@@ -62,7 +62,7 @@ def test_delete_user(client: TestClient) -> None:
     )
 
     response = client.delete(
-        f"/api/v1/user/{test_username}",
+        f"/api/v1/system/user/{test_username}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
     )
     assert response.status_code == 200
@@ -75,7 +75,7 @@ def test_delete_db_user(client: TestClient) -> None:
     )
 
     response = client.delete(
-        f"/api/v1/db_user/{test_username}",
+        f"/api/v1/system/db_user/{test_username}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
     )
     assert response.status_code == 200
