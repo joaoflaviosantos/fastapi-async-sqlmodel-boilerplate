@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "fastapi-async-sqlmodel-boilerplate"
+version = "0.1.0"
+description = "An extendable and fully async FastAPI boilerplate using FastAPI, SQLModel, Alembic, PostgreSQL and Redis"
+license = "MIT"
+readme = "README.md"
+authors = ["joaoflaviosantos <joaoflavio.s@hotmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["all"], version = "^0.105.0"}
+sqlmodel = "^0.0.14"
+uvicorn = "^0.25.0"
+alembic = "^1.13.1"
+asyncpg = "^0.29.0"
+SQLAlchemy-Utils = "^0.41.1"
+bcrypt = "^4.1.2"
+pyjwt = { extras = ["crypto"], version = "^2.8.0" }
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+SQLAlchemy = "^2.0.23"
+pytest = "^7.4.2"
+fastapi-async-sqlalchemy = "^0.6.0"
+fastapi-pagination = {extras = ["sqlalchemy"], version = "^0.12.14"}
+redis = "^5.0.1"
+arq = "^0.25.0"
+gunicorn = "^21.2.0"
+pydantic-settings = "^2.1.0"
+
+[tool.poetry.dev-dependencies]
+types-redis = "^4.6.0.11"
+mypy = "^1.7.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
