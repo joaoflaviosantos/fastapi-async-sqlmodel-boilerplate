@@ -29,7 +29,7 @@ async def create_task(message: str) -> Dict[str, str]:
 
 
 @router.get("/system/task/{task_id}")
-async def get_task(task_id: str) -> Optional[Dict[str, Any]]:
+async def get_task(task_id: str) -> Optional[Any]:
     """
     Get information about a specific background task.
 
@@ -43,6 +43,6 @@ async def get_task(task_id: str) -> Optional[Dict[str, Any]]:
     Optional[Dict[str, Any]]
         A dictionary containing information about the task if found, or None otherwise.
     """
-    job = ArqJob(task_id, queue.pool)
+    job = ArqJob(job_id=str(task_id), redis=queue.pool)
     job_info: dict = await job.info()
     return job_info
