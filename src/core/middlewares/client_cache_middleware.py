@@ -1,5 +1,9 @@
+# Third-Party Dependencies
 from fastapi import FastAPI, Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.middleware.base import (
+    BaseHTTPMiddleware, 
+    RequestResponseEndpoint
+)
 
 
 class ClientCacheMiddleware(BaseHTTPMiddleware):

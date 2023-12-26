@@ -1,20 +1,27 @@
+# Built-in Dependencies
 from typing import TypeVar, Generic, List, Dict, Any
 
+# Third-Party Dependencies
 from pydantic import BaseModel
 
+# Generic type variable for the schema used in the list response
 SchemaType = TypeVar("SchemaType", bound=BaseModel)
 
+
+# Generic BaseModel for a list response
 class ListResponse(BaseModel, Generic[SchemaType]):
     data: List[SchemaType]
 
 
+# BaseModel for a paginated list response, inheriting from the generic ListResponse
 class PaginatedListResponse(ListResponse[SchemaType]):
-    total_count: int
-    has_more: bool
-    page: int | None = None
-    items_per_page: int | None = None
+    total_count: int # Total number of items
+    has_more: bool # Whether there are more items beyond the current page
+    page: int | None = None # Current page number
+    items_per_page: int | None = None # Number of items per page
 
 
+# Function to create a paginated response
 def paginated_response(
         crud_data: dict, 
         page: int, 
@@ -49,6 +56,7 @@ def paginated_response(
         "items_per_page": items_per_page
     }
 
+# Function to calculate the offset
 def compute_offset(page: int, items_per_page: int) -> int:
     """
     Calculate the offset for pagination based on the given page number and items per page.

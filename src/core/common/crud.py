@@ -1,13 +1,16 @@
+# Built-in Dependencies
 from typing import Any, Dict, Generic, List, Type, TypeVar, Union
 from datetime import datetime
 
-from pydantic import BaseModel
+# Third-Party Dependencies
 from sqlalchemy import select, update, delete, func, and_, inspect
-from sqlalchemy.sql import Join
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine.row import Row
+from sqlalchemy.sql import Join
+from pydantic import BaseModel
 
-from .crud_helper import (
+# Local Dependencies
+from src.core.common.crud_helper import (
     _extract_matching_columns_from_schema, 
     _extract_matching_columns_from_kwargs,
     _auto_detect_join_condition,
@@ -20,6 +23,7 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=BaseModel)
 DeleteSchemaType = TypeVar("DeleteSchemaType", bound=BaseModel)
+
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSchemaInternalType, DeleteSchemaType]):
     """
@@ -287,9 +291,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSche
         if join_on is None:
             join_on = _auto_detect_join_condition(self._model, join_model)
 
+        # Extract columns to select from primary model based on schema
         primary_select = _extract_matching_columns_from_schema(model=self._model, schema=schema_to_select)
         join_select = []
 
+        # Extract columns to select from joined model based on schema or all columns if schema_to_select is not provided
         if join_schema_to_select:
             columns = _extract_matching_columns_from_schema(model=join_model, schema=join_schema_to_select)
         else:
@@ -300,6 +306,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSche
             if f"{join_prefix}{column.name}" not in [col.name for col in primary_select]:
                 join_select.append(labeled_column)
 
+        # Build the select statement with the specified join type and join condition
         if join_type == "left":
             stmt = select(*primary_select, *join_select).outerjoin(join_model, join_on)
         elif join_type == "inner":
@@ -307,10 +314,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSche
         else:
             raise ValueError(f"Invalid join type: {join_type}. Only 'left' or 'inner' are valid.")
 
+        # Apply additional filters based on kwargs
         for key, value in kwargs.items():
             if hasattr(self._model, key):
                 stmt = stmt.where(getattr(self._model, key) == value)
 
+        # Execute the statement and retrieve the result
         db_row = await db.execute(stmt)
         result: Row = db_row.first()
         if result:

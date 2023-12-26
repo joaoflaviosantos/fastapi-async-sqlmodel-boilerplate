@@ -1,22 +1,41 @@
+# Built-in Dependencies
 from typing import Annotated, Union, Dict, Any
 
-from fastapi import Depends
+# Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Request
+from fastapi import Depends, Request
 import fastapi
 
+# Local Dependencies
 from src.core.api.dependencies import get_current_user, get_current_superuser
-from src.core.exceptions.http_exceptions import DuplicateValueException, NotFoundException, ForbiddenException
-from src.core.utils.paginated import PaginatedListResponse, paginated_response, compute_offset
-from src.core.db.database import async_get_db
-from src.core.security import get_password_hash, blacklist_token, oauth2_scheme
+from src.apps.system.rate_limits.crud import crud_rate_limits
 from src.apps.system.users.crud import crud_users
 from src.apps.system.tiers.crud import crud_tiers
-from src.apps.system.rate_limits.crud import crud_rate_limits
-from src.apps.system.tiers.models import Tier
-from src.apps.system.users.schemas import UserCreate, UserCreateInternal, UserUpdate, UserRead, UserTierUpdate
 from src.apps.system.tiers.schemas import TierRead
-
+from src.apps.system.tiers.models import Tier
+from src.core.db.database import async_get_db
+from src.core.exceptions.http_exceptions import (
+    DuplicateValueException, 
+    NotFoundException, 
+    ForbiddenException
+)
+from src.apps.system.users.schemas import (
+    UserCreate, 
+    UserCreateInternal, 
+    UserUpdate, 
+    UserRead, 
+    UserTierUpdate
+)
+from src.core.utils.paginated import (
+    PaginatedListResponse, 
+    paginated_response, 
+    compute_offset
+)
+from src.core.security import (
+    get_password_hash, 
+    blacklist_token, 
+    oauth2_scheme
+)
 
 router = fastapi.APIRouter(tags=["System - Users"])
 

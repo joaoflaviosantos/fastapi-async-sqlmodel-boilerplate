@@ -1,18 +1,25 @@
+# Built-in Dependencies
 from typing import Annotated, Dict
 
-from fastapi import Request, Depends
+# Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request, Depends
 import fastapi
 
+# Local Dependencies
 from src.apps.blog.posts.schemas import PostCreate, PostUpdate, PostRead, PostCreateInternal
-from src.apps.system.users.schemas import UserRead
-from src.core.api.dependencies import get_current_user, get_current_superuser
-from src.core.db.database import async_get_db
-from src.apps.blog.posts.crud import crud_posts
-from src.apps.system.users.crud import crud_users
 from src.core.exceptions.http_exceptions import NotFoundException, ForbiddenException
+from src.core.api.dependencies import get_current_user, get_current_superuser
+from src.apps.system.users.schemas import UserRead
+from src.apps.system.users.crud import crud_users
+from src.apps.blog.posts.crud import crud_posts
+from src.core.db.database import async_get_db
 from src.core.utils.cache import cache
-from src.core.utils.paginated import PaginatedListResponse, paginated_response, compute_offset
+from src.core.utils.paginated import (
+    PaginatedListResponse, 
+    paginated_response,
+    compute_offset
+)
 
 router = fastapi.APIRouter(tags=["Blog - Posts"])
 
@@ -24,10 +31,15 @@ async def write_post(
     current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> PostRead:
-    db_user = await crud_users.get(db=db, schema_to_select=UserRead, username=username, is_deleted=False)
+    db_user = await crud_users.get(
+        db=db, 
+        schema_to_select=UserRead, 
+        username=username, 
+        is_deleted=False
+        )
     if db_user is None:
         raise NotFoundException("User not found")
-    
+
     if current_user["id"] != db_user["id"]:
         raise ForbiddenException()
 

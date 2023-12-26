@@ -1,12 +1,15 @@
+# Built-in Dependencies
 from typing import Any, List, Type, Union, Optional
-from sqlalchemy import inspect
+
+# Third-Party Dependencies
 from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql import ColumnElement
 from sqlalchemy.sql.schema import Column
-from sqlalchemy.sql.elements import Label
-
+from sqlalchemy import inspect
 from pydantic import BaseModel
 
+# Local Dependencies
 from src.core.db.database import Base
 
 def _extract_matching_columns_from_schema(model: Type[Base], schema: Union[Type[BaseModel], list, None]) -> List[Any]:
@@ -89,7 +92,7 @@ def _auto_detect_join_condition(base_model: Type[DeclarativeMeta], join_model: T
     fk_columns = [col for col in inspect(base_model).c if col.foreign_keys]
     join_on = next(
         (base_model.__table__.c[col.name] == join_model.__table__.c[list(col.foreign_keys)[0].column.name]
-         for col in fk_columns if list(col.foreign_keys)[0].column.table == join_model.__table__),
+            for col in fk_columns if list(col.foreign_keys)[0].column.table == join_model.__table__),
         None
     )
 

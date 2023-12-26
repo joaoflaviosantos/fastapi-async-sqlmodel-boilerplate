@@ -1,16 +1,19 @@
+# Built-in Dependencies
 from typing import Annotated, Dict
 from datetime import timedelta
 from jose import JWTError
 
-from fastapi import Response, Request, Depends
+# Third-party Dependencies
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Response, Request, Depends
 import fastapi
 
-from src.core.config import settings
-from src.core.db.database import async_get_db
+# Local Dependencies
 from src.core.exceptions.http_exceptions import UnauthorizedException
+from src.core.db.database import async_get_db
 from src.core.common.schemas import Token
+from src.core.config import settings
 from src.core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES, 
     create_access_token, 

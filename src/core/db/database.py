@@ -1,28 +1,34 @@
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio.session import AsyncSession
+# Third-Party Dependencies
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, MappedAsDataclass
+from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 
-
+# Local Dependencies
 from src.core.config import settings
 
+# Define a base class for declarative models with support for dataclasses
 class Base(DeclarativeBase, MappedAsDataclass):
     pass
 
+# Define the database URI and URL based on the application settings
 DATABASE_URI = f"{settings.POSTGRES_ASYNC_URI}"
 DATABASE_URL = DATABASE_URI
 
+# Create an async database engine
 async_engine = create_async_engine(
     DATABASE_URL,
     echo=False,
     future=True
 )
 
+# Create a local session class using the async engine
 local_session = sessionmaker(
     bind=async_engine, 
     class_=AsyncSession, 
     expire_on_commit=False
 )
 
+# Define an async function to get the database session
 async def async_get_db() -> AsyncSession:
     async_session = local_session
     

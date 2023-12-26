@@ -1,9 +1,13 @@
+# Built-in Dependencies
 import asyncio
+
+# Third-Party Dependencies
 from sqlalchemy import select
 
-from src.core.config import config
+# Local Dependencies
 from src.core.db.database import AsyncSession, local_session
 from src.apps.system.tiers.models import Tier
+from src.core.config import config
 
 async def create_first_tier(session: AsyncSession) -> None:
     tier_name = config("TIER_NAME", default="free")
@@ -22,6 +26,7 @@ async def create_first_tier(session: AsyncSession) -> None:
 async def main():
     async with local_session() as session:
         await create_first_tier(session)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

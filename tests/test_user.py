@@ -1,4 +1,4 @@
-# External Dependencies
+# Third-Party Dependencies
 from fastapi.testclient import TestClient
 
 # Local Dependencies

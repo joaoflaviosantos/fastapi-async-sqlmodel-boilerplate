@@ -1,4 +1,4 @@
-# External Dependencies
+# Third-Party Dependencies
 from pydantic_core.core_schema import ValidationInfo
 from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
@@ -123,7 +123,7 @@ class Settings(
     RedisRateLimiterSettings,
     DefaultRateLimitSettings,
     EnvironmentSettings
-    ):
+):
     pass
 
 

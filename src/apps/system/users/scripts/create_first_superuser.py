@@ -1,4 +1,10 @@
+# Built-in Dependencies
+from datetime import datetime
 import asyncio
+import uuid
+
+# Third-Party Dependencies
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import (
     select, 
     Table, 
@@ -11,15 +17,14 @@ from sqlalchemy import (
     DateTime, 
     Boolean
 )
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-from datetime import datetime
 
-from src.core.db.database import async_engine
+# Local Dependencies
 from src.core.db.database import AsyncSession, local_session
-from src.core.config import settings
-from src.apps.system.users.models import User
+from src.core.db.database import async_engine
 from src.core.security import get_password_hash
+from src.apps.system.users.models import User
+from src.core.config import settings
+
 
 async def create_first_user(session: AsyncSession) -> None:
     name = settings.ADMIN_NAME
@@ -50,7 +55,6 @@ async def create_first_user(session: AsyncSession) -> None:
             Column("tier_id", Integer, ForeignKey("tier.id"), index=True)
         )
 
-        
         data = {
             'name': name,
             'email': email,
@@ -58,7 +62,6 @@ async def create_first_user(session: AsyncSession) -> None:
             'hashed_password': hashed_password,
             'is_superuser': True
         }
-
 
         stmt = insert(user_table).values(data)
         async with async_engine.connect() as conn:
@@ -68,6 +71,7 @@ async def create_first_user(session: AsyncSession) -> None:
 async def main():
     async with local_session() as session:
         await create_first_user(session)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

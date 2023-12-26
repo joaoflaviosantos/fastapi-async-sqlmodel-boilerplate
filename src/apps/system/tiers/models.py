@@ -1,10 +1,14 @@
-from typing import Optional
+# Built-in Dependencies
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import String, DateTime
+# Third-Party Dependencies
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, DateTime
 
+# Local Dependencies
 from src.core.db.database import Base
+
 
 class Tier(Base):
     __tablename__ = "tier"

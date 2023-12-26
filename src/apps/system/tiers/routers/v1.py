@@ -1,20 +1,30 @@
+# Built-in Dependencies
 from typing import Annotated, Dict
 
-from fastapi import Request, Depends
+# Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request, Depends
 import fastapi
 
+# Local Dependencies
+from src.core.api.dependencies import get_current_superuser
+from src.apps.system.tiers.crud import crud_tiers
+from src.core.db.database import async_get_db
+from src.core.exceptions.http_exceptions import (
+    DuplicateValueException, 
+    NotFoundException
+)
 from src.apps.system.tiers.schemas import (
     TierRead,
     TierCreate,
     TierCreateInternal,
     TierUpdate
 )
-from src.core.api.dependencies import get_current_superuser
-from src.core.db.database import async_get_db
-from src.core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
-from src.apps.system.tiers.crud import crud_tiers
-from src.core.utils.paginated import PaginatedListResponse, paginated_response, compute_offset
+from src.core.utils.paginated import (
+    PaginatedListResponse, 
+    paginated_response, 
+    compute_offset
+)
 
 router = fastapi.APIRouter(tags=["System - Tiers"])
 

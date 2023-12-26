@@ -1,10 +1,14 @@
+# Built-in Dependencies
 from typing import Optional
 from datetime import datetime
 
+# Third-Party Dependencies
 from sqlalchemy import String, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
+# Local Dependencies
 from src.core.db.database import Base
+
 
 class RateLimit(Base):
     __tablename__ = "rate_limit"

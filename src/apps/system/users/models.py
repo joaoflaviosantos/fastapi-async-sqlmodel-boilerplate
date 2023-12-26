@@ -1,10 +1,13 @@
+# Built-in Dependencies
+from datetime import datetime
 from typing import Optional
 import uuid as uuid_pkg
-from datetime import datetime
 
+# Third-Party Dependencies
 from sqlalchemy import String, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
+# Local Dependencies
 from src.core.db.database import Base
 
 class User(Base):

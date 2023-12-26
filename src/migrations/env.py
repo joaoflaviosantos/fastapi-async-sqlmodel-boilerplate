@@ -1,12 +1,14 @@
-import asyncio
+# Built-in Dependencies
 from logging.config import fileConfig
+import asyncio
 
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
+# Third-Party Dependencies
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
+from sqlalchemy.engine import Connection
+from sqlalchemy import pool
 from alembic import context
 
+# Local Dependencies
 from src.core.db.database import Base
 from src.core.config import settings
 from src.core.db import *
@@ -48,6 +50,8 @@ def run_migrations_offline() -> None:
     Calls to context.execute() here emit the given string to the
     script output.
 
+    This function is responsible for running migrations when the application is not connected to a database.
+
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -62,6 +66,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
+    """Perform the actual migration process.
+
+    This function is responsible for running migrations when the application is connected to a database.
+
+    """
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
@@ -69,8 +78,9 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """In this scenario we need to create an Engine
-    and associate a connection with the context.
+    """Run migrations asynchronously.
+
+    This function is responsible for running migrations in an asynchronous manner.
 
     """
 
@@ -87,7 +97,11 @@ async def run_async_migrations() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
+    """Run migrations in 'online' mode.
+
+    This function is responsible for running migrations when the application is online.
+
+    """
 
     asyncio.run(run_async_migrations())
 

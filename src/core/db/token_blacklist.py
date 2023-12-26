@@ -1,10 +1,14 @@
+# Built-in Dependencies
 from datetime import datetime
 
+# Third-Party Dependencies
 from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .database import Base
+# Local Dependencies
+from src.core.db.database import Base
 
+# Define a TokenBlacklist class that represents the 'token_blacklist' table
 class TokenBlacklist(Base):
     __tablename__ = "token_blacklist"
 

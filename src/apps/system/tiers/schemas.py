@@ -1,9 +1,13 @@
+# Built-in Dependencies
 from typing import Annotated
 from datetime import datetime
 
+# Third-Party Dependencies
 from pydantic import BaseModel, Field
 
+# Local Dependencies
 from src.core.common.schemas import TimestampSchema
+
 
 class TierBase(BaseModel):
     name: Annotated[

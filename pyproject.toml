@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "fastapi-async-sqlmodel-boilerplate"
 version = "0.1.0"
-description = "An opinionated yet highly extensible and fully asynchronous FastAPI boilerplate, embracing the Django-like folder structure. 🚀 Built with FastAPI, SQLModel (Pydantic v2 + SQLAlchemy 2.0), Alembic, PostgreSQL, and Redis. 📈"
+description = "An opinionated yet highly extensible and fully asynchronous FastAPI boilerplate, embracing the Django-like folder structure. 🚀 Built with FastAPI, SQLModel (Pydantic v2 + SQLAlchemy 2.0), Alembic, PostgreSQL, Redis and ARQ. 📈"
 license = "MIT"
 readme = "README.md"
 authors = ["joaoflaviosantos <joaoflavio.s@hotmail.com>"]

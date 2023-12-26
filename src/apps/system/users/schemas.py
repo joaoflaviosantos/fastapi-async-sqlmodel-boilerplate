@@ -1,9 +1,17 @@
+# Built-in Dependencies
 from typing import Annotated, Optional
 from datetime import datetime
 
+# Third-Party Dependencies
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-from src.core.common.schemas import UUIDSchema, TimestampSchema, PersistentDeletion
+# Local Dependencies
+from src.core.common.schemas import (
+    UUIDSchema, 
+    TimestampSchema, 
+    PersistentDeletion
+)
+
 
 class UserBase(BaseModel):
     name: Annotated[
