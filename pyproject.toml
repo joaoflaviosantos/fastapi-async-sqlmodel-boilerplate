@@ -28,10 +28,9 @@ arq = "^0.25.0"
 gunicorn = "^21.2.0"
 pydantic-settings = "^2.1.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 types-redis = "^4.6.0.11"
 mypy = "^1.7.1"
-
 
 [build-system]
 requires = ["poetry-core"]

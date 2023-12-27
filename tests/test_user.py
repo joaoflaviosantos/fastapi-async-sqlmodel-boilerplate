@@ -16,7 +16,6 @@ TEST_PASSWORD = settings.TEST_PASSWORD
 ADMIN_USERNAME = settings.ADMIN_USERNAME
 ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 
-client = TestClient(app)
 
 def test_post_user(client: TestClient) -> None:
     response = client.post(
