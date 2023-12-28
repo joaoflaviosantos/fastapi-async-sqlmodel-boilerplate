@@ -195,11 +195,12 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
     if client is None:
         raise MissingClientError
 
-    cursor = -1
-    while cursor != 0:
+    cursor = b'0'
+    while cursor != b'0':
         # Scan for keys matching the pattern
-        cursor, keys = await client.scan(cursor, match=pattern, count=100)
+        cursor, keys = client.scan(cursor=cursor, match=pattern, count=100)
         if keys:
+            # Delete keys
             await client.delete(*keys)
 
 
@@ -329,7 +330,7 @@ def cache(
                 # Retrieve cached data if available
                 cached_data = await client.get(cache_key)
                 if cached_data:
-                    return json.loads(cached_data.decode())
+                    return json.loads(cached_data)
 
             # Execute the original function if no cached data is found or if the request is not a GET
             result = await func(request, *args, **kwargs)

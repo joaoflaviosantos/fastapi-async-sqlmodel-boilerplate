@@ -176,7 +176,7 @@ async def erase_db_post(
     if db_user is None:
         raise NotFoundException("User not found")
     
-    db_post = await crud_posts.get(db=db, schema_to_select=PostRead, id=id, is_deleted=False)
+    db_post = await crud_posts.get(db=db, schema_to_select=PostRead, id=id)
     if db_post is None:
         raise NotFoundException("Post not found")
     

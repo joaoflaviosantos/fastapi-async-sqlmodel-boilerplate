@@ -52,7 +52,11 @@ async def run_seed_scripts() -> None:
 # --------------------------------------
 # Function to create Redis cache pool during startup
 async def create_redis_cache_pool() -> None:
-    cache.pool = redis.ConnectionPool.from_url(settings.REDIS_CACHE_URL)
+    cache.pool = redis.ConnectionPool.from_url(
+        settings.REDIS_CACHE_URL,
+        encoding="utf8",
+        decode_responses=True,
+        )
     cache.client = redis.Redis.from_pool(cache.pool)  # type: ignore
 
 # Function to close Redis cache pool during shutdown
