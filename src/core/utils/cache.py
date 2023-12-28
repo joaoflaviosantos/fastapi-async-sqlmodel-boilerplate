@@ -195,13 +195,25 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
     if client is None:
         raise MissingClientError
 
-    cursor = b'0'
-    while cursor != b'0':
-        # Scan for keys matching the pattern
-        cursor, keys = client.scan(cursor=cursor, match=pattern, count=100)
-        if keys:
-            # Delete keys
-            await client.delete(*keys)
+    cursor = 0
+
+    while True:
+        try:
+            # Scan for keys matching the pattern
+            new_cursor, keys = await client.scan(cursor=cursor, match=pattern, count=100)
+
+            # Update cursor for the next iteration
+            cursor = new_cursor
+
+            if not keys:
+                break  # Exit the loop if no keys are found
+            else:
+                # Delete keys
+                await client.delete(*keys)
+
+        except Exception as e:
+            print(f"Error in SCAN operation: {e}")
+            break
 
 
 # Cache Decorator Function

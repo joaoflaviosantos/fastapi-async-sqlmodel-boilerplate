@@ -135,7 +135,7 @@ async def patch_post(
 @cache(
     "{username}_post_cache", 
     resource_id_name="id", 
-    to_invalidate_extra={"{username}_posts": "{username}"}
+    pattern_to_invalidate_extra=["{username}_posts:*"]
 )
 async def erase_post(
     request: Request, 
@@ -164,7 +164,7 @@ async def erase_post(
 @cache(
     "{username}_post_cache", 
     resource_id_name="id", 
-    to_invalidate_extra={"{username}_posts": "{username}"}
+    pattern_to_invalidate_extra=["{username}_posts:*"]
 )
 async def erase_db_post(
     request: Request, 
