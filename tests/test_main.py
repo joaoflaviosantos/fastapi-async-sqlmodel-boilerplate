@@ -5,4 +5,4 @@ from fastapi.testclient import TestClient
 # --------------------------------------
 # --------- SYSTEM.USERS TESTS ---------
 # --------------------------------------
-from src.apps.system.users.tests.v1 import *
+from src.apps.system.users.tests.test_v1 import *
