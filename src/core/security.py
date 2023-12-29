@@ -25,11 +25,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/system/auth/login")
 
 # Function to verify plain password against hashed password
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+    correct_password: bool = bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+    return correct_password
 
 # Function to generate hashed password from plain password
 def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    hashed_password: str = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return hashed_password
+
 
 # Function to authenticate a user based on provided credentials
 async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> Union[Dict[str, Any], Literal[False]]:
