@@ -9,7 +9,7 @@ from sqlalchemy import pool
 from alembic import context
 
 # Local Dependencies
-from src.core.db.database import Base
+from src.core.common.models import Base
 from src.core.config import settings
 from src.core.db import *
 

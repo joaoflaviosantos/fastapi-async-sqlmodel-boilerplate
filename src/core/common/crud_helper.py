@@ -10,7 +10,7 @@ from sqlalchemy import inspect
 from pydantic import BaseModel
 
 # Local Dependencies
-from src.core.db.database import Base
+from src.core.common.models import Base
 
 def _extract_matching_columns_from_schema(model: Type[Base], schema: Union[Type[BaseModel], list, None]) -> List[Any]:
     """

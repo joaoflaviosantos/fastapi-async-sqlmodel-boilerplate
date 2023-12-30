@@ -13,7 +13,7 @@ from src.apps.system.users.crud import crud_users
 from src.apps.system.tiers.crud import crud_tiers
 from src.apps.system.tiers.schemas import TierRead
 from src.apps.system.tiers.models import Tier
-from src.core.db.database import async_get_db
+from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
     DuplicateValueException, 
     NotFoundException, 

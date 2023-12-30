@@ -8,7 +8,7 @@ from sqlalchemy import String, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
-from src.core.db.database import Base
+from src.core.common.models import Base
 
 
 class Post(Base):

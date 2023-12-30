@@ -5,7 +5,7 @@ import asyncio
 from sqlalchemy import select
 
 # Local Dependencies
-from src.core.db.database import AsyncSession, local_session
+from src.core.db.session import AsyncSession, local_session
 from src.apps.system.tiers.models import Tier
 from src.core.config import config
 

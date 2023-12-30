@@ -13,7 +13,7 @@ from src.core.api.dependencies import get_current_user, get_current_superuser
 from src.apps.system.users.schemas import UserRead
 from src.apps.system.users.crud import crud_users
 from src.apps.blog.posts.crud import crud_posts
-from src.core.db.database import async_get_db
+from src.core.db.session import async_get_db
 from src.core.utils.cache import cache
 from src.core.utils.paginated import (
     PaginatedListResponse, 

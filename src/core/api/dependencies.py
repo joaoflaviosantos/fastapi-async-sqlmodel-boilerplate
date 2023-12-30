@@ -17,7 +17,7 @@ from src.core.exceptions.http_exceptions import (
     RateLimitException
 )
 
-from src.core.db.database import async_get_db
+from src.core.db.session import async_get_db
 from src.apps.system.users.models import User
 from src.core.security import oauth2_scheme
 from src.core.security import verify_token

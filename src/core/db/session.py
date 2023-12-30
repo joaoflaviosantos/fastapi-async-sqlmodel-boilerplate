@@ -1,14 +1,11 @@
 # Third-Party Dependencies
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, MappedAsDataclass
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Local Dependencies
 from src.core.config import settings
 
-# Define a base class for declarative models with support for dataclasses
-class Base(DeclarativeBase, MappedAsDataclass):
-    pass
 
 # Define the database URI and URL based on the application settings
 DATABASE_URI = f"{settings.POSTGRES_ASYNC_URI}"

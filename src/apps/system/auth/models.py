@@ -6,7 +6,7 @@ from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
-from src.core.db.database import Base
+from src.core.common.models import Base
 
 # Define a TokenBlacklist class that represents the 'token_blacklist' table
 class TokenBlacklist(Base):

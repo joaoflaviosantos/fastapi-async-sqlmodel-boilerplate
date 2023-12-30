@@ -9,7 +9,7 @@ import fastapi
 # Local Dependencies
 from src.core.api.dependencies import get_current_superuser
 from src.apps.system.tiers.crud import crud_tiers
-from src.core.db.database import async_get_db
+from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
     DuplicateValueException, 
     NotFoundException

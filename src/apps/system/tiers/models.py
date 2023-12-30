@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime
 
 # Local Dependencies
-from src.core.db.database import Base
+from src.core.common.models import Base
 
 
 class Tier(Base):

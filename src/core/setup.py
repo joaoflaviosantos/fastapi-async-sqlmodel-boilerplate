@@ -16,9 +16,9 @@ from src.core.middlewares.client_cache_middleware import ClientCacheMiddleware
 from src.apps.system.users.management.commands import create_first_superuser
 from src.apps.system.tiers.management.commands import create_first_tier
 from src.core.api.dependencies import get_current_superuser
-from src.core.db.database import async_engine as engine
+from src.core.db.session import async_engine as engine
 from src.core.utils import cache, rate_limit
-from src.core.db.database import Base
+from src.core.common.models import Base
 from src.core.config import settings
 from src.core.utils import queue
 from src.core.config import (

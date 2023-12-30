@@ -3,8 +3,14 @@ from datetime import datetime, UTC
 import uuid as uuid_pkg
 
 # Third-Party Dependencies
+from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass
 from sqlalchemy import Column, DateTime, Boolean, text
 from sqlalchemy.dialects.postgresql import UUID
+
+
+# Define a base class for declarative models with support for dataclasses
+class Base(DeclarativeBase, MappedAsDataclass):
+    pass
 
 
 class UUIDMixin:

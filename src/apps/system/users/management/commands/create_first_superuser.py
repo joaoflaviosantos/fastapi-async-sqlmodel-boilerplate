@@ -19,8 +19,8 @@ from sqlalchemy import (
 )
 
 # Local Dependencies
-from src.core.db.database import AsyncSession, local_session
-from src.core.db.database import async_engine
+from src.core.db.session import AsyncSession, local_session
+from src.core.db.session import async_engine
 from src.core.security import get_password_hash
 from src.apps.system.users.models import User
 from src.core.config import settings

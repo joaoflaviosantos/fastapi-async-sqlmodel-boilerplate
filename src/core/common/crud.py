@@ -16,7 +16,7 @@ from src.core.common.crud_helper import (
     _auto_detect_join_condition,
     _add_column_with_prefix
 )
-from src.core.db.database import Base
+from src.core.common.models import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
