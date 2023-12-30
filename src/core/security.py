@@ -9,8 +9,8 @@ from jose import jwt, JWTError
 import bcrypt
 
 # Local Dependencies
-from src.core.common.schemas import TokenData, TokenBlacklistCreate
-from src.core.db.crud_token_blacklist import crud_token_blacklist
+from src.apps.system.auth.schemas import TokenData, TokenBlacklistCreate
+from src.apps.system.auth.crud import crud_token_blacklist
 from src.apps.system.users.crud import crud_users
 from src.core.config import settings
 

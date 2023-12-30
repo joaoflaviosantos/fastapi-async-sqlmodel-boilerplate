@@ -11,8 +11,8 @@ import fastapi
 
 # Local Dependencies
 from src.core.exceptions.http_exceptions import UnauthorizedException
+from src.apps.system.auth.schemas import Token
 from src.core.db.database import async_get_db
-from src.core.common.schemas import Token
 from src.core.config import settings
 from src.core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES, 

@@ -1,6 +1,6 @@
 # Local Dependencies
-from src.core.common.schemas import TokenBlacklistCreate, TokenBlacklistUpdate
-from src.core.db.token_blacklist import TokenBlacklist
+from src.apps.system.auth.schemas import TokenBlacklistCreate, TokenBlacklistUpdate
+from src.apps.system.auth.models import TokenBlacklist
 from src.core.common.crud import CRUDBase
 
 # Define a CRUD (Create, Read, Update, Delete) interface for the TokenBlacklist model
