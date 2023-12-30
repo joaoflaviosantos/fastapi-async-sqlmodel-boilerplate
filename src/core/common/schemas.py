@@ -1,7 +1,7 @@
 # Built-in Dependencies
 from typing import Any, Generic, TypeVar
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid as uuid_pkg
 from math import ceil
 
@@ -145,7 +145,7 @@ class TimestampSchema(BaseModel):
     """
     Pydantic schema for Timestamp mixin.
     """
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
     updated_at: datetime = Field(default=None)
 
     @field_serializer("created_at")

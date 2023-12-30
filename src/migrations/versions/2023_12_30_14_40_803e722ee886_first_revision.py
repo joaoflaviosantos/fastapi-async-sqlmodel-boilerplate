@@ -1,8 +1,8 @@
-"""fist_revision
+"""first revision
 
-Revision ID: d54063fd269f
+Revision ID: 803e722ee886
 Revises: 
-Create Date: 2023-12-25 15:32:27.019177
+Create Date: 2023-12-30 14:40:15.370102
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd54063fd269f'
+revision: str = '803e722ee886'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -23,12 +23,20 @@ def upgrade() -> None:
     op.create_table('tier',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.create_table('token_blacklist',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('token', sa.String(), nullable=False),
+    sa.Column('expires_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('id')
+    )
+    op.create_index(op.f('ix_token_blacklist_token'), 'token_blacklist', ['token'], unique=True)
     op.create_table('rate_limit',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('tier_id', sa.Integer(), nullable=False),
@@ -36,8 +44,8 @@ def upgrade() -> None:
     sa.Column('path', sa.String(), nullable=False),
     sa.Column('limit', sa.Integer(), nullable=False),
     sa.Column('period', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['tier_id'], ['tier.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('id'),
@@ -52,9 +60,9 @@ def upgrade() -> None:
     sa.Column('hashed_password', sa.String(), nullable=False),
     sa.Column('profile_image_url', sa.String(), nullable=False),
     sa.Column('uuid', sa.Uuid(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('is_superuser', sa.Boolean(), nullable=False),
     sa.Column('tier_id', sa.Integer(), nullable=True),
@@ -74,9 +82,9 @@ def upgrade() -> None:
     sa.Column('text', sa.String(length=63206), nullable=False),
     sa.Column('uuid', sa.Uuid(), nullable=False),
     sa.Column('media_url', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['created_by_user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id', 'uuid'),
@@ -100,5 +108,7 @@ def downgrade() -> None:
     op.drop_table('user')
     op.drop_index(op.f('ix_rate_limit_tier_id'), table_name='rate_limit')
     op.drop_table('rate_limit')
+    op.drop_index(op.f('ix_token_blacklist_token'), table_name='token_blacklist')
+    op.drop_table('token_blacklist')
     op.drop_table('tier')
     # ### end Alembic commands ###

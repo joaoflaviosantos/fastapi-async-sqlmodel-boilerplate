@@ -1,6 +1,6 @@
 # Built-in Dependencies
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, UTC
 
 # Third-Party Dependencies
 from sqlalchemy import String, DateTime, ForeignKey, Integer
@@ -23,6 +23,6 @@ class RateLimit(Base):
     period: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default_factory=datetime.utcnow
+        DateTime(timezone=True), default_factory=lambda:  datetime.now(UTC)
     )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)

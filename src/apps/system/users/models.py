@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 import uuid as uuid_pkg
 
@@ -26,11 +26,12 @@ class User(Base):
     uuid: Mapped[uuid_pkg.UUID] = mapped_column(
         default_factory=uuid_pkg.uuid4, primary_key=True, unique=True
     )
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default_factory=datetime.utcnow
+        DateTime(timezone=True), default_factory=lambda:  datetime.now(UTC)
     )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(default=None)
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
 

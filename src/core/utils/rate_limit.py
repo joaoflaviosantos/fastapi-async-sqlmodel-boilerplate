@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from datetime import datetime
+from datetime import datetime, UTC
 
 # Third-Party Dependencies
 from redis.asyncio import Redis, ConnectionPool
@@ -29,7 +29,7 @@ async def is_rate_limited(
         raise Exception("Redis client is not initialized.")
 
     # Calculate the start of the current time window
-    current_timestamp = int(datetime.utcnow().timestamp())
+    current_timestamp = int(datetime.now(UTC).timestamp())
     window_start = current_timestamp - (current_timestamp % period)
 
     # Sanitize the path for use in the key

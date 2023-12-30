@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid as uuid_pkg
 
 # Third-Party Dependencies
@@ -18,13 +18,13 @@ class TimestampMixin:
     """
     Adds 'created_at' and 'updated_at' columns with default values for the creation timestamp and update timestamp.
     """
-    created_at: datetime = Column(DateTime, default=datetime.utcnow, server_default=text("current_timestamp(0)"))
-    updated_at: datetime = Column(DateTime, nullable=True, onupdate=datetime.utcnow, server_default=text("current_timestamp(0)"))
+    created_at: datetime = Column(DateTime(timezone=True), default=datetime.now(UTC), server_default=text("current_timestamp(0)"))
+    updated_at: datetime = Column(DateTime(timezone=True), nullable=True, onupdate=datetime.now(UTC), server_default=text("current_timestamp(0)"))
 
 
 class SoftDeleteMixin:
     """
     Adds 'deleted_at' and 'is_deleted' columns for soft deletion functionality.
     """
-    deleted_at: datetime = Column(DateTime, nullable=True)
+    deleted_at: datetime = Column(DateTime(timezone=True), nullable=True)
     is_deleted: bool = Column(Boolean, default=False)
