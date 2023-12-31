@@ -14,7 +14,7 @@ test_post_id = None
 test_post = {
     "title": "This is my test post",
     "text": "This is the content of my test post.",
-    "media_url": "https://www.testpostimageurl.com"
+    "media_url": "https://www.imageurl.com/test_post.jpg"
 }
 
 def test_post_post(client: TestClient) -> None:
