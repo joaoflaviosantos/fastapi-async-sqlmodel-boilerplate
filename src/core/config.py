@@ -1,16 +1,19 @@
+# Built-in Dependencies
+from typing import Any
+from enum import Enum
+import os
+
 # Third-Party Dependencies
 from pydantic_core.core_schema import ValidationInfo
 from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
 from starlette.config import Config
-from typing import Any
-from enum import Enum
-import os
 
 # Environment Variables Config Getters
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
-env_path = os.path.join(current_file_dir, "..", "..", "..", ".env")
+env_path = os.path.abspath(os.path.join(current_file_dir, "..", "..", ".env"))
 config = Config(env_path)
+
 
 class AppSettings(BaseSettings):
     PROJECT_NAME: str = config("PROJECT_NAME", default="FastAPI app")
@@ -60,6 +63,10 @@ class FirstUserSettings(BaseSettings):
     ADMIN_EMAIL: str = config("ADMIN_EMAIL", default="admin@admin.com")
     ADMIN_USERNAME: str = config("ADMIN_USERNAME", default="admin")
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
+
+
+class FirstTierSettings(BaseSettings):
+    TIER_NAME: str = config("TIER_NAME", default="free")
 
 
 class TestSettings(BaseSettings):
@@ -116,6 +123,7 @@ class Settings(
     PostgresSettings, 
     CryptSettings, 
     FirstUserSettings,
+    FirstTierSettings,
     TestSettings,
     RedisCacheSettings,
     ClientSideCacheSettings,
