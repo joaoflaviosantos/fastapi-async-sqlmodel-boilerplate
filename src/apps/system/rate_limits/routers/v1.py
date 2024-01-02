@@ -122,18 +122,23 @@ async def patch_rate_limit(
     )
     if db_rate_limit is None:
         raise NotFoundException("Rate Limit not found")
-    
-    db_rate_limit_path = await crud_rate_limits.exists(
-        db=db,
-        tier_id=db_tier["id"],
-        path=values.path
-    )
-    if db_rate_limit_path is not None:
-        raise DuplicateValueException("There is already a rate limit for this path")
 
-    db_rate_limit_name = await crud_rate_limits.exists(db=db)
-    if db_rate_limit_path is not None:
-        raise DuplicateValueException("There is already a rate limit with this name")
+    if values.path is not None:
+        db_rate_limit_path = await crud_rate_limits.exists(
+            db=db,
+            tier_id=db_tier["id"],
+            path=values.path
+        )
+        if db_rate_limit_path:
+            raise DuplicateValueException("There is already a rate limit for this path")
+
+    if values.name is not None:
+        db_rate_limit_name = await crud_rate_limits.exists(
+            db=db,
+            name=values.name,
+            )
+        if db_rate_limit_name:
+            raise DuplicateValueException("There is already a rate limit with this name")
 
     await crud_rate_limits.update(db=db, object=values, id=db_rate_limit["id"])
     return {"message": "Rate Limit updated"}
