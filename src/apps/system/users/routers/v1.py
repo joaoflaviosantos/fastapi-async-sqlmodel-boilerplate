@@ -36,6 +36,7 @@ from src.core.security import (
     blacklist_token, 
     oauth2_scheme
 )
+from src.core.utils import cache
 
 router = fastapi.APIRouter(tags=["System - Users"])
 
@@ -158,14 +159,17 @@ async def erase_db_user(
     request: Request, 
     username: str,
     db: Annotated[AsyncSession, Depends(async_get_db)],
-    token: str = Depends(oauth2_scheme)
 ) -> Dict[str, str]:
     db_user = await crud_users.exists(db=db, username=username)
     if not db_user:
         raise NotFoundException("User not found")
     
+    # Remove user from Redis cache
+    if cache.client:
+        await cache.client.hdel('system:usernames', username)
+
+    # Delete user from the database
     await crud_users.db_delete(db=db, username=username)
-    await blacklist_token(token=token, db=db)
     return {"message": "User deleted from the database"}
 
 

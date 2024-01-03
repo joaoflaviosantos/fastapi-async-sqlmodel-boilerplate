@@ -12,6 +12,7 @@ import bcrypt
 from src.apps.system.auth.schemas import TokenData, TokenBlacklistCreate
 from src.apps.system.auth.crud import crud_token_blacklist
 from src.apps.system.users.crud import crud_users
+from src.core.utils import cache
 from src.core.config import settings
 
 # Constants for token-related settings
@@ -32,7 +33,6 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     hashed_password: str = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     return hashed_password
-
 
 # Function to authenticate a user based on provided credentials
 async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> Union[Dict[str, Any], Literal[False]]:
@@ -86,7 +86,8 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
     Returns
     -------
     TokenData | None
-        TokenData instance if the token is valid, None otherwise.
+        An instance of TokenData representing the user if the token is valid.
+        None is returned if the token is invalid or the user is not active.
     """
     is_blacklisted = await crud_token_blacklist.exists(db, token=token)
     if is_blacklisted:
@@ -98,7 +99,29 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         username_or_email: str = payload.get("sub")
         if username_or_email is None:
             return None
-        return TokenData(username_or_email=username_or_email)
+
+        # Check if the Redis client is available
+        if cache.client:
+            # Check if user is active in Redis
+            is_active = await cache.client.hget('system:usernames', username_or_email)
+
+            if is_active:
+                return TokenData(username_or_email=username_or_email)
+
+        # If not active in Redis or Redis is not available, check PostgreSQL
+        user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+
+        if user:
+            # Update Redis with user active status if Redis is available
+            if cache.client:
+                await cache.client.hset('system:usernames', username_or_email, 'active')
+
+            return TokenData(username_or_email=username_or_email)
+        
+        # If user is not found in Redis or PostgreSQL, blacklist the token
+        await blacklist_token(token=token, db=db)
+
+        return None
     
     except JWTError:
         return None
