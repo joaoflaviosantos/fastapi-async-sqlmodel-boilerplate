@@ -31,10 +31,11 @@ def test_auth_login(client: TestClient) -> None:
     test_access_token = response_json["access_token"]
     test_token_type = response_json["token_type"]
     test_refresh_token_cookie = response.cookies.get("refresh_token")
-    
+
     assert test_access_token is not None
     assert test_token_type == "bearer"
     assert response.status_code == 200
+
 
 def test_auth_refresh(client: TestClient) -> None:
     client.cookies.update({"refresh_token": test_refresh_token_cookie})
@@ -48,6 +49,7 @@ def test_auth_refresh(client: TestClient) -> None:
     assert new_access_token is not None
     assert token_type == "bearer"
     assert response.status_code == 200
+
 
 def test_auth_logout(client: TestClient) -> None:
     response_logout = client.post(

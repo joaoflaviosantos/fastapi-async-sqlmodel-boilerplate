@@ -8,7 +8,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 # Local Dependencies
 from src.core.common.models import Base
 
-# Define a TokenBlacklist class that represents the 'token_blacklist' table
 class TokenBlacklist(Base):
     __tablename__ = "token_blacklist"
 

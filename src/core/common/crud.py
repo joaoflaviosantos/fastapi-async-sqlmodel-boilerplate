@@ -24,7 +24,6 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=BaseModel)
 DeleteSchemaType = TypeVar("DeleteSchemaType", bound=BaseModel)
 
-
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSchemaInternalType, DeleteSchemaType]):
     """
     Base class for CRUD operations on a model.
@@ -97,7 +96,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSche
             return out
         
         return None
-    
+
     async def exists(
             self, 
             db: AsyncSession, 
@@ -125,7 +124,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, UpdateSche
         
         result = await db.execute(stmt)
         return result.first() is not None
-    
+
     async def count(
         self, 
         db: AsyncSession,

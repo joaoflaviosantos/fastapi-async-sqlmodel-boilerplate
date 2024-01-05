@@ -25,7 +25,6 @@ from src.core.security import get_password_hash
 from src.apps.system.users.models import User
 from src.core.config import settings
 
-
 async def create_first_user(session: AsyncSession) -> None:
     name = settings.ADMIN_NAME
     email = settings.ADMIN_EMAIL
@@ -67,6 +66,7 @@ async def create_first_user(session: AsyncSession) -> None:
         async with async_engine.connect() as conn:
             await conn.execute(stmt)
             await conn.commit()
+
 
 async def main():
     async with local_session() as session:

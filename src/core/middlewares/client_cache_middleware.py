@@ -5,7 +5,6 @@ from starlette.middleware.base import (
     RequestResponseEndpoint
 )
 
-
 class ClientCacheMiddleware(BaseHTTPMiddleware):
     """
     Middleware to set the `Cache-Control` header for client-side caching on all responses.

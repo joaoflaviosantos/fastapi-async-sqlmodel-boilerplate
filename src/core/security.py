@@ -103,7 +103,10 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         # Check if the Redis client is available
         if cache.client:
             # Check if user is active in Redis
-            is_active = await cache.client.hget('system:usernames', username_or_email)
+            is_active = await cache.client.hget(
+                settings.REDIS_HASH_SYSTEM_USERNAMES, 
+                username_or_email
+            )
 
             if is_active:
                 return TokenData(username_or_email=username_or_email)
@@ -114,7 +117,11 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         if user:
             # Update Redis with user active status if Redis is available
             if cache.client:
-                await cache.client.hset('system:usernames', username_or_email, 'active')
+                await cache.client.hset(
+                    settings.REDIS_HASH_SYSTEM_USERNAMES, 
+                    username_or_email, 
+                    "active"
+                )
 
             return TokenData(username_or_email=username_or_email)
         

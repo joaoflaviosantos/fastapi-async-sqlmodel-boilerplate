@@ -10,7 +10,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 # Local Dependencies
 from src.core.common.models import Base
 
-
 class Post(Base):
     __tablename__ = "post"
 

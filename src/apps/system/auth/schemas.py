@@ -4,7 +4,6 @@ from datetime import datetime
 # Third-Party Dependencies
 from pydantic import BaseModel
 
-
 class Token(BaseModel):
     """
     Token response schema.

@@ -12,7 +12,6 @@ from src.core.common.schemas import (
     PersistentDeletion
 )
 
-
 class UserBase(BaseModel):
     name: Annotated[
         str, 

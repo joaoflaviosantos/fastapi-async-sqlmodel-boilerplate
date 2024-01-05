@@ -9,7 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 # Local Dependencies
 from src.core.common.models import Base
 
-
 class RateLimit(Base):
     __tablename__ = "rate_limit"
     

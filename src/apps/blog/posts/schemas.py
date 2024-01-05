@@ -12,7 +12,6 @@ from src.core.common.schemas import (
     PersistentDeletion
 )
 
-
 class PostBase(BaseModel):
     title: Annotated[
         str,
@@ -22,7 +21,7 @@ class PostBase(BaseModel):
         str, 
         Field(min_length=1, max_length=63206, examples=["This is the content of my post."])
     ]
-    
+
 
 class Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion):
     media_url: Annotated[

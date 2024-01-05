@@ -23,6 +23,7 @@ async def create_first_tier(session: AsyncSession) -> None:
         
         await session.commit()
 
+
 async def main():
     async with local_session() as session:
         await create_first_tier(session)

@@ -33,7 +33,6 @@ from src.core.config import (
     EnvironmentSettings
 )
 
-
 # --------------------------------------
 # -------------- DATABASE --------------
 # --------------------------------------
@@ -125,7 +124,6 @@ def create_application(
             ], 
         **kwargs: Any
 ) -> FastAPI:
-
     """
     Creates and configures a FastAPI application based on the provided settings.
 
@@ -155,7 +153,6 @@ def create_application(
     -------
     FastAPI
         A fully configured FastAPI application instance.
-
     """
     # --------------------------------------
     # ---- BEFORE CREATING APPLICATION -----

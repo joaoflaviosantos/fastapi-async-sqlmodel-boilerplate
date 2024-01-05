@@ -14,7 +14,6 @@ current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.abspath(os.path.join(current_file_dir, "..", "..", ".env"))
 config = Config(env_path)
 
-
 class AppSettings(BaseSettings):
     PROJECT_NAME: str = config("PROJECT_NAME", default="FastAPI app")
     PROJECT_DESCRIPTION: str | None = config("PROJECT_DESCRIPTION", default=None)
@@ -95,6 +94,7 @@ class RedisQueueSettings(BaseSettings):
     REDIS_QUEUE_PASSWORD: str | None = config("REDIS_QUEUE_PASSWORD", default=None)
     REDIS_QUEUE_URL: str = f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
 
+
 class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="localhost")
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
@@ -106,6 +106,10 @@ class RedisRateLimiterSettings(BaseSettings):
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
+
+
+class RedisHashSettings(BaseSettings):
+    REDIS_HASH_SYSTEM_USERNAMES: str = "system:usernames"
 
 
 class EnvironmentOption(Enum):
@@ -129,6 +133,7 @@ class Settings(
     ClientSideCacheSettings,
     RedisQueueSettings,
     RedisRateLimiterSettings,
+    RedisHashSettings,
     DefaultRateLimitSettings,
     EnvironmentSettings
 ):

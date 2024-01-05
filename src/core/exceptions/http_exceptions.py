@@ -4,7 +4,6 @@ from http import HTTPStatus
 # Third-Party Dependencies
 from fastapi import HTTPException, status
 
-
 class CustomException(HTTPException):
     """
     Custom base exception class for handling HTTP exceptions.

@@ -15,7 +15,6 @@ TEST_PASSWORD = settings.TEST_PASSWORD
 ADMIN_USERNAME = settings.ADMIN_USERNAME
 ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 
-
 def test_post_user(client: TestClient) -> None:
     response = client.post(
         "/api/v1/system/user",
@@ -28,17 +27,20 @@ def test_post_user(client: TestClient) -> None:
     )
     assert response.status_code == 201
 
+
 def test_get_user(client: TestClient) -> None:
     response = client.get(
         f"/api/v1/system/user/{TEST_USERNAME}"
     )
     assert response.status_code == 200
 
+
 def test_get_multiple_users(client: TestClient) -> None:
     response = client.get(
         "/api/v1/system/users"
     )
     assert response.status_code == 200
+
 
 def test_update_user(client: TestClient) -> None:
     token = _get_token(
@@ -56,6 +58,7 @@ def test_update_user(client: TestClient) -> None:
     )
     assert response.status_code == 200
 
+
 def test_delete_user(client: TestClient) -> None:
     token = _get_token(
         username=TEST_USERNAME, 
@@ -68,6 +71,7 @@ def test_delete_user(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
     )
     assert response.status_code == 200
+
 
 def test_delete_db_user(client: TestClient) -> None:
     token = _get_token(

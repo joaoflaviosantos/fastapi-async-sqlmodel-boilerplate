@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 # Local Dependencies
 from src.core.config import settings
 
-
 # Define the database URI and URL based on the application settings
 DATABASE_URI = f"{settings.POSTGRES_ASYNC_URI}"
 DATABASE_URL = DATABASE_URI
@@ -24,6 +23,7 @@ local_session = sessionmaker(
     class_=AsyncSession, 
     expire_on_commit=False
 )
+
 
 # Define an async function to get the database session
 async def async_get_db() -> AsyncSession:

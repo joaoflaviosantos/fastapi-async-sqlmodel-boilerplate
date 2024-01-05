@@ -14,7 +14,6 @@ if platform.system() == "Linux":
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-
 # Worker Functions
 # --------------------------------------
 # ---------- BACKGROUND TASKS ----------

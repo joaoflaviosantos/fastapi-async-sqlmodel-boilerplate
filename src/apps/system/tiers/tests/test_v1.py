@@ -36,10 +36,12 @@ def test_post_tier(client: TestClient) -> None:
     assert test_tier_name is not None
     assert response.status_code == 201
 
+
 def test_get_multiple_tiers(client: TestClient) -> None:
     response = client.get("/api/v1/system/tiers")
 
     assert response.status_code == 200
+
 
 def test_get_tier(client: TestClient) -> None:
     global test_tier_name
@@ -48,6 +50,7 @@ def test_get_tier(client: TestClient) -> None:
     response = client.get(f"/api/v1/system/tier/{test_tier_name}")
 
     assert response.status_code == 200
+
 
 def test_update_tier(client: TestClient) -> None:
     global test_tier_name
