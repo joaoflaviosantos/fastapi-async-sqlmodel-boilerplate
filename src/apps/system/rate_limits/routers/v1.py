@@ -11,6 +11,7 @@ from src.core.api.dependencies import get_current_superuser
 from src.core.db.session import async_get_db
 from src.apps.system.rate_limits.crud import crud_rate_limits
 from src.apps.system.tiers.crud import crud_tiers
+from src.core.utils.rate_limit import is_valid_path
 from src.core.exceptions.http_exceptions import (
     NotFoundException, 
     DuplicateValueException, 
@@ -27,6 +28,7 @@ from src.core.utils.paginated import (
     paginated_response, 
     compute_offset
 )
+from src.main import app
 
 router = fastapi.APIRouter(tags=["System - Rate Limits"])
 
@@ -43,6 +45,10 @@ async def write_rate_limit(
 
     rate_limit_internal_dict = rate_limit.model_dump()
     rate_limit_internal_dict["tier_id"] = db_tier["id"]
+
+    # Checks if the path is a valid route
+    if not is_valid_path(rate_limit.path, app):
+        raise NotFoundException("Invalid path")
 
     db_rate_limit = await crud_rate_limits.exists(db=db, name=rate_limit_internal_dict["name"])
     if db_rate_limit:
@@ -113,7 +119,11 @@ async def patch_rate_limit(
     db_tier = await crud_tiers.get(db=db, name=tier_name)
     if db_tier is None:
         raise NotFoundException("Tier not found")
-    
+
+    # Checks if the path is a valid route
+    if not is_valid_path(values.path, app):
+        raise NotFoundException("Invalid path")
+
     db_rate_limit = await crud_rate_limits.get(
         db=db,
         schema_to_select=RateLimitRead, 
