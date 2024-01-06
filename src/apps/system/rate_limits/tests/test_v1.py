@@ -2,6 +2,7 @@
 from fastapi.testclient import TestClient
 
 # Local Dependencies
+from src.core.utils.rate_limit import sanitize_path
 from src.core.config import settings
 from tests.helper import _get_token
 
@@ -13,7 +14,7 @@ ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 test_rate_limit_id = None
 test_rate_limit = {
     "name": "Test Rate Limit",
-    "path": "/test_rate_limit",
+    "path": "/api/v1/system/tasks/task",
     "limit": 100,
     "period": 3600
 }
@@ -69,7 +70,7 @@ def test_get_rate_limit(client: TestClient) -> None:
     
     assert response.status_code == 200
     assert rate_limit["name"] == test_rate_limit["name"]
-    assert rate_limit["path"] == test_rate_limit["path"].replace("/", "")
+    assert rate_limit["path"] == sanitize_path(test_rate_limit["path"])
     assert rate_limit["limit"] == test_rate_limit["limit"]
     assert rate_limit["period"] == test_rate_limit["period"]
 

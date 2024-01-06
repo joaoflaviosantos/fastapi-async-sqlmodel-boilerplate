@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, APIRouter
 
 # Local Dependencies
-from src.apps.system.rate_limits.schemas import sanitize_path
 from src.core.logger import logging
-from src.main import app
 
 # Logger instance for the current module
 logger = logging.getLogger(__name__)
@@ -20,29 +18,76 @@ client: Redis | None = None
 
 # Function to normalize a route path, removing consultation parameters
 def normalize_route_path(route_path: str) -> str:
+    """
+    Normalize a route path by removing any query parameters.
+
+    Args:
+        route_path (str): The route path to be normalized.
+
+    Returns:
+        str: The normalized route path.
+
+    Example:
+        >>> normalize_route_path("/user?name=john")
+        "/user"
+    """
     return route_path.split("?")[0]
+
+
+def sanitize_path(path: str) -> str:
+    """
+    Sanitizes a given path by normalizing it and replacing any forward slashes with underscores.
+
+    Parameters:
+        path (str): The path to be sanitized.
+
+    Returns:
+        str: The sanitized path.
+    """
+    normalized_path = normalize_route_path(path)
+    return normalized_path.strip("/").replace("/", "_")
+
 
 # Function to verify that a path is a valid route in the FastAPI application
 def is_valid_path(path: str, app: FastAPI) -> bool:
-    # Obtains all application routes
-    all_routes = []
-    for route in app.routes:
-        if isinstance(route, APIRouter):
-            all_routes.extend(route.routes)
-        else:
-            all_routes.append(route)
+    """
+    Checks if a given path is a valid route in the FastAPI application.
 
-    # Verifica se o caminho é uma rota válida
-    return any(normalize_route_path(f"{route.path}") == normalize_route_path(path) for route in all_routes)
+    Parameters:
+        path (str): The path to be checked.
+        app (FastAPI): The FastAPI application instance.
+
+    Returns:
+        bool: True if the path is a valid route, False otherwise.
+    """
+    # Obtains all application routes
+    all_routes = [sanitize_path(route.path) for route in app.routes]
+    return path in all_routes
+
 
 # Checks if a rate limit has been exceeded
 async def is_rate_limited(
+    app: FastAPI,
     db: AsyncSession,
     user_id: int,
     path: str,
     limit: int,
     period: int
 ) -> bool:
+    """
+    Check if the user with the given ID is rate limited for the specified path.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+        db (AsyncSession): The asynchronous session for interacting with the database.
+        user_id (int): The ID of the user to check for rate limiting.
+        path (str): The path to check for rate limiting.
+        limit (int): The maximum number of requests allowed within the specified period.
+        period (int): The duration of the rate limiting period in seconds.
+
+    Returns:
+        bool: True if the user is rate limited, False otherwise.
+    """
     if client is None:
         logger.error("Redis client is not initialized.")
         raise Exception("Redis client is not initialized.")
@@ -52,7 +97,7 @@ async def is_rate_limited(
     window_start = current_timestamp - (current_timestamp % period)
 
     # Checks if the path is a valid route
-    if not is_valid_path(path, app):
+    if not is_valid_path(path=path, app=app):
         logger.warning(f"Invalid route: {path}")
         return False
 

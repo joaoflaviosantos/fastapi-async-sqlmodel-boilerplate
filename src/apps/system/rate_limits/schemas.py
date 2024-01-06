@@ -7,10 +7,7 @@ from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 # Local Dependencies
 from src.core.common.schemas import TimestampSchema
-
-def sanitize_path(path: str) -> str:
-    return path.strip("/").replace("/", "_")
-
+from src.core.utils.rate_limit import sanitize_path
 
 class RateLimitBase(BaseModel):
     path: Annotated[

@@ -132,6 +132,7 @@ async def rate_limiter(
 
     # Check if the user is rate-limited for the given path
     is_limited = await is_rate_limited(
+        app=request.app,
         db=db,
         user_id=user_id,
         path=path,

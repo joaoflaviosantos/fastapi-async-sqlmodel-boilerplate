@@ -28,7 +28,6 @@ from src.core.utils.paginated import (
     paginated_response, 
     compute_offset
 )
-from src.main import app
 
 router = fastapi.APIRouter(tags=["System - Rate Limits"])
 
@@ -47,7 +46,7 @@ async def write_rate_limit(
     rate_limit_internal_dict["tier_id"] = db_tier["id"]
 
     # Checks if the path is a valid route
-    if not is_valid_path(rate_limit.path, app):
+    if not is_valid_path(path=rate_limit.path, app=request.app):
         raise NotFoundException("Invalid path")
 
     db_rate_limit = await crud_rate_limits.exists(db=db, name=rate_limit_internal_dict["name"])
@@ -120,10 +119,6 @@ async def patch_rate_limit(
     if db_tier is None:
         raise NotFoundException("Tier not found")
 
-    # Checks if the path is a valid route
-    if not is_valid_path(values.path, app):
-        raise NotFoundException("Invalid path")
-
     db_rate_limit = await crud_rate_limits.get(
         db=db,
         schema_to_select=RateLimitRead, 
@@ -134,6 +129,11 @@ async def patch_rate_limit(
         raise NotFoundException("Rate Limit not found")
 
     if values.path is not None:
+        # Checks if the path is a valid route
+        if not is_valid_path(path=values.path, app=request.app):
+            raise NotFoundException("Invalid path")
+
+        # Checks if there is already a rate limit for this path
         db_rate_limit_path = await crud_rate_limits.exists(
             db=db,
             tier_id=db_tier["id"],
