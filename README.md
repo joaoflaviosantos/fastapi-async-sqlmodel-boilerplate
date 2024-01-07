@@ -1,4 +1,4 @@
-# FastAPI Async SQLModel Boilerplate 🚀
+# FastAPI Async SQLModel Boilerplate
 
 <p align="center">
   <a href="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate">

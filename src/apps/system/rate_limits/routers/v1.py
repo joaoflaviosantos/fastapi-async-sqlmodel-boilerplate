@@ -13,15 +13,16 @@ from src.apps.system.rate_limits.crud import crud_rate_limits
 from src.apps.system.tiers.crud import crud_tiers
 from src.core.utils.rate_limit import is_valid_path
 from src.core.exceptions.http_exceptions import (
-    NotFoundException, 
+    UnprocessableEntityException, 
     DuplicateValueException, 
-    RateLimitException
+    RateLimitException, 
+    NotFoundException
 )
 from src.apps.system.rate_limits.schemas import (
-    RateLimitRead,
-    RateLimitCreate,
-    RateLimitCreateInternal,
-    RateLimitUpdate
+    RateLimitCreateInternal, 
+    RateLimitCreate, 
+    RateLimitUpdate, 
+    RateLimitRead
 )
 from src.core.utils.paginated import (
     PaginatedListResponse, 
@@ -47,7 +48,7 @@ async def write_rate_limit(
 
     # Checks if the path is a valid route
     if not is_valid_path(path=rate_limit.path, app=request.app):
-        raise NotFoundException("Invalid path")
+        raise UnprocessableEntityException("Invalid path")
 
     db_rate_limit = await crud_rate_limits.exists(db=db, name=rate_limit_internal_dict["name"])
     if db_rate_limit:
