@@ -1,0 +1,14 @@
+default_language_version:
+  python: python3.11
+
+repos:
+  - repo: local
+    hooks:
+      - id: unit_test
+        name: Unit test
+        language: system
+        entry: poetry run pytest -v ./tests
+        pass_filenames: false
+        always_run: true
+        types: [python]
+        stages: [manual]
