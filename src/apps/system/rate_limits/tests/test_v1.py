@@ -1,3 +1,6 @@
+# Built-in Dependencies
+from uuid import uuid4
+
 # Third-Party Dependencies
 from fastapi.testclient import TestClient
 
@@ -46,14 +49,11 @@ def test_post_invalid_rate_limit_tier_name(client: TestClient) -> None:
         client=client
     )
 
-    invalid_test_rate_limit = test_rate_limit.copy()
-    invalid_test_rate_limit["path"] = "/api/v1/invalid/route"
+    invalid_tier_name = f"invalid-tier-{uuid4()}"
 
-    invalid_tier_name = "invalid_tier"
-    
     response = client.post(
         f"/api/v1/system/tier/{invalid_tier_name}/rate_limit",
-        json=invalid_test_rate_limit,
+        json=test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
     )
 
