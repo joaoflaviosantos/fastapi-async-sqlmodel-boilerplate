@@ -39,7 +39,28 @@ def test_post_rate_limit(client: TestClient) -> None:
     assert response.status_code == 201
 
 
-def test_post_invalid_rate_limit(client: TestClient) -> None:
+def test_post_invalid_rate_limit_tier_name(client: TestClient) -> None:
+    token = _get_token(
+        username=ADMIN_USERNAME,
+        password=ADMIN_PASSWORD,
+        client=client
+    )
+
+    invalid_test_rate_limit = test_rate_limit.copy()
+    invalid_test_rate_limit["path"] = "/api/v1/invalid/route"
+
+    invalid_tier_name = "invalid_tier"
+    
+    response = client.post(
+        f"/api/v1/system/tier/{invalid_tier_name}/rate_limit",
+        json=invalid_test_rate_limit,
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+    )
+
+    assert response.status_code == 404
+
+
+def test_post_invalid_rate_limit_path(client: TestClient) -> None:
     token = _get_token(
         username=ADMIN_USERNAME,
         password=ADMIN_PASSWORD,
