@@ -41,7 +41,7 @@ class PostgresSettings(DatabaseSettings):
     POSTGRES_PORT: int = config("POSTGRES_PORT", default=5432)
     POSTGRES_DB: str = config("POSTGRES_DB", default="postgres")
     POSTGRES_ASYNC_URI: PostgresDsn | str = ""
-    
+
     @field_validator("POSTGRES_ASYNC_URI", mode="after")
     def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
@@ -65,7 +65,7 @@ class FirstUserSettings(BaseSettings):
 
 
 class FirstTierSettings(BaseSettings):
-    TIER_NAME_DEFAULT: str = config("TIER_NAME_DEFAULT", default="free")
+    TIER_NAME_DEFAULT: str = config("TIER_NAME_DEFAULT", default="Free")
 
 
 class TestSettings(BaseSettings):
@@ -83,10 +83,6 @@ class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
 
 
-class ClientSideCacheSettings(BaseSettings):
-    CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)
-
-
 class RedisQueueSettings(BaseSettings):
     REDIS_QUEUE_HOST: str = config("REDIS_QUEUE_HOST", default="localhost")
     REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
@@ -98,9 +94,13 @@ class RedisQueueSettings(BaseSettings):
 class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="localhost")
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
-    REDIS_RATE_LIMIT_USERNAME: str | None = config("REDIS_QUEUE_USERNAME", default=None)
-    REDIS_RATE_LIMIT_PASSWORD: str | None = config("REDIS_QUEUE_PASSWORD", default=None)
+    REDIS_RATE_LIMIT_USERNAME: str | None = config("REDIS_RATE_LIMIT_USERNAME", default=None)
+    REDIS_RATE_LIMIT_PASSWORD: str | None = config("REDIS_RATE_LIMIT_PASSWORD", default=None)
     REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
+
+
+class RedisHashSettings(BaseSettings):
+    REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES: str = "system:auth:valid_usernames"
 
 
 class DefaultRateLimitSettings(BaseSettings):
@@ -108,8 +108,8 @@ class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
 
 
-class RedisHashSettings(BaseSettings):
-    REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES: str = "system:auth:valid-usernames"
+class ClientSideCacheSettings(BaseSettings):
+    CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)
 
 
 class EnvironmentOption(Enum):
