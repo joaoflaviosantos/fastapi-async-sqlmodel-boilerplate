@@ -10,7 +10,7 @@ from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
 async def create_first_tier(session: AsyncSession) -> None:
-    tier_name = settings.TIER_NAME
+    tier_name = settings.TIER_NAME_DEFAULT
     
     query = select(Tier).where(Tier.name == tier_name)
     result = await session.execute(query)

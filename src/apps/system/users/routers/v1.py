@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Annotated, Union, Dict, Any
+from typing import Annotated, Dict, Any
 
 # Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,7 +167,7 @@ async def erase_db_user(
     
     # Remove user from Redis cache
     if cache.client:
-        await cache.client.hdel(settings.REDIS_HASH_SYSTEM_USERNAMES, username)
+        await cache.client.hdel(settings.REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES, username)
 
     # Delete user from the database
     await crud_users.db_delete(db=db, username=username)

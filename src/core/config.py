@@ -65,7 +65,7 @@ class FirstUserSettings(BaseSettings):
 
 
 class FirstTierSettings(BaseSettings):
-    TIER_NAME: str = config("TIER_NAME", default="free")
+    TIER_NAME_DEFAULT: str = config("TIER_NAME_DEFAULT", default="free")
 
 
 class TestSettings(BaseSettings):
@@ -109,7 +109,7 @@ class DefaultRateLimitSettings(BaseSettings):
 
 
 class RedisHashSettings(BaseSettings):
-    REDIS_HASH_SYSTEM_USERNAMES: str = "system:usernames"
+    REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES: str = "system:auth:valid-usernames"
 
 
 class EnvironmentOption(Enum):
