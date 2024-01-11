@@ -1,4 +1,8 @@
-# FastAPI Async SQLModel Boilerplate
+<h1 align="center">FastAPI Async SQLModel Boilerplate</h1>
+
+<p align="center" markdown=1>
+  <i>Supercharge your FastAPI development. A backend for perfectionists with deadlines and lovers of asynchronous programming.</i>
+</p>
 
 <p align="center">
   <a href="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate">
@@ -38,8 +42,6 @@
 
 🚧 _Note: This project is currently under development and is a work in progress._ 🚧
 
-🚀 **The backend for perfectionists with deadlines and enthusiasts of asynchronous programming.**
-
 This is a boilerplate project designed for building high-performance APIs using FastAPI, SQLModel (v2.0), Redis, ARQ, NGINX, and Docker. The goal is to leverage asynchronous programming as much as possible to achieve optimal performance, embracing the Django-like folder structure.
 
 **Folder Structure Sensibility:**
@@ -58,14 +60,48 @@ This project aims to provide a robust structure while serving as an excellent to
 
 ## Project Goals 🎯
 
-- Leverage the power of FastAPI for building high-performance APIs.
-- Use SQLModel to streamline the interaction between the database and the API.
-- Implement asynchronous programming wherever applicable for optimal performance.
-- Integrate Redis for caching, rate limiting, and improving data access speed.
-- Utilize ARQ for handling background tasks asynchronously.
-- Implement a robust logging system to track and manage application events efficiently.
-- Containerize the application with Docker for easy deployment and scalability.
-- Manage database migrations seamlessly using Alembic.
+- [x] Leverage the power of FastAPI for building high-performance APIs.
+- [x] Implement asynchronous programming wherever applicable for optimal performance.
+- [x] Integrate Redis for caching, rate limiting, and improving data access speed.
+- [x] Utilize ARQ for handling background tasks asynchronously.
+- [x] Implement a robust logging system to track and manage application events efficiently.
+- [x] Manage database migrations seamlessly using Alembic.
+- [x] Develop comprehensive unit tests for API endpoints using pytest.
+- [ ] Implement using SQLModel to streamline the interaction between the database and the API.
+- [ ] Implement containerization of the application with Docker for easy deployment and scalability.
+
+## Prerequisites
+
+Before you begin, ensure you have the following prerequisites installed and configured:
+
+- PostgreSQL: Set up a PostgreSQL database.
+- Redis: Install and configure a Redis server.
+- Python 3.11 or later: Make sure to have Python 3.11 or a newer version installed on your system.
+- Poetry: Install Poetry for managing dependencies.
+
+**Note:** Soon, there will be an additional option for development using Docker containers.
+
+## Installing Poetry
+
+Poetry is a dependency manager for Python. Follow the steps below to install Poetry:
+
+1. Open a terminal.
+
+2. Run the following command to install Poetry using pip:
+
+   ```bash
+   pip install poetry
+   ```
+
+3. Verify the installation by running:
+
+   ```bash
+   poetry --version
+   ```
+
+   This should display the installed Poetry version.
+
+4. With Poetry installed, you can now proceed to install the project dependencies.
 
 ### Installation
 
