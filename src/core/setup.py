@@ -84,6 +84,10 @@ async def startup_logging() -> None:
         # Log an error if there's an issue retrieving CPU information
         logger.error(f"Error getting CPU information: {e}")
 
+# Function to configure logging during shutdown
+async def shutdown_logging() -> None:
+    logger.info("API shutdown")
+
 
 # --------------------------------------
 # -------------- DATABASE --------------
@@ -242,6 +246,7 @@ def create_application(
     # --------------------------------------
     application.include_router(router)
     application.add_event_handler("startup", startup_logging)
+    application.add_event_handler("shutdown", shutdown_logging)
     application.add_event_handler("startup", set_threadpool_tokens)
 
     if isinstance(settings, DatabaseSettings):

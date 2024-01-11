@@ -63,6 +63,7 @@ This project aims to provide a robust structure while serving as an excellent to
 - Implement asynchronous programming wherever applicable for optimal performance.
 - Integrate Redis for caching, rate limiting, and improving data access speed.
 - Utilize ARQ for handling background tasks asynchronously.
+- Implement a robust logging system to track and manage application events efficiently.
 - Containerize the application with Docker for easy deployment and scalability.
 - Manage database migrations seamlessly using Alembic.
 
