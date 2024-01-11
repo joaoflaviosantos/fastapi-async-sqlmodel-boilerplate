@@ -38,6 +38,8 @@
 
 🚧 _Note: This project is currently under development and is a work in progress._ 🚧
 
+🚀 **The backend for perfectionists with deadlines and enthusiasts of asynchronous programming.**
+
 This is a boilerplate project designed for building high-performance APIs using FastAPI, SQLModel (v2.0), Redis, ARQ, NGINX, and Docker. The goal is to leverage asynchronous programming as much as possible to achieve optimal performance, embracing the Django-like folder structure.
 
 **Folder Structure Sensibility:**
@@ -63,8 +65,6 @@ This project aims to provide a robust structure while serving as an excellent to
 - Utilize ARQ for handling background tasks asynchronously.
 - Containerize the application with Docker for easy deployment and scalability.
 - Manage database migrations seamlessly using Alembic.
-
-🚀 **The backend for perfectionists with deadlines and enthusiasts of asynchronous programming.**
 
 ### Installation
 
