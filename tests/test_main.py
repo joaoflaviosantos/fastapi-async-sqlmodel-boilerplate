@@ -1,7 +1,7 @@
 # Local Dependencies
 from src.core.logger import logging, configure_logging
 
-# Configure logging for the worker
+# Configure logging for the tests suite
 configure_logging(log_file='tests')
 
 # Logger instance for the current module

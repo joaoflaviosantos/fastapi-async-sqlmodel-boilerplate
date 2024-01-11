@@ -66,6 +66,66 @@ This project aims to provide a robust structure while serving as an excellent to
 
 🚀 **The backend for perfectionists with deadlines and enthusiasts of asynchronous programming.**
 
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate.git
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd fastapi-async-sqlmodel-boilerplate
+   ```
+
+3. Install dependencies using Poetry:
+
+   ```bash
+   poetry install
+   ```
+
+4. Define environment variables in ".env":
+
+   - Copy the ".env.example" file as ".env":
+
+     ```bash
+     cp .env.example .env
+     ```
+
+   - Open the ".env" file and modify the environment variables accordingly.
+
+     Note: Make sure to set a secure and unique value for the `SECRET_KEY`.
+
+     You can generate a secure secret key using the following command:
+
+     ```bash
+     poetry run python -c "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))"
+     ```
+
+### Running the Backend
+
+Start the FastAPI application:
+
+```bash
+poetry run uvicorn src.main:app --reload
+```
+
+Start the ARQ worker:
+
+```bash
+poetry run arq src.worker.WorkerSettings
+```
+
+### Running Tests
+
+Run tests using pytest:
+
+```bash
+poetry run python -m pytest -vv ./tests
+```
+
 Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
 
 ## Reference Projects 🌐
