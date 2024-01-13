@@ -22,11 +22,11 @@ from src.apps.system.users.management.commands import create_first_superuser
 from src.apps.system.tiers.management.commands import create_first_tier
 from src.apps.blog.posts.management.commands import create_first_post
 from src.core.api.dependencies import get_current_superuser
-from src.core.logger import logging, configure_logging
 from src.core.db.session import async_engine as engine
 from src.core.utils import cache, rate_limit
 from src.core.common.models import Base
 from src.core.config import settings
+from src.core.logger import logging
 from src.core.utils import queue
 from src.core.config import (
     DatabaseSettings, 
