@@ -1,6 +1,7 @@
 # Built-in Dependencies
 from typing import Annotated
 from datetime import datetime
+from uuid import UUID
 
 # Third-Party Dependencies
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -29,7 +30,7 @@ class RateLimitBase(BaseModel):
 
 
 class RateLimit(TimestampSchema, RateLimitBase):
-    tier_id: int
+    tier_id: UUID
     name: Annotated[
         str | None,
         Field(
@@ -40,8 +41,8 @@ class RateLimit(TimestampSchema, RateLimitBase):
 
 
 class RateLimitRead(RateLimitBase):
-    id: int
-    tier_id: int
+    id: UUID
+    tier_id: UUID
     name: str
 
 
@@ -58,7 +59,7 @@ class RateLimitCreate(RateLimitBase):
 
 
 class RateLimitCreateInternal(RateLimitCreate):
-    tier_id: int
+    tier_id: UUID
 
 
 class RateLimitUpdate(BaseModel):

@@ -1,72 +1,55 @@
 # Built-in Dependencies
-from datetime import datetime, UTC
 import asyncio
-import uuid
 
 # Third-Party Dependencies
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import (
-    select, 
-    Table, 
-    MetaData, 
-    Column, 
-    Integer, 
-    String, 
-    insert, 
-    ForeignKey, 
-    DateTime, 
-    Boolean
-)
+from sqlalchemy import select
 
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
-from src.core.db.session import async_engine
 from src.core.security import get_password_hash
 from src.apps.system.users.models import User
+from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
 async def create_first_user(session: AsyncSession) -> None:
+    # First user/admin data
     name = settings.ADMIN_NAME
     email = settings.ADMIN_EMAIL
     username = settings.ADMIN_USERNAME
     hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
 
+    # Checking if user already exists
     query = select(User).filter_by(email=email)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
-    
+
+    # Creating admin user if it doesn't exist
     if user is None:
-        metadata = MetaData()
-        user_table = Table(
-            "user", metadata,
-            Column("id", Integer, primary_key=True, autoincrement=True, nullable=False),
-            Column("name", String(30), nullable=False),
-            Column("username", String(20), nullable=False, unique=True, index=True),
-            Column("email", String(50), nullable=False, unique=True, index=True),
-            Column("hashed_password", String, nullable=False),
-            Column("profile_image_url", String, default="https://www.imageurl.com/first_user.jpg"),
-            Column("uuid", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True),
-            Column("created_at", DateTime(timezone=True), default=lambda:  datetime.now(UTC), nullable=False),
-            Column("updated_at", DateTime),
-            Column("deleted_at", DateTime),
-            Column("is_deleted", Boolean, default=False, index=True),
-            Column("is_superuser", Boolean, default=False),
-            Column("tier_id", Integer, ForeignKey("tier.id"), index=True)
+        # Getting default tier to assign to first user/admin
+        query = (
+            select(Tier)
+            .where(Tier.name == settings.TIER_NAME_DEFAULT)
+        )
+        result = await session.execute(query)
+        tier = result.scalar_one_or_none()
+
+        if tier is None:
+            raise Exception("Default tier not found")
+
+        # Creating first user/admin
+        session.add(
+            User(
+                name=name, 
+                email=email, 
+                username=username,
+                hashed_password=hashed_password,
+                is_superuser=True,
+                profile_image_url="https://www.imageurl.com/first_user.jpg",
+                tier_id=tier.id
+            )
         )
 
-        data = {
-            'name': name,
-            'email': email,
-            'username': username,
-            'hashed_password': hashed_password,
-            'is_superuser': True
-        }
-
-        stmt = insert(user_table).values(data)
-        async with async_engine.connect() as conn:
-            await conn.execute(stmt)
-            await conn.commit()
-
+        await session.commit()
 
 async def main():
     async with local_session() as session:

@@ -99,8 +99,8 @@ async def create_tables() -> None:
 
 async def run_seed_scripts() -> None:
     # Function to run seed scripts during startup
-    await create_first_superuser.main()
     await create_first_tier.main()
+    await create_first_superuser.main()
     await create_first_post.main()
 
 

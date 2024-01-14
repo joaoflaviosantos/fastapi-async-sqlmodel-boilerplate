@@ -1,6 +1,7 @@
 # Built-in Dependencies
 from typing import Annotated, Optional
 from datetime import datetime
+from uuid import UUID
 
 # Third-Party Dependencies
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
@@ -34,11 +35,11 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
     ]
     hashed_password: str
     is_superuser: bool = False
-    tier_id: int | None = None
+    tier_id: UUID | None = None
 
 
 class UserRead(BaseModel):
-    id: int
+    id: UUID
     
     name: Annotated[
         str, 
@@ -53,7 +54,7 @@ class UserRead(BaseModel):
         Field(examples=["user.userson@example.com"])
     ]
     profile_image_url: str
-    tier_id: int | None
+    tier_id: UUID | None
 
 
 class UserCreate(UserBase):
@@ -113,7 +114,7 @@ class UserUpdateInternal(UserUpdate):
 
 
 class UserTierUpdate(BaseModel):
-    tier_id: int
+    tier_id: UUID
 
 
 class UserDelete(BaseModel):

@@ -10,19 +10,19 @@ from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
 async def create_first_tier(session: AsyncSession) -> None:
+    # First tier data
     tier_name = settings.TIER_NAME_DEFAULT
-    
+
+    # Checking if tier already exists
     query = select(Tier).where(Tier.name == tier_name)
     result = await session.execute(query)
     tier = result.scalar_one_or_none()
-    
-    if tier is None:
-        session.add(
-            Tier(name=tier_name)
-        )
-        
-        await session.commit()
 
+    # Creating tier if it doesn't exist
+    if tier is None:
+        session.add(Tier(name=tier_name))
+
+        await session.commit()
 
 async def main():
     async with local_session() as session:

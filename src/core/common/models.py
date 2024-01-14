@@ -1,41 +1,46 @@
 # Built-in Dependencies
 from datetime import datetime, UTC
-import uuid as uuid_pkg
+from uuid import UUID, uuid4
 
 # Third-Party Dependencies
-from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass
-from sqlalchemy import Column, DateTime, Boolean, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime
+from sqlalchemy.orm import (
+    DeclarativeBase, 
+    MappedAsDataclass, 
+    Mapped, 
+    mapped_column
+)
 
 # Define a base class for declarative models with support for dataclasses
 class Base(DeclarativeBase, MappedAsDataclass):
     pass
 
 
-class UUIDMixin:
+class UUIDMixin(Base):
     """
     Adds a UUID column as the primary key with a default value generated using uuid4 and server default for PostgreSQL.
     """
-    uuid: uuid_pkg.UUID = Column(
-        UUID, primary_key=True, default=uuid_pkg.uuid4, server_default=text("gen_random_uuid()")
-    )
+    __abstract__ = True
+    id: Mapped[UUID] = mapped_column(default_factory=uuid4, primary_key=True, unique=True)
 
 
-class TimestampMixin:
+class TimestampMixin(Base):
     """
     Adds 'created_at' and 'updated_at' columns with default values for the creation timestamp and update timestamp.
     """
-    created_at: datetime = Column(
-        DateTime(timezone=True), default=datetime.now(UTC), server_default=text("current_timestamp(0)")
+    __abstract__ = True
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default_factory=lambda: datetime.now(UTC)
     )
-    updated_at: datetime = Column(
-        DateTime(timezone=True), nullable=True, onupdate=datetime.now(UTC), server_default=text("current_timestamp(0)")
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default_factory=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
 
-class SoftDeleteMixin:
+class SoftDeleteMixin(Base):
     """
     Adds 'deleted_at' and 'is_deleted' columns for soft deletion functionality.
     """
-    deleted_at: datetime = Column(DateTime(timezone=True), nullable=True)
-    is_deleted: bool = Column(Boolean, default=False)
+    __abstract__ = True
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    is_deleted: Mapped[bool] = mapped_column(default=False, index=True)

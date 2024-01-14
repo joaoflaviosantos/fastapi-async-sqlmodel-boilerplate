@@ -1,5 +1,6 @@
 # Built-in Dependencies
 from typing import Annotated, Dict
+from uuid import UUID
 
 # Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +45,7 @@ async def write_post(
         raise ForbiddenException()
 
     post_internal_dict = post.model_dump()
-    post_internal_dict["created_by_user_id"] = db_user["id"]
+    post_internal_dict["user_id"] = db_user["id"]
 
     post_internal = PostCreateInternal(**post_internal_dict)
     return await crud_posts.create(db=db, object=post_internal)
@@ -72,7 +73,7 @@ async def read_posts(
         offset=compute_offset(page, items_per_page),
         limit=items_per_page,
         schema_to_select=PostRead,
-        created_by_user_id=db_user["id"],
+        user_id=db_user["id"],
         is_deleted=False
     )
 
@@ -88,14 +89,14 @@ async def read_posts(
 async def read_post(
     request: Request, 
     username: str,
-    id: int, 
+    id: UUID, 
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict:
     db_user = await crud_users.get(db=db, schema_to_select=UserRead, username=username, is_deleted=False)
     if db_user is None:
         raise NotFoundException("User not found")
     
-    db_post = await crud_posts.get(db=db, schema_to_select=PostRead, id=id, created_by_user_id=db_user["id"], is_deleted=False)
+    db_post = await crud_posts.get(db=db, schema_to_select=PostRead, id=id, user_id=db_user["id"], is_deleted=False)
     if db_post is None:
         raise NotFoundException("Post not found")
     
@@ -111,7 +112,7 @@ async def read_post(
 async def patch_post(
     request: Request,
     username: str,
-    id: int,
+    id: UUID,
     values: PostUpdate,
     current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)]
@@ -140,7 +141,7 @@ async def patch_post(
 async def erase_post(
     request: Request, 
     username: str,
-    id: int,
+    id: UUID,
     current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> Dict[str, str]:
@@ -169,7 +170,7 @@ async def erase_post(
 async def erase_db_post(
     request: Request, 
     username: str,
-    id: int,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> Dict[str, str]:
     db_user = await crud_users.get(db=db, schema_to_select=UserRead, username=username, is_deleted=False)

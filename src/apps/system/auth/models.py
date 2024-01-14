@@ -6,13 +6,15 @@ from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
-from src.core.common.models import Base
+from src.core.common.models import (
+    TimestampMixin, 
+    UUIDMixin,
+    Base
+)
 
-class TokenBlacklist(Base):
-    __tablename__ = "token_blacklist"
+class TokenBlacklist(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "system_token_blacklist"
 
-    id: Mapped[int] = mapped_column(
-        "id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False
-    )
-    token: Mapped[str] = mapped_column(String, unique=True, index=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    # Data Columns
+    token: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False, default=None)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=None)

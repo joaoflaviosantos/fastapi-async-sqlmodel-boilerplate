@@ -1,6 +1,7 @@
 # Built-in Dependencies
 from typing import Annotated
 from datetime import datetime
+from uuid import UUID
 
 # Third-Party Dependencies
 from pydantic import BaseModel, Field
@@ -20,7 +21,7 @@ class Tier(TimestampSchema, TierBase):
 
 
 class TierRead(TierBase):
-    id: int
+    id: UUID
     created_at: datetime
 
 

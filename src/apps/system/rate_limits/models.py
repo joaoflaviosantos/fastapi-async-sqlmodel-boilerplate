@@ -1,27 +1,25 @@
 # Built-in Dependencies
-from typing import Optional
-from datetime import datetime, UTC
+from uuid import UUID
 
 # Third-Party Dependencies
-from sqlalchemy import String, DateTime, ForeignKey, Integer
+from sqlalchemy import String, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
-from src.core.common.models import Base
+from src.core.common.models import (
+    TimestampMixin, 
+    UUIDMixin,
+    Base
+)
 
-class RateLimit(Base):
-    __tablename__ = "rate_limit"
-    
-    id: Mapped[int] = mapped_column(
-        "id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False
-    )
-    tier_id: Mapped[int] = mapped_column(ForeignKey("tier.id"), index=True)
-    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    path: Mapped[str] = mapped_column(String, nullable=False)
-    limit: Mapped[int] = mapped_column(Integer, nullable=False)
-    period: Mapped[int] = mapped_column(Integer, nullable=False)
+class RateLimit(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "system_rate_limit"
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default_factory=lambda:  datetime.now(UTC)
-    )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
+    # Data Columns
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False, default=None)
+    path: Mapped[str] = mapped_column(String, nullable=False, default=None)
+    limit: Mapped[int] = mapped_column(Integer, nullable=False, default=None)
+    period: Mapped[int] = mapped_column(Integer, nullable=False, default=None)
+
+    # Relationships Columns
+    tier_id: Mapped[UUID] = mapped_column(ForeignKey("system_tier.id"), index=True, nullable=False, default=None)

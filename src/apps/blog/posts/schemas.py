@@ -1,6 +1,7 @@
 # Built-in Dependencies
 from datetime import datetime
 from typing import Annotated
+from uuid import UUID
 
 # Third-Party Dependencies
 from pydantic import BaseModel, Field, ConfigDict
@@ -32,11 +33,11 @@ class Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion):
             default=None
         ),
     ]
-    created_by_user_id: int
+    user_id: UUID
 
 
 class PostRead(BaseModel):
-    id: int
+    id: UUID
     title: Annotated[
         str,
         Field(min_length=2, max_length=30, examples=["This is my post"])
@@ -52,7 +53,7 @@ class PostRead(BaseModel):
             default=None
         ),
     ]
-    created_by_user_id: int
+    user_id: UUID
     created_at: datetime
 
 
@@ -70,7 +71,7 @@ class PostCreate(PostBase):
 
 
 class PostCreateInternal(PostCreate):
-    created_by_user_id: int
+    user_id: UUID
 
 
 class PostUpdate(BaseModel):

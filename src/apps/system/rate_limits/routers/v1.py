@@ -1,5 +1,6 @@
 # Built-in Dependencies
 from typing import Annotated, Dict
+from uuid import UUID
 
 # Third-Party Dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -89,7 +90,7 @@ async def read_rate_limits(
 async def read_rate_limit(
     request: Request,
     tier_name: str,
-    id: int,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict:
     db_tier = await crud_tiers.get(db=db, name=tier_name)
@@ -112,7 +113,7 @@ async def read_rate_limit(
 async def patch_rate_limit(
     request: Request,
     tier_name: str,
-    id: int,
+    id: UUID,
     values: RateLimitUpdate,
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> Dict[str, str]:
@@ -159,7 +160,7 @@ async def patch_rate_limit(
 async def erase_rate_limit(
     request: Request,
     tier_name: str,
-    id: int,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> Dict[str, str]:
     db_tier = await crud_tiers.get(db=db, name=tier_name)
