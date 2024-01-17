@@ -44,21 +44,28 @@
 
 ## Project Overview
 
-This is a boilerplate project designed for building high-performance APIs using FastAPI, SQLModel (v2.0), Redis, ARQ, NGINX, and Docker. The goal is to leverage asynchronous programming as much as possible to achieve optimal performance, embracing the Django-like folder structure.
-
-**Folder Structure Sensibility:**
-The project adheres to a Django-inspired folder structure, promoting a logical organization of functionalities within designated directories. Notably, there is a dedicated directory named `apps` where individual applications are housed. This deliberate structuring fosters a modular and clear codebase, facilitating developers in locating and comprehending specific features efficiently. Key areas like `system/auth` and `blog/posts` exemplify this organizational approach, striking an optimal balance between modularity and clarity.
+This FastAPI boilerplate for high-performance APIs leverages async programming alongside libraries such as SQLModel, Redis, ARQ, NGINX, and Docker. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/auth` and `blog/posts` showcase the optimal balance between modularity and clarity. The project adheres to the KISS principle (Keep It Simple, Stupid).
 
 ## Technologies Featured
 
 This project aims to provide a solid foundation for developing APIs with the following cutting-edge technologies:
 
-- **FastAPI:** A modern, fast web framework for building APIs with Python.
-- **SQLModel (v2.0):** A SQL query builder and ORM for Python, incorporating SQLAlchemy 2.0, designed to reduce the mapping between persistence and transport classes. Utilizing Pydantic v2 can bring performance improvements ranging from 5x to 50x compared to Pydantic v1.
-- **Redis:** In-memory data structure store, crucial for caching and other high-performance use cases. Utilized in the project through the `redis.asyncio` library for asynchronous operations. Redis is employed to create a rate limiter in conjunction with SQLModel.
-- **ARQ:** A high-performance asynchronous task queue for handling asynchronous and periodic tasks. ARQ is an excellent choice for lightweight and asyncio-friendly task processing.
-- **NGINX:** A high-performance web server that doubles as a reverse proxy and load balancer.
-- **Docker:** Containerization for effortless deployment and scalability.
+- ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
+- 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
+- 🧰 **SQLModel 2.0:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
+- 🔐 **JWT User Authentication:** Secure user authentication using JSON Web Tokens.
+- 🍪 **Cookie-based Refresh Token:** Implement refresh token mechanism using cookies.
+- 🏬 **Easy Redis Caching:** Utilize Redis for simple and effective caching.
+- 👜 **Client-side Caching:** Facilitate easy client-side caching for improved performance.
+- 🚦 **ARQ Integration:** Seamlessly integrate ARQ for efficient task queue management.
+- ⚙️ **Efficient Querying:** Optimize database queries by fetching only what's needed, with support for joins.
+- ⎘ **Pagination Support:** Out-of-the-box pagination support for enhanced data presentation.
+- 🛑 **Rate Limiter Dependency:** Implement a rate limiter for controlled API access.
+- 👮 **Secure FastAPI Docs:** Restrict FastAPI docs behind authentication and hide based on the environment.
+- 🦾 **Easily Extendable:** Extend and customize the project effortlessly.
+- 🤸‍♂️ **Flexible:** Adapt the boilerplate to suit your specific needs.
+- 🚚 **Docker Compose:** Easily run the project with Docker Compose.
+- ⚖️ **NGINX Reverse Proxy and Load Balancing:** Enhance scalability with NGINX reverse proxy and load balancing.
 
 This project aims to provide a robust structure while serving as an excellent tool for quick POC validations and MVP launches. It's crafted to attract enthusiasts who appreciate how Django operates.
 
@@ -72,16 +79,17 @@ This project aims to provide a robust structure while serving as an excellent to
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
 - [ ] Implement using SQLModel to streamline the interaction between the database and the API.
+- [ ] Enhance scalability with NGINX reverse proxy and load balancing.
 - [ ] Implement containerization of the application with Docker for easy deployment and scalability.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following prerequisites installed and configured:
 
-- PostgreSQL: Set up a PostgreSQL database.
-- Redis: Install and configure a Redis server.
-- Python 3.11 or later: Make sure to have Python 3.11 or a newer version installed on your system.
-- Poetry: Install Poetry for managing dependencies.
+- [PostgreSQL](https://www.postgresql.org): Set up a PostgreSQL database.
+- [Redis](https://redis.io): Install and configure a Redis server.
+- [Python](https://www.python.org): Make sure to have Python 3.11 or a newer version installed on your system.
+- [Poetry](https://python-poetry.org): Install Poetry for managing dependencies.
 
 **Note:** Soon, there will be an additional option for development using Docker containers.
 
@@ -144,6 +152,20 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
      ```bash
      poetry run python -c "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))"
      ```
+
+## Database Migration Setup
+
+While in the `root` folder, run Alembic migrations:
+
+```bash
+poetry run alembic revision --autogenerate
+```
+
+And to apply the migration:
+
+```bash
+poetry run alembic upgrade head
+```
 
 ## Running the Backend
 
