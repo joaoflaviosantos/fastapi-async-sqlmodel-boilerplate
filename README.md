@@ -46,15 +46,15 @@
 
 This FastAPI boilerplate for high-performance APIs leverages async programming alongside libraries such as SQLModel, Redis, ARQ, NGINX, and Docker. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/auth` and `blog/posts` showcase the optimal balance between modularity and clarity. The project adheres to the KISS principle (Keep It Simple, Stupid).
 
-## Technologies Featured
+## Featured Aspects
 
-This project aims to provide a solid foundation for developing APIs with the following cutting-edge technologies:
+This project aims to offer a strong foundation for API development, incorporating a blend of cutting-edge technologies and structural principles:
 
 - ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
 - 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
 - 🧰 **SQLModel 2.0:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
 - 🔐 **JWT User Authentication:** Secure user authentication using JSON Web Tokens.
-- 🍪 **Cookie-based Refresh Token:** Implement refresh token mechanism using cookies.
+- 🍪 **Cookie-based Refresh Token:** Implement a refresh token mechanism using cookies.
 - 🏬 **Easy Redis Caching:** Utilize Redis for simple and effective caching.
 - 👜 **Client-side Caching:** Facilitate easy client-side caching for improved performance.
 - 🚦 **ARQ Integration:** Seamlessly integrate ARQ for efficient task queue management.
@@ -155,7 +155,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
 ## Database Migration Setup
 
-While in the `root` folder, run Alembic migrations:
+To create tables in the database, run Alembic migrations:
 
 ```bash
 poetry run alembic revision --autogenerate
