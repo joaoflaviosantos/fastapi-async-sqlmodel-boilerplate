@@ -44,7 +44,7 @@
 
 ## Project Overview
 
-This FastAPI boilerplate for high-performance APIs leverages async programming alongside libraries such as SQLModel, Redis, ARQ, NGINX, and Docker. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/auth` and `blog/posts` showcase the optimal balance between modularity and clarity. The project adheres to the KISS principle (Keep It Simple, Stupid).
+This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **ARQ**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/auth` and `blog/posts` showcase the optimal balance between modularity and clarity.
 
 ## Featured Aspects
 
@@ -145,7 +145,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
    - Open the ".env" file and modify the environment variables accordingly.
 
-     Note: Make sure to set a secure and unique value for the `SECRET_KEY`.
+     **Note:** Make sure to set a secure and unique value for the `SECRET_KEY`.
 
      You can generate a secure secret key using the following command:
 
@@ -153,7 +153,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
      poetry run python -c "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))"
      ```
 
-## Database Migration Setup
+## Database Migration
 
 To create tables in the database, run Alembic migrations:
 
@@ -195,3 +195,4 @@ Feel free to use this boilerplate as a starting point for your own projects, and
 
 - [FastAPI Boilerplate by Igor Magalhães](https://github.com/igorbenav/FastAPI-boilerplate)
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
+- [The Ultimate FastAPI Async Setup by Evgeniy Tretyakov](https://github.com/ETretyakov/hero-app)
