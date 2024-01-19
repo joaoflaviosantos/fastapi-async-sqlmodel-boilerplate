@@ -10,33 +10,28 @@ from src.apps.blog.posts.models import Post
 from src.apps.system.users.models import User
 from src.core.config import settings
 
+
 async def create_first_post(session: AsyncSession) -> None:
     # First post data
     test_post = {
         "title": "This is my first post",
         "text": "This is the content of my first post.",
-        "media_url": "https://www.imageurl.com/first_post.jpg"
+        "media_url": "https://www.imageurl.com/first_post.jpg",
     }
 
     # Checking if post already exists
-    query = (
-        select(Post)
-        .where(
-            Post.title == test_post["title"],
-            Post.text == test_post["text"],
-            Post.media_url == test_post["media_url"]
-            )
-        )
+    query = select(Post).where(
+        Post.title == test_post["title"],
+        Post.text == test_post["text"],
+        Post.media_url == test_post["media_url"],
+    )
     result = await session.execute(query)
     post = result.scalar_one_or_none()
 
     # Creating post if it doesn't exist
     if post is None:
         # Getting admin user as post author
-        query = (
-            select(User)
-            .where(User.username == settings.ADMIN_USERNAME)
-        )
+        query = select(User).where(User.username == settings.ADMIN_USERNAME)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
 
@@ -46,14 +41,15 @@ async def create_first_post(session: AsyncSession) -> None:
         # Creating first post
         session.add(
             Post(
-                title=test_post["title"], 
-                text=test_post["text"], 
+                title=test_post["title"],
+                text=test_post["text"],
                 media_url=test_post["media_url"],
-                user_id=user.id
+                user_id=user.id,
             )
         )
 
         await session.commit()
+
 
 async def main():
     async with local_session() as session:

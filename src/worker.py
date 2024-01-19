@@ -15,7 +15,7 @@ from src.core.logger import logging, configure_logging
 from src.core.config import settings
 
 # Configure logging for the worker
-configure_logging(log_file='worker')
+configure_logging(log_file="worker")
 
 # Logger instance for the current module
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Conditional Dependencies
 if platform.system() == "Linux":
     import uvloop
+
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 # Worker Functions
@@ -39,23 +40,30 @@ async def sample_background_task(ctx: Worker, name: str) -> str:
 # --------------------------------------
 async def startup(ctx: Worker) -> None:
     # Obtain username and machine IP
-    user_name = os.getenv('USER') or os.getenv('LOGNAME') or os.getenv('USERNAME')
+    user_name = os.getenv("USER") or os.getenv("LOGNAME") or os.getenv("USERNAME")
     ip_address = socket.gethostbyname(socket.gethostname())
 
     try:
         # Run 'lscpu' command to get detailed CPU information
-        cpu_info_process = subprocess.run(['lscpu'], capture_output=True, text=True)
+        cpu_info_process = subprocess.run(["lscpu"], capture_output=True, text=True)
         cpu_info_output = cpu_info_process.stdout
 
         # Extract relevant CPU information
         relevant_info = [
-            "Architecture", "CPU op-mode(s)", "Model name", "CPU family",
-            "Model", "Thread(s) per core", "Core(s) per socket", "Socket(s)",
-            "BogoMIPS", "Virtualization"
+            "Architecture",
+            "CPU op-mode(s)",
+            "Model name",
+            "CPU family",
+            "Model",
+            "Thread(s) per core",
+            "Core(s) per socket",
+            "Socket(s)",
+            "BogoMIPS",
+            "Virtualization",
         ]
 
         relevant_cpu_info = {
-            info.strip(): line.split(':', 1)[1].strip()
+            info.strip(): line.split(":", 1)[1].strip()
             for line in cpu_info_output.splitlines()
             if (info := line.split(":", 1)[0].strip()) in relevant_info
         }
@@ -75,6 +83,7 @@ async def startup(ctx: Worker) -> None:
         # Log an error if there's an issue retrieving CPU information
         logger.error(f"Error getting CPU information: {e}")
 
+
 async def shutdown(ctx: Worker) -> None:
     logger.info("Worker shutdown")
 
@@ -85,14 +94,12 @@ async def shutdown(ctx: Worker) -> None:
 # --------------------------------------
 class WorkerSettings:
     redis_settings = RedisSettings(
-        host=settings.REDIS_QUEUE_HOST, 
+        host=settings.REDIS_QUEUE_HOST,
         port=settings.REDIS_QUEUE_PORT,
         username=settings.REDIS_QUEUE_USERNAME,
-        password=settings.REDIS_QUEUE_PASSWORD        
-        )
+        password=settings.REDIS_QUEUE_PASSWORD,
+    )
     on_startup = startup
     on_shutdown = shutdown
     handle_signals = False
-    functions = [
-        sample_background_task
-    ]
+    functions = [sample_background_task]

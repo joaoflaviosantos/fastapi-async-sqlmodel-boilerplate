@@ -29,14 +29,14 @@ from src.core.config import settings
 from src.core.logger import logging
 from src.core.utils import queue
 from src.core.config import (
-    DatabaseSettings, 
-    RedisCacheSettings, 
-    AppSettings, 
-    ClientSideCacheSettings, 
+    DatabaseSettings,
+    RedisCacheSettings,
+    AppSettings,
+    ClientSideCacheSettings,
     RedisQueueSettings,
     RedisRateLimiterSettings,
     EnvironmentOption,
-    EnvironmentSettings
+    EnvironmentSettings,
 )
 
 # Logger instance for the current module
@@ -48,23 +48,30 @@ logger = logging.getLogger(__name__)
 # Function to configure logging during startup
 async def startup_logging() -> None:
     # Obtain username and machine IP
-    user_name = os.getenv('USER') or os.getenv('LOGNAME') or os.getenv('USERNAME')
+    user_name = os.getenv("USER") or os.getenv("LOGNAME") or os.getenv("USERNAME")
     ip_address = socket.gethostbyname(socket.gethostname())
 
     try:
         # Run 'lscpu' command to get detailed CPU information
-        cpu_info_process = subprocess.run(['lscpu'], capture_output=True, text=True)
+        cpu_info_process = subprocess.run(["lscpu"], capture_output=True, text=True)
         cpu_info_output = cpu_info_process.stdout
 
         # Extract relevant CPU information
         relevant_info = [
-            "Architecture", "CPU op-mode(s)", "Model name", "CPU family",
-            "Model", "Thread(s) per core", "Core(s) per socket", "Socket(s)",
-            "BogoMIPS", "Virtualization"
+            "Architecture",
+            "CPU op-mode(s)",
+            "Model name",
+            "CPU family",
+            "Model",
+            "Thread(s) per core",
+            "Core(s) per socket",
+            "Socket(s)",
+            "BogoMIPS",
+            "Virtualization",
         ]
 
         relevant_cpu_info = {
-            info.strip(): line.split(':', 1)[1].strip()
+            info.strip(): line.split(":", 1)[1].strip()
             for line in cpu_info_output.splitlines()
             if (info := line.split(":", 1)[0].strip()) in relevant_info
         }
@@ -84,6 +91,7 @@ async def startup_logging() -> None:
         # Log an error if there's an issue retrieving CPU information
         logger.error(f"Error getting CPU information: {e}")
 
+
 # Function to configure logging during shutdown
 async def shutdown_logging() -> None:
     logger.info("API shutdown")
@@ -96,6 +104,7 @@ async def shutdown_logging() -> None:
 async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
 async def run_seed_scripts() -> None:
     # Function to run seed scripts during startup
@@ -113,12 +122,13 @@ async def create_redis_cache_pool() -> None:
         settings.REDIS_CACHE_URL,
         encoding="utf8",
         decode_responses=True,
-        )
+    )
     cache.client = redis.Redis.from_pool(cache.pool)  # type: ignore
+
 
 # Function to close Redis cache pool during shutdown
 async def close_redis_cache_pool() -> None:
-    await cache.client.aclose() # type: ignore
+    await cache.client.aclose()  # type: ignore
 
 
 # --------------------------------------
@@ -128,16 +138,17 @@ async def close_redis_cache_pool() -> None:
 async def create_redis_queue_pool() -> None:
     queue.pool = await create_pool(
         RedisSettings(
-            host=settings.REDIS_QUEUE_HOST, 
+            host=settings.REDIS_QUEUE_HOST,
             port=settings.REDIS_QUEUE_PORT,
             username=settings.REDIS_QUEUE_USERNAME,
-            password=settings.REDIS_QUEUE_PASSWORD
-            )
+            password=settings.REDIS_QUEUE_PASSWORD,
         )
+    )
+
 
 # Function to close Redis queue pool during shutdown
 async def close_redis_queue_pool() -> None:
-    await queue.pool.aclose() # type: ignore
+    await queue.pool.aclose()  # type: ignore
 
 
 # --------------------------------------
@@ -146,11 +157,12 @@ async def close_redis_queue_pool() -> None:
 # Function to create Redis rate limit pool during startup
 async def create_redis_rate_limit_pool() -> None:
     rate_limit.pool = redis.ConnectionPool.from_url(settings.REDIS_RATE_LIMIT_URL)
-    rate_limit.client = redis.Redis.from_pool(rate_limit.pool) # type: ignore
+    rate_limit.client = redis.Redis.from_pool(rate_limit.pool)  # type: ignore
+
 
 # Function to close Redis rate limit pool during shutdown
 async def close_redis_rate_limit_pool() -> None:
-    await rate_limit.client.aclose() # type: ignore
+    await rate_limit.client.aclose()  # type: ignore
 
 
 # --------------------------------------
@@ -168,23 +180,23 @@ async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
 # --------------------------------------
 # Function to create and configure a FastAPI application
 def create_application(
-        router: APIRouter, 
-        settings: Union[
-            DatabaseSettings, 
-            RedisCacheSettings, 
-            AppSettings, 
-            ClientSideCacheSettings, 
-            RedisQueueSettings, 
-            RedisRateLimiterSettings, 
-            EnvironmentSettings
-            ], 
-        **kwargs: Any
+    router: APIRouter,
+    settings: Union[
+        DatabaseSettings,
+        RedisCacheSettings,
+        AppSettings,
+        ClientSideCacheSettings,
+        RedisQueueSettings,
+        RedisRateLimiterSettings,
+        EnvironmentSettings,
+    ],
+    **kwargs: Any,
 ) -> FastAPI:
     """
     Creates and configures a FastAPI application based on the provided settings.
 
-    This function initializes a FastAPI application, then conditionally configures 
-    it with various settings and handlers. The specific configuration is determined 
+    This function initializes a FastAPI application, then conditionally configures
+    it with various settings and handlers. The specific configuration is determined
     by the type of the `settings` object provided.
 
     Parameters
@@ -202,7 +214,7 @@ def create_application(
         - RedisQueueSettings: Sets up event handlers for creating and closing a Redis queue pool.
         - EnvironmentSettings: Conditionally sets documentation URLs and integrates custom routes for API documentation based on environment type.
 
-    **kwargs 
+    **kwargs
         Extra keyword arguments passed directly to the FastAPI constructor.
 
     Returns
@@ -220,23 +232,15 @@ def create_application(
             "description": settings.PROJECT_DESCRIPTION,
             "contact": {
                 "name": settings.CONTACT_NAME,
-                "email": settings.CONTACT_EMAIL
+                "email": settings.CONTACT_EMAIL,
             },
-            "license_info": {
-                "name": settings.LICENSE_NAME
-            }
+            "license_info": {"name": settings.LICENSE_NAME},
         }
         kwargs.update(to_update)
 
     if isinstance(settings, EnvironmentSettings):
         # Configure documentation URLs to be None in non-production environments
-        kwargs.update(
-            {
-                "docs_url": None, 
-                "redoc_url": None, 
-                "openapi_url": None
-            }
-        )
+        kwargs.update({"docs_url": None, "redoc_url": None, "openapi_url": None})
 
     # Create and configure FastAPI application
     application = FastAPI(**kwargs)
@@ -253,7 +257,7 @@ def create_application(
         # Add event handlers for database setup during startup
         application.add_event_handler("startup", create_tables)
         application.add_event_handler("startup", run_seed_scripts)
-    
+
     if isinstance(settings, RedisCacheSettings):
         # Add event handlers for Redis cache pool setup and shutdown
         application.add_event_handler("startup", create_redis_cache_pool)
@@ -291,7 +295,11 @@ def create_application(
 
             @docs_router.get("/openapi.json", include_in_schema=False)
             async def openapi() -> Dict[str, Any]:
-                out: dict = get_openapi(title=application.title, version=application.version, routes=application.routes)
+                out: dict = get_openapi(
+                    title=application.title,
+                    version=application.version,
+                    routes=application.routes,
+                )
                 return out
 
             # Include custom routes for API documentation

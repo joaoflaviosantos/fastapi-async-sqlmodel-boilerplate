@@ -7,11 +7,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
 from src.core.common.models import (
-    SoftDeleteMixin, 
-    TimestampMixin, 
+    SoftDeleteMixin,
+    TimestampMixin,
     UUIDMixin,
-    Base
+    Base,
 )
+
 
 class Post(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "blog_post"
@@ -22,4 +23,6 @@ class Post(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     media_url: Mapped[str | None] = mapped_column(String, default=None)
 
     # Relationships Columns
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("system_user.id"), index=True, nullable=False, default=None)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("system_user.id"), index=True, nullable=False, default=None
+    )

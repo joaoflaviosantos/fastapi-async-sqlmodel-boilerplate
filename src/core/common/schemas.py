@@ -13,13 +13,13 @@ from fastapi_pagination import Params, Page
 DataType = TypeVar("DataType")
 T = TypeVar("T")
 
+
 class PageBase(Page[T], Generic[T]):
     """
     Base class for paginated responses. Adds previous and next page numbers.
     """
-    previous_page: int | None = Field(
-        None, description="Page number of the previous page"
-    )
+
+    previous_page: int | None = Field(None, description="Page number of the previous page")
     next_page: int | None = Field(None, description="Page number of the next page")
 
 
@@ -27,6 +27,7 @@ class IResponseBase(BaseModel, Generic[T]):
     """
     Base class for API response. Contains message, metadata, and data.
     """
+
     message: str = ""
     meta: dict = {}
     data: T | None
@@ -36,6 +37,7 @@ class IGetResponsePaginated(AbstractPage[T], Generic[T]):
     """
     API response class for paginated GET requests. Extends IResponseBase with pagination details.
     """
+
     message: str | None = ""
     meta: dict = {}
     data: PageBase[T]
@@ -74,6 +76,7 @@ class IGetResponseBase(IResponseBase[DataType], Generic[DataType]):
     """
     API response class for basic GET requests.
     """
+
     message: str | None = "Data got correctly"
 
 
@@ -81,6 +84,7 @@ class IPostResponseBase(IResponseBase[DataType], Generic[DataType]):
     """
     API response class for POST requests.
     """
+
     message: str | None = "Data created correctly"
 
 
@@ -88,6 +92,7 @@ class IPutResponseBase(IResponseBase[DataType], Generic[DataType]):
     """
     API response class for PUT requests.
     """
+
     message: str | None = "Data updated correctly"
 
 
@@ -95,6 +100,7 @@ class IDeleteResponseBase(IResponseBase[DataType], Generic[DataType]):
     """
     API response class for DELETE requests.
     """
+
     message: str | None = "Data deleted correctly"
 
 
@@ -126,6 +132,7 @@ class HealthCheck(BaseModel):
     """
     Health check response schema.
     """
+
     name: str
     version: str
     description: str
@@ -138,6 +145,7 @@ class UUIDSchema(BaseModel):
     """
     Pydantic schema for UUID mixin.
     """
+
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
 
 
@@ -145,6 +153,7 @@ class TimestampSchema(BaseModel):
     """
     Pydantic schema for Timestamp mixin.
     """
+
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
     updated_at: datetime = Field(default=None)
 
@@ -152,7 +161,7 @@ class TimestampSchema(BaseModel):
     def serialize_dt(self, created_at: datetime | None, _info: Any) -> str | None:
         if created_at is not None:
             return created_at.isoformat()
-        
+
         return None
 
     @field_serializer("updated_at")
@@ -167,12 +176,13 @@ class PersistentDeletion(BaseModel):
     """
     Pydantic schema for PersistentDeletion mixin.
     """
+
     deleted_at: datetime | None = Field(default=None)
     is_deleted: bool = False
 
-    @field_serializer('deleted_at')
+    @field_serializer("deleted_at")
     def serialize_dates(self, deleted_at: datetime | None, _info: Any) -> str | None:
         if deleted_at is not None:
             return deleted_at.isoformat()
-        
+
         return None

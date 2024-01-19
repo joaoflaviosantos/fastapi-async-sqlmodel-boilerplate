@@ -14,21 +14,18 @@ test_post_id = None
 test_post = {
     "title": "This is my test post",
     "text": "This is the content of my test post.",
-    "media_url": "https://www.imageurl.com/test_post.jpg"
+    "media_url": "https://www.imageurl.com/test_post.jpg",
 }
+
 
 def test_post_post(client: TestClient) -> None:
     global test_post_id
 
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
     response = client.post(
         f"/api/v1/blog/{ADMIN_USERNAME}/post",
         json=test_post,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     test_post_id = response.json()["id"]
 
@@ -37,10 +34,8 @@ def test_post_post(client: TestClient) -> None:
 
 
 def test_get_user_post(client: TestClient) -> None:
-    
-    response = client.get(
-        f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}"
-    )
+
+    response = client.get(f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}")
     post = response.json()
 
     assert response.status_code == 200
@@ -50,51 +45,37 @@ def test_get_user_post(client: TestClient) -> None:
 
 
 def test_get_multiple_posts(client: TestClient) -> None:
-    response = client.get(
-        f"/api/v1/blog/{ADMIN_USERNAME}/posts"
-    )
+    response = client.get(f"/api/v1/blog/{ADMIN_USERNAME}/posts")
 
     assert response.status_code == 200
 
 
 def test_update_post(client: TestClient) -> None:
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
-    
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
     response = client.patch(
         f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}",
         json=test_post,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200
 
 
 def test_delete_post(client: TestClient) -> None:
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
         f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200
 
 
 def test_delete_db_post(client: TestClient) -> None:
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
         f"/api/v1/blog/{ADMIN_USERNAME}/db_post/{test_post_id}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200

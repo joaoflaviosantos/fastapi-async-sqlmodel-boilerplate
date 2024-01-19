@@ -2,13 +2,15 @@ default_language_version:
   python: python3.11
 
 repos:
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
   - repo: local
     hooks:
       - id: unit_test
-        name: Unit test
+        name: pytest
+        entry: poetry run python -m pytest -vv ./tests
         language: system
-        entry: poetry run pytest -v ./tests
         pass_filenames: false
         always_run: true
-        types: [python]
-        stages: [manual]

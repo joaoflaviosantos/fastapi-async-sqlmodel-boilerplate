@@ -14,17 +14,15 @@ ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 test_access_token = None
 test_refresh_token_cookie = None
 
+
 def test_auth_login(client: TestClient) -> None:
     global test_access_token
     global test_refresh_token_cookie
 
-    response =  client.post(
+    response = client.post(
         "/api/v1/system/auth/login",
-        data={
-            "username": ADMIN_USERNAME,
-            "password": ADMIN_PASSWORD
-        },
-        headers={"content-type": "application/x-www-form-urlencoded"}
+        data={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
+        headers={"content-type": "application/x-www-form-urlencoded"},
     )
 
     response_json = response.json()
@@ -54,7 +52,7 @@ def test_auth_refresh(client: TestClient) -> None:
 def test_auth_logout(client: TestClient) -> None:
     response_logout = client.post(
         "/api/v1/system/auth/logout",
-        headers={"Authorization": f"Bearer {test_access_token}"}
+        headers={"Authorization": f"Bearer {test_access_token}"},
     )
 
     response_json_logout = response_logout.json()

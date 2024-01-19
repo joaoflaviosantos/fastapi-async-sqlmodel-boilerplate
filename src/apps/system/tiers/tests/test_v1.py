@@ -11,24 +11,19 @@ ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 
 # Test global variables
 test_tier_name = None
-test_tier = {
-    "name": "Test Tier"
-}
+test_tier = {"name": "Test Tier"}
+
 
 def test_post_tier(client: TestClient) -> None:
     global test_tier_name
     assert test_tier_name is None
 
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
         "/api/v1/system/tier",
         json=test_tier,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     test_tier_name = response.json()["name"]
@@ -56,20 +51,16 @@ def test_update_tier(client: TestClient) -> None:
     global test_tier_name
     assert test_tier_name is not None
 
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     updated_tier_name = "Updated Test Tier"
 
     response = client.patch(
         f"/api/v1/system/tier/{test_tier_name}",
         json={"name": updated_tier_name},
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
-    
+
     test_tier_name = updated_tier_name
 
     assert response.status_code == 200
@@ -79,15 +70,11 @@ def test_delete_tier(client: TestClient) -> None:
     assert test_tier_name is not None
 
     # Obter token de autenticação
-    token = _get_token(
-        username=ADMIN_USERNAME, 
-        password=ADMIN_PASSWORD, 
-        client=client
-    )
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
         f"/api/v1/system/tier/{test_tier_name}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'}
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 200

@@ -2,10 +2,10 @@
 from src.core.common.crud import CRUDBase
 from src.apps.system.users.models import User
 from src.apps.system.users.schemas import (
-    UserCreateInternal, 
-    UserUpdate, 
-    UserUpdateInternal, 
-    UserDelete
+    UserCreateInternal,
+    UserUpdate,
+    UserUpdateInternal,
+    UserDelete,
 )
 
 # CRUD operations for the 'User' model

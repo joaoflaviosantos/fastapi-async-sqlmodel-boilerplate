@@ -14,18 +14,14 @@ class ListResponse(BaseModel, Generic[SchemaType]):
 
 # BaseModel for a paginated list response, inheriting from the generic ListResponse
 class PaginatedListResponse(ListResponse[SchemaType]):
-    total_count: int # Total number of items
-    has_more: bool # Whether there are more items beyond the current page
-    page: int | None = None # Current page number
-    items_per_page: int | None = None # Number of items per page
+    total_count: int  # Total number of items
+    has_more: bool  # Whether there are more items beyond the current page
+    page: int | None = None  # Current page number
+    items_per_page: int | None = None  # Number of items per page
 
 
 # Function to create a paginated response
-def paginated_response(
-        crud_data: dict, 
-        page: int, 
-        items_per_page: int
-) -> Dict[str, Any]:
+def paginated_response(crud_data: dict, page: int, items_per_page: int) -> Dict[str, Any]:
     """
     Create a paginated response based on the provided data and pagination parameters.
 
@@ -52,7 +48,7 @@ def paginated_response(
         "total_count": crud_data["total_count"],
         "has_more": (page * items_per_page) < crud_data["total_count"],
         "page": page,
-        "items_per_page": items_per_page
+        "items_per_page": items_per_page,
     }
 
 

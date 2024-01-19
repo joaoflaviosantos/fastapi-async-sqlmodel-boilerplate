@@ -29,25 +29,32 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
     correct_password: bool = bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
     return correct_password
 
+
 # Function to generate hashed password from plain password
 def get_password_hash(password: str) -> str:
     hashed_password: str = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     return hashed_password
 
+
 # Function to authenticate a user based on provided credentials
-async def authenticate_user(username_or_email: str, password: str, db: AsyncSession) -> Union[Dict[str, Any], Literal[False]]:
+async def authenticate_user(
+    username_or_email: str, password: str, db: AsyncSession
+) -> Union[Dict[str, Any], Literal[False]]:
     if "@" in username_or_email:
-        db_user: dict | None = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
+        db_user: dict | None = await crud_users.get(
+            db=db, email=username_or_email, is_deleted=False
+        )
     else:
         db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
-    
+
     if not db_user:
         return False
-    
+
     elif not await verify_password(password, db_user["hashed_password"]):
         return False
-    
+
     return db_user
+
 
 # Function to create an access token with optional expiration time
 async def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
@@ -60,6 +67,7 @@ async def create_access_token(data: dict[str, Any], expires_delta: timedelta | N
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 # Function to create a refresh token with optional expiration time
 async def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
@@ -71,6 +79,7 @@ async def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | 
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 # Function to verify the validity of a token and return TokenData if valid
 async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
     """
@@ -78,9 +87,9 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
 
     Parameters
     ----------
-    token: str 
+    token: str
         The JWT token to be verified.
-    db: AsyncSession 
+    db: AsyncSession
         Database session for performing database operations.
 
     Returns
@@ -104,8 +113,8 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         if cache.client:
             # Check if user is active in Redis
             is_active = await cache.client.hget(
-                settings.REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES, 
-                username_or_email
+                settings.REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES,
+                username_or_email,
             )
 
             if is_active:
@@ -118,20 +127,21 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
             # Update Redis with user active status if Redis is available
             if cache.client:
                 await cache.client.hset(
-                    settings.REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES, 
-                    username_or_email, 
-                    "active"
+                    settings.REDIS_HASH_SYSTEM_AUTH_VALID_USERNAMES,
+                    username_or_email,
+                    "active",
                 )
 
             return TokenData(username_or_email=username_or_email)
-        
+
         # If user is not found in Redis or PostgreSQL, blacklist the token
         await blacklist_token(token=token, db=db)
 
         return None
-    
+
     except JWTError:
         return None
+
 
 # Function to blacklist a token by storing it in the database
 async def blacklist_token(token: str, db: AsyncSession) -> None:
@@ -139,7 +149,5 @@ async def blacklist_token(token: str, db: AsyncSession) -> None:
     expires_at = datetime.fromtimestamp(payload.get("exp"))
     await crud_token_blacklist.create(
         db,
-        object=TokenBlacklistCreate(
-            **{"token": token, "expires_at": expires_at}
-        )
+        object=TokenBlacklistCreate(**{"token": token, "expires_at": expires_at}),
     )

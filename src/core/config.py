@@ -14,6 +14,7 @@ current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.abspath(os.path.join(current_file_dir, "..", "..", ".env"))
 config = Config(env_path)
 
+
 class AppSettings(BaseSettings):
     PROJECT_NAME: str = config("PROJECT_NAME", default="FastAPI app")
     PROJECT_DESCRIPTION: str | None = config("PROJECT_DESCRIPTION", default=None)
@@ -123,9 +124,9 @@ class EnvironmentSettings(BaseSettings):
 
 
 class Settings(
-    AppSettings, 
-    PostgresSettings, 
-    CryptSettings, 
+    AppSettings,
+    PostgresSettings,
+    CryptSettings,
     FirstUserSettings,
     FirstTierSettings,
     TestSettings,
@@ -135,7 +136,7 @@ class Settings(
     RedisRateLimiterSettings,
     RedisHashSettings,
     DefaultRateLimitSettings,
-    EnvironmentSettings
+    EnvironmentSettings,
 ):
     pass
 

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 # Local Dependencies
 from src.main import app
 
+
 @pytest.fixture(scope="session")
 def client():
     """

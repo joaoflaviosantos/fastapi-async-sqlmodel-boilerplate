@@ -72,7 +72,7 @@ async def is_rate_limited(
     user_id: int,
     path: str,
     limit: int,
-    period: int
+    period: int,
 ) -> bool:
     """
     Check if the user with the given ID is rate limited for the specified path.

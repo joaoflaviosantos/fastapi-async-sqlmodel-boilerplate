@@ -3,11 +3,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
 
 # Local Dependencies
-from src.core.common.models import (
-    TimestampMixin, 
-    UUIDMixin,
-    Base
-)
+from src.core.common.models import TimestampMixin, UUIDMixin, Base
+
 
 class Tier(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "system_tier"

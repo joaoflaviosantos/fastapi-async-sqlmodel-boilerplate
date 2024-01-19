@@ -7,19 +7,19 @@ import os
 from src.core.config import settings
 
 # Constants
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 # Default log file name
-LOG_FILE_NAME = 'api'
+LOG_FILE_NAME = "api"
 
 # Constructing log file path
-LOG_FILE_PATH = os.path.join(LOG_DIR, f'{LOG_FILE_NAME}.log')
+LOG_FILE_PATH = os.path.join(LOG_DIR, f"{LOG_FILE_NAME}.log")
 
 # Logging level and format constants
 LOGGING_LEVEL = logging.INFO
-LOGGING_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # Configuring the basic logging settings
 logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
@@ -35,7 +35,7 @@ console_handler.setLevel(level=logging.INFO)
 console_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
 
 # Adding both handlers to the root logger
-root_logger = logging.getLogger(name='')
+root_logger = logging.getLogger(name="")
 root_logger.handlers.clear()
 root_logger.addHandler(hdlr=file_handler)
 root_logger.addHandler(hdlr=console_handler)
@@ -52,10 +52,12 @@ def configure_logging(log_file: str = LOG_FILE_NAME) -> None:
     root_logger.handlers.clear()
 
     # Constructing log file path based on the provided log_file parameter
-    log_file_path = os.path.join(LOG_DIR, f'{log_file}.log')
+    log_file_path = os.path.join(LOG_DIR, f"{log_file}.log")
 
     # Configuring a rotating file handler for logging
-    custom_file_handler = RotatingFileHandler(filename=log_file_path, maxBytes=10485760, backupCount=5)
+    custom_file_handler = RotatingFileHandler(
+        filename=log_file_path, maxBytes=10485760, backupCount=5
+    )
     custom_file_handler.setLevel(level=LOGGING_LEVEL)
     custom_file_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
 
@@ -67,6 +69,7 @@ def configure_logging(log_file: str = LOG_FILE_NAME) -> None:
     # Adding both handlers to the root logger
     root_logger.addHandler(hdlr=custom_file_handler)
     root_logger.addHandler(hdlr=custom_console_handler)
+
 
 # Example usage of configure_logging with a custom log file name
 # configure_logging(log_file='worker')

@@ -11,6 +11,7 @@ from src.apps.system.users.models import User
 from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
+
 async def create_first_user(session: AsyncSession) -> None:
     # First user/admin data
     name = settings.ADMIN_NAME
@@ -26,10 +27,7 @@ async def create_first_user(session: AsyncSession) -> None:
     # Creating admin user if it doesn't exist
     if user is None:
         # Getting default tier to assign to first user/admin
-        query = (
-            select(Tier)
-            .where(Tier.name == settings.TIER_NAME_DEFAULT)
-        )
+        query = select(Tier).where(Tier.name == settings.TIER_NAME_DEFAULT)
         result = await session.execute(query)
         tier = result.scalar_one_or_none()
 
@@ -39,17 +37,18 @@ async def create_first_user(session: AsyncSession) -> None:
         # Creating first user/admin
         session.add(
             User(
-                name=name, 
-                email=email, 
+                name=name,
+                email=email,
                 username=username,
                 hashed_password=hashed_password,
                 is_superuser=True,
                 profile_image_url="https://www.imageurl.com/first_user.jpg",
-                tier_id=tier.id
+                tier_id=tier.id,
             )
         )
 
         await session.commit()
+
 
 async def main():
     async with local_session() as session:

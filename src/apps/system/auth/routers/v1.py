@@ -15,31 +15,30 @@ from src.apps.system.auth.schemas import Token
 from src.core.db.session import async_get_db
 from src.core.config import settings
 from src.core.security import (
-    ACCESS_TOKEN_EXPIRE_MINUTES, 
-    create_access_token, 
-    authenticate_user, 
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    authenticate_user,
     create_refresh_token,
     verify_token,
-    oauth2_scheme, 
-    blacklist_token
+    oauth2_scheme,
+    blacklist_token,
 )
 
 router = fastapi.APIRouter(tags=["System - Authentication"])
+
 
 @router.post("/system/auth/login", response_model=Token)
 async def login_for_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Annotated[AsyncSession, Depends(async_get_db)]
+    db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Dict[str, str]:
     user = await authenticate_user(
-        username_or_email=form_data.username, 
-        password=form_data.password, 
-        db=db
+        username_or_email=form_data.username, password=form_data.password, db=db
     )
     if not user:
         raise UnauthorizedException("Wrong username, email or password.")
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
         data={"sub": user["username"]}, expires_delta=access_token_expires
@@ -53,20 +52,16 @@ async def login_for_access_token(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite='Lax',
-        max_age=max_age
+        samesite="Lax",
+        max_age=max_age,
     )
-    
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer"
-    }
+
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/system/auth/refresh")
 async def refresh_access_token(
-    request: Request,
-    db: AsyncSession = Depends(async_get_db)
+    request: Request, db: AsyncSession = Depends(async_get_db)
 ) -> Dict[str, str]:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
@@ -84,13 +79,13 @@ async def refresh_access_token(
 async def logout(
     response: Response,
     access_token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(async_get_db)
+    db: AsyncSession = Depends(async_get_db),
 ) -> Dict[str, str]:
     try:
         await blacklist_token(token=access_token, db=db)
         response.delete_cookie(key="refresh_token")
 
         return {"message": "Logged out successfully"}
-    
+
     except JWTError:
         raise UnauthorizedException("Invalid token.")

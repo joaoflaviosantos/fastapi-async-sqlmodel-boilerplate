@@ -34,6 +34,9 @@ pre-commit = "^3.6.0"
 types-redis = "^4.6.0.11"
 mypy = "^1.7.1"
 
+[tool.black]
+line-length = 100
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

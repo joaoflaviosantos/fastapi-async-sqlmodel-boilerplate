@@ -6,11 +6,8 @@ from sqlalchemy import String, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Local Dependencies
-from src.core.common.models import (
-    TimestampMixin, 
-    UUIDMixin,
-    Base
-)
+from src.core.common.models import TimestampMixin, UUIDMixin, Base
+
 
 class RateLimit(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "system_rate_limit"
@@ -22,4 +19,6 @@ class RateLimit(UUIDMixin, TimestampMixin, Base):
     period: Mapped[int] = mapped_column(Integer, nullable=False, default=None)
 
     # Relationships Columns
-    tier_id: Mapped[UUID] = mapped_column(ForeignKey("system_tier.id"), index=True, nullable=False, default=None)
+    tier_id: Mapped[UUID] = mapped_column(
+        ForeignKey("system_tier.id"), index=True, nullable=False, default=None
+    )

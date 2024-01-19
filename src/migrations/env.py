@@ -17,10 +17,7 @@ from src.core.db import *
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option(
-    name="sqlalchemy.url", 
-    value=f"{settings.POSTGRES_ASYNC_URI}"
-)
+config.set_main_option(name="sqlalchemy.url", value=f"{settings.POSTGRES_ASYNC_URI}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

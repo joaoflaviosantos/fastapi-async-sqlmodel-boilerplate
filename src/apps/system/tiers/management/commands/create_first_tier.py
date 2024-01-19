@@ -9,6 +9,7 @@ from src.core.db.session import AsyncSession, local_session
 from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
+
 async def create_first_tier(session: AsyncSession) -> None:
     # First tier data
     tier_name = settings.TIER_NAME_DEFAULT
@@ -23,6 +24,7 @@ async def create_first_tier(session: AsyncSession) -> None:
         session.add(Tier(name=tier_name))
 
         await session.commit()
+
 
 async def main():
     async with local_session() as session:
