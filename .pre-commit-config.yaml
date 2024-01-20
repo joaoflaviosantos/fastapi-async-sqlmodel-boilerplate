@@ -6,11 +6,11 @@ repos:
     rev: 22.10.0
     hooks:
       - id: black
-  # - repo: local
-  #   hooks:
-  #     - id: unit_test
-  #       name: pytest
-  #       entry: poetry run python -m pytest -vv ./tests
-  #       language: system
-  #       pass_filenames: false
-  #       always_run: true
+  - repo: local
+    hooks:
+      - id: unit_test
+        name: pytest
+        entry: poetry run python -m pytest -vv ./tests
+        language: system
+        pass_filenames: false
+        always_run: true
