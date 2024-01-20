@@ -27,11 +27,16 @@ class UUIDMixin(SQLModel):
 
     Description:
     ----------
-    'UUIDMixin' pydantic class.
+    'UUIDMixin' pydantic class with a UUID column as the primary key.
 
-    Extra Info:
+    Fields:
     ----------
-    Adds a UUID column as the primary key with a default value generated using uuid4.
+    - 'id': Unique identifier (UUID) for the record.
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
     """
 
     # Data Columns
@@ -50,6 +55,16 @@ class TimestampMixin(SQLModel):
     Description:
     ----------
     'TimestampMixin' pydantic class.
+
+    Fields:
+    - 'created_at': Timestamp for the creation of the record.
+    - 'updated_at': Timestamp for the last update of the record.
+
+    Examples:
+    ---------
+    Examples of valid data for each field:
+    - 'created_at': "2024-01-20T12:00:00"
+    - 'updated_at': "2024-01-20T12:30:00"
 
     Extra Info:
     ----------
@@ -132,6 +147,16 @@ class SoftDeleteMixin(SQLModel):
     ----------
     'SoftDeleteMixin' pydantic class.
 
+    Fields:
+    - 'deleted_at': Timestamp for the deletion of the record (soft deletion).
+    - 'is_deleted': Flag indicating whether the record is deleted (soft deletion).
+
+    Examples:
+    ---------
+    Examples of valid data for each field:
+    - 'deleted_at': "2024-01-20T13:00:00"
+    - 'is_deleted': True
+
     Extra Info:
     ----------
     Adds 'deleted_at' and 'is_deleted' fields for soft deletion functionality.
@@ -148,3 +173,10 @@ class SoftDeleteMixin(SQLModel):
         index=True,
         description="Flag indicating whether the record is deleted (soft deletion)",
     )
+
+    @field_serializer("deleted_at")
+    def serialize_dates(self, deleted_at: datetime | None, _info: Any) -> str | None:
+        if deleted_at is not None:
+            return deleted_at.isoformat()
+
+        return None

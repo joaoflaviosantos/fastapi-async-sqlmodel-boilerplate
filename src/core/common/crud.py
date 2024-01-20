@@ -58,7 +58,7 @@ class CRUDBase(
             The Pydantic schema containing the data to be saved.
 
         Returns
-        -------
+        ----------
         ModelType
             The created database object.
         """
@@ -87,7 +87,7 @@ class CRUDBase(
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict | None
             The fetched database row or None if not found.
         """
@@ -116,7 +116,7 @@ class CRUDBase(
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         bool
             True if a record exists, False otherwise.
         """
@@ -138,7 +138,7 @@ class CRUDBase(
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         int
             Total count of records that match the applied filters.
 
@@ -181,7 +181,7 @@ class CRUDBase(
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict[str, Any]
             Dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
         """
@@ -233,12 +233,12 @@ class CRUDBase(
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict | None
             The fetched database row or None if not found.
 
         Examples
-        --------
+        ----------
         Simple example: Joining User and Tier models without explicitly providing join_on
         ```python
         result = await crud_user.get_joined(
@@ -370,12 +370,12 @@ class CRUDBase(
             Filters to apply to the primary query.
 
         Returns
-        -------
+        ----------
         Dict[str, Any]
             A dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
 
         Examples
-        --------
+        ----------
         # Fetching multiple User records joined with Tier records, using left join
         users = await crud_user.get_multi_joined(
             db=session,
@@ -446,7 +446,7 @@ class CRUDBase(
             Filters for the update.
 
         Returns
-        -------
+        ----------
         None
         """
         if isinstance(object, dict):
@@ -474,7 +474,7 @@ class CRUDBase(
             Filters for the delete.
 
         Returns
-        -------
+        ----------
         None
         """
         stmt = delete(self._model).filter_by(**kwargs)
@@ -495,7 +495,7 @@ class CRUDBase(
             Filters for fetching the database row if not provided.
 
         Returns
-        -------
+        ----------
         None
         """
         db_row = db_row or await self.exists(db=db, **kwargs)

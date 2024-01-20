@@ -14,7 +14,12 @@ class Tier(TimestampMixin, TierBase):
 
     Description:
     ----------
-    'Tier' ORM class that maps the 'system_tier' database table.
+    Schema representing tier data.
+
+    Fields:
+    ----------
+    - 'name' (str): Tier name.
+    - 'created_at' (datetime): Timestamp for the creation of the tier record.
     """
 
     pass
@@ -26,7 +31,12 @@ class TierRead(TierBase):
 
     Description:
     ----------
-    'TierRead' schema for reading tier data.
+    Read-only schema for retrieving tier data.
+
+    Fields:
+    ----------
+    - 'id' (UUID): Unique identifier for the tier.
+    - 'created_at' (datetime): Timestamp for the creation of the tier record.
     """
 
     id: UUID
@@ -39,7 +49,11 @@ class TierCreate(TierBase):
 
     Description:
     ----------
-    'TierCreate' schema is used for creating a tier entry.
+    Schema for creating a tier entry.
+
+    Fields:
+    ----------
+    - 'name' (str): Tier name.
     """
 
     pass
@@ -51,13 +65,16 @@ class TierCreateInternal(TierCreate):
 
     Description:
     ----------
-    'TierCreateInternal' schema is used internally for creating a tier entry.
+    Internal schema for creating a tier entry.
+
+    Fields:
+    ----------
+    - 'name' (str): Tier name.
     """
 
     pass
 
 
-# All these fields are optional
 @optional()
 class TierUpdate(TierBase):
     """
@@ -65,7 +82,11 @@ class TierUpdate(TierBase):
 
     Description:
     ----------
-    'TierUpdate' schema is used for updating a tier entry.
+    Schema for updating a tier entry.
+
+    Optional Fields:
+    ----------
+    - 'name' (str): Tier name (optional).
     """
 
     name: str | None = None
@@ -77,7 +98,11 @@ class TierUpdateInternal(TierUpdate):
 
     Description:
     ----------
-    'TierUpdateInternal' schema is used internally for updating a tier entry.
+    Internal schema for updating a tier entry.
+
+    Fields:
+    ----------
+    - 'updated_at' (datetime): Timestamp for the last update of the tier record.
     """
 
     updated_at: datetime
@@ -89,7 +114,7 @@ class TierDelete(Base):
 
     Description:
     ----------
-    'TierDelete' schema is used for deleting a tier entry.
+    Schema for deleting a tier entry.
     """
 
     pass

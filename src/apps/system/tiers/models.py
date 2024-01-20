@@ -12,6 +12,14 @@ class TierBase(Base):
     Description:
     ----------
     'TierBase' pydantic class.
+
+    Fields:
+    ----------
+    - 'name' (str): Tier name.
+
+    Examples:
+    ----------
+    - 'name': "Free"
     """
 
     # Data Columns
@@ -32,6 +40,17 @@ class Tier(TierBase, UUIDMixin, TimestampMixin, table=True):
     Description:
     ----------
     'Tier' ORM class that maps the 'system_tier' database table.
+
+    Fields:
+    ----------
+    - 'name' (str): Tier name.
+    - 'id' (UUID): Unique identifier for the tier.
+    - 'created_at' (datetime): Timestamp for the creation of the tier record.
+    - 'updated_at' (datetime): Timestamp for the last update of the tier record.
+
+    Table Name:
+    ----------
+    'system_tier'
     """
 
     __tablename__ = "system_tier"

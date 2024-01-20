@@ -23,7 +23,7 @@ class ClientCacheMiddleware(BaseHTTPMiddleware):
         Duration (in seconds) for which the response should be cached.
 
     Methods
-    -------
+    ----------
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         Process the request and set the `Cache-Control` header in the response.
 
@@ -48,7 +48,7 @@ class ClientCacheMiddleware(BaseHTTPMiddleware):
             The next middleware or route handler in the processing chain.
 
         Returns
-        -------
+        ----------
         Response
             The response object with the `Cache-Control` header set.
 

@@ -14,7 +14,20 @@ class RateLimitConfigBase(Base):
 
     Description:
     ----------
-    'RateLimitConfigBase' pydantic class.
+    'RateLimitConfigBase' pydantic class with configuration information for a rate limit.
+
+    Fields:
+    ----------
+    - 'path': API path for rate limit.
+    - 'limit': Number of requests allowed in the specified period.
+    - 'period': Time period (in seconds) during which the limit applies.
+
+    Examples:
+    ----------
+    Examples of valid data for each field:
+    - 'path': "users"
+    - 'limit': 5
+    - 'period': 60
     """
 
     # Data Columns
@@ -43,7 +56,16 @@ class RateLimitNameBase(Base):
 
     Description:
     ----------
-    'RateLimitNameBase' pydantic class.
+    'RateLimitNameBase' pydantic class with name information for a rate limit.
+
+    Fields:
+    ----------
+    - 'name': Rate limit name.
+
+    Examples:
+    ----------
+    Example of valid data:
+    - 'name': "users:5:60"
     """
 
     # Data Columns
@@ -63,7 +85,15 @@ class RateLimitTierBase(Base):
 
     Description:
     ----------
-    'RateLimitTierBases' pydantic class.
+    'RateLimitTierBase' pydantic class with tier-related information for a rate limit.
+
+    Fields:
+    - 'tier_id': ID of the tier to which the rate limit is associated.
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'tier_id': UUID("123e4567-e89b-12d3-a456-426614174001")
     """
 
     # Relationships Columns
@@ -82,7 +112,22 @@ class RateLimit(
 
     Description:
     ----------
-    'RateLimit' ORM class that maps the 'system_rate_limit' database table.
+    'RateLimit' ORM class representing the 'system_rate_limit' database table.
+
+    Fields:
+    ----------
+    - 'path': API path for rate limit.
+    - 'limit': Number of requests allowed in the specified period.
+    - 'period': Time period (in seconds) during which the limit applies.
+    - 'name': Rate limit name.
+    - 'tier_id': ID of the tier to which the rate limit is associated.
+    - 'id': Unique identifier (UUID) for the rate limit.
+    - 'created_at': Timestamp for the creation of the rate limit record.
+    - 'updated_at': Timestamp for the last update of the rate limit record.
+
+    Table Name:
+    ----------
+    'system_rate_limit'
     """
 
     __tablename__ = "system_rate_limit"

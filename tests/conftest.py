@@ -15,12 +15,12 @@ def client():
     meaning it will be shared among all test functions in a session.
 
     Returns
-    -------
+    ----------
     TestClient
         The FastAPI TestClient instance.
 
     Example
-    -------
+    ----------
     Using the `client` fixture in a test function:
     ```python
     def test_example(client):

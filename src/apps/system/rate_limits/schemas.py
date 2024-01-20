@@ -21,7 +21,11 @@ class RateLimitBase(RateLimitConfigBase):
 
     Description:
     ----------
-    'RateLimitBase' pydantic class.
+    Base schema for representing rate limit configuration.
+
+    Custom Validation:
+    ----------
+    - 'path': Validates and sanitizes the path using the 'sanitize_path' function.
     """
 
     @field_validator("path")
@@ -38,7 +42,15 @@ class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitTierB
 
     Description:
     ----------
-    'RateLimit' pydantic class.
+    Schema for representing rate limit data.
+
+    Fields:
+    ----------
+    - 'path' (str): API path for rate limit.
+    - 'limit' (int): Number of requests allowed in the specified period.
+    - 'period' (int): Time period (in seconds) during which the limit applies.
+    - 'name' (str): Rate limit name.
+    - 'tier_id' (UUID | None): ID of the tier to which the rate limit is associated.
     """
 
     pass
@@ -50,7 +62,12 @@ class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBa
 
     Description:
     ----------
-    'RateLimitRead' schema for reading rate limit data.
+    Read-only schema for retrieving rate limit data.
+
+    Fields:
+    ----------
+    - 'id' (UUID): Unique identifier for the rate limit.
+    - 'created_at' (datetime): Timestamp for the creation of the rate limit record.
     """
 
     pass
@@ -62,7 +79,14 @@ class RateLimitCreate(RateLimitBase, RateLimitNameBase):
 
     Description:
     ----------
-    'RateLimitCreate' schema is used for creating a rate limit entry.
+    Schema for creating a rate limit entry.
+
+    Fields:
+    ----------
+    - 'path' (str): API path for rate limit.
+    - 'limit' (int): Number of requests allowed in the specified period.
+    - 'period' (int): Time period (in seconds) during which the limit applies.
+    - 'name' (str): Rate limit name.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -74,7 +98,15 @@ class RateLimitCreateInternal(RateLimitCreate, RateLimitTierBase):
 
     Description:
     ----------
-    'RateLimitCreateInternal' schema is used internally for creating a rate limit entry.
+    Internal schema for creating a rate limit entry.
+
+    Fields:
+    ----------
+    - 'path' (str): API path for rate limit.
+    - 'limit' (int): Number of requests allowed in the specified period.
+    - 'period' (int): Time period (in seconds) during which the limit applies.
+    - 'name' (str): Rate limit name.
+    - 'tier_id' (UUID | None): ID of the tier to which the rate limit is associated.
     """
 
     pass
@@ -88,7 +120,14 @@ class RateLimitUpdate(RateLimitBase, RateLimitNameBase):
 
     Description:
     ----------
-    'RateLimitUpdate' schema is used for updating a rate limit entry.
+    Schema for updating a rate limit entry.
+
+    Optional Fields:
+    ----------
+    - 'path' (str): API path for rate limit (optional).
+    - 'limit' (int): Number of requests allowed in the specified period (optional).
+    - 'period' (int): Time period (in seconds) during which the limit applies (optional).
+    - 'name' (str): Rate limit name (optional).
     """
 
     pass
@@ -100,7 +139,11 @@ class RateLimitUpdateInternal(RateLimitUpdate):
 
     Description:
     ----------
-    'RateLimitUpdateInternal' schema is used internally for updating a rate limit entry.
+    Internal schema for updating a rate limit entry.
+
+    Fields:
+    ----------
+    - 'updated_at' (datetime): Timestamp for the last update of the rate limit record.
     """
 
     updated_at: datetime
@@ -112,7 +155,7 @@ class RateLimitDelete(Base):
 
     Description:
     ----------
-    'RateLimitDelete' schema is used for deleting a rate limit entry.
+    Schema for deleting a rate limit entry.
     """
 
     pass

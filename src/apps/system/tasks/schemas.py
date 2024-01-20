@@ -9,6 +9,10 @@ class Job(Base):
     Description:
     ----------
     'Job' response schema.
+
+    Fields:
+    ----------
+    - 'id' (str): Unique identifier for the job.
     """
 
     id: str
