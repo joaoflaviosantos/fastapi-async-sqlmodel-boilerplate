@@ -1,10 +1,11 @@
 # Built-in Dependencies
 from datetime import datetime, UTC
 from uuid import UUID, uuid4
-from typing import Optional
+from typing import Optional, Any
 
 # Third-Party Dependencies
 from sqlmodel import SQLModel, Field, DateTime
+from pydantic import field_serializer
 
 
 # Define a base class for declarative models with support for dataclasses
@@ -107,6 +108,20 @@ class TimestampMixin(SQLModel):
         sa_column_kwargs={"onupdate": datetime.now(UTC)},
         description="Timestamp for the last update of the record",
     )
+
+    @field_serializer("created_at")
+    def serialize_dt(self, created_at: datetime | None, _info: Any) -> str | None:
+        if created_at is not None:
+            return created_at.isoformat()
+
+        return None
+
+    @field_serializer("updated_at")
+    def serialize_updated_at(self, updated_at: datetime | None, _info: Any) -> str | None:
+        if updated_at is not None:
+            return updated_at.isoformat()
+
+        return None
 
 
 class SoftDeleteMixin(SQLModel):

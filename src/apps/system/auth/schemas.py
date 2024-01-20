@@ -4,10 +4,17 @@ from datetime import datetime
 # Third-Party Dependencies
 from pydantic import BaseModel
 
+# Local Dependencies
+from src.apps.system.auth.models import TokenBlacklistBase
+
 
 class Token(BaseModel):
     """
-    Token response schema.
+    API Schema
+
+    Description:
+    ----------
+    'Token' response schema.
     """
 
     access_token: str
@@ -16,24 +23,23 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """
-    Token data schema.
+    API Schema
+
+    Description:
+    ----------
+    'TokenData' response schema.
     """
 
     username_or_email: str
 
 
-class TokenBlacklistBase(BaseModel):
-    """
-    Base schema for token blacklist.
-    """
-
-    token: str
-    expires_at: datetime
-
-
 class TokenBlacklistCreate(TokenBlacklistBase):
     """
-    Schema for creating a token blacklist entry.
+    API Schema
+
+    Description:
+    ----------
+    'TokenBlacklistCreate' schema is used for creating a token blacklist entry.
     """
 
     pass
@@ -41,7 +47,11 @@ class TokenBlacklistCreate(TokenBlacklistBase):
 
 class TokenBlacklistUpdate(TokenBlacklistBase):
     """
-    Schema for updating a token blacklist entry.
+    API Schema
+
+    Description:
+    ----------
+    'TokenBlacklistUpdate' schema is used for updating a token blacklist entry.
     """
 
     pass

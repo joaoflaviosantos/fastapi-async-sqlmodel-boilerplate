@@ -1,6 +1,14 @@
-# Third-Party Dependencies
-from pydantic import BaseModel
+# Local Dependencies
+from src.core.common.models import Base
 
 
-class Job(BaseModel):
+class Job(Base):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'Job' response schema.
+    """
+
     id: str

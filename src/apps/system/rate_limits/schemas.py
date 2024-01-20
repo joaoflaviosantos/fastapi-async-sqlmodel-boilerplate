@@ -1,61 +1,118 @@
 # Built-in Dependencies
-from typing import Annotated
 from datetime import datetime
-from uuid import UUID
 
 # Third-Party Dependencies
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import ConfigDict, field_validator
 
 # Local Dependencies
-from src.core.common.schemas import TimestampSchema
+from src.apps.system.rate_limits.models import (
+    RateLimitConfigBase,
+    RateLimitNameBase,
+    RateLimitTierBase,
+)
+from src.core.common.models import Base, UUIDMixin, TimestampMixin
 from src.core.utils.rate_limit import sanitize_path
+from src.core.utils.partial import optional
 
 
-class RateLimitBase(BaseModel):
-    path: Annotated[str, Field(examples=["users"])]
-    limit: Annotated[int, Field(examples=[5])]
-    period: Annotated[int, Field(examples=[60])]
+class RateLimitBase(RateLimitConfigBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitBase' pydantic class.
+    """
 
     @field_validator("path")
     def validate_and_sanitize_path(cls, v: str) -> str:
+        """
+        Validate and sanitize the 'path' field.
+        """
         return sanitize_path(v)
 
 
-class RateLimit(TimestampSchema, RateLimitBase):
-    tier_id: UUID
-    name: Annotated[str | None, Field(default=None, examples=["users:5:60"])]
+class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimit' pydantic class.
+    """
+
+    pass
 
 
-class RateLimitRead(RateLimitBase):
-    id: UUID
-    tier_id: UUID
-    name: str
+class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitRead' schema for reading rate limit data.
+    """
+
+    pass
 
 
-class RateLimitCreate(RateLimitBase):
+class RateLimitCreate(RateLimitBase, RateLimitNameBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitCreate' schema is used for creating a rate limit entry.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
-    name: Annotated[str | None, Field(default=None, examples=["api_v1_users:5:60"])]
+
+class RateLimitCreateInternal(RateLimitCreate, RateLimitTierBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitCreateInternal' schema is used internally for creating a rate limit entry.
+    """
+
+    pass
 
 
-class RateLimitCreateInternal(RateLimitCreate):
-    tier_id: UUID
+# All these fields are optional
+@optional()
+class RateLimitUpdate(RateLimitBase, RateLimitNameBase):
+    """
+    API Schema
 
+    Description:
+    ----------
+    'RateLimitUpdate' schema is used for updating a rate limit entry.
+    """
 
-class RateLimitUpdate(BaseModel):
-    path: str | None = Field(default=None)
-    limit: int | None = None
-    period: int | None = None
-    name: str | None = None
-
-    @field_validator("path")
-    def validate_and_sanitize_path(cls, v: str) -> str:
-        return sanitize_path(v) if v is not None else None
+    pass
 
 
 class RateLimitUpdateInternal(RateLimitUpdate):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitUpdateInternal' schema is used internally for updating a rate limit entry.
+    """
+
     updated_at: datetime
 
 
-class RateLimitDelete(BaseModel):
+class RateLimitDelete(Base):
+    """
+    API Schema
+
+    Description:
+    ----------
+    'RateLimitDelete' schema is used for deleting a rate limit entry.
+    """
+
     pass
