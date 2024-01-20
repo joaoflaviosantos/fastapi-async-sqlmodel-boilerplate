@@ -96,7 +96,7 @@ class CRUDBase(
         )
         stmt = select(*to_select).filter_by(**kwargs)
 
-        db_row = await db.execute(stmt)
+        db_row = await db.exec(stmt)
         result: Row = db_row.first()
         if result is not None:
             out: dict = dict(result._mapping)
@@ -123,7 +123,7 @@ class CRUDBase(
         to_select = _extract_matching_columns_from_kwargs(model=self._model, kwargs=kwargs)
         stmt = select(*to_select).filter_by(**kwargs).limit(1)
 
-        result = await db.execute(stmt)
+        result = await db.exec(stmt)
         return result.first() is not None
 
     async def count(self, db: AsyncSession, **kwargs: Any) -> int:
@@ -190,7 +190,7 @@ class CRUDBase(
         )
         stmt = select(*to_select).filter_by(**kwargs).offset(offset).limit(limit)
 
-        result = await db.execute(stmt)
+        result = await db.exec(stmt)
         data = [dict(row) for row in result.mappings()]
 
         total_count = await self.count(db=db, **kwargs)
@@ -321,7 +321,7 @@ class CRUDBase(
                 stmt = stmt.where(getattr(self._model, key) == value)
 
         # Execute the statement and retrieve the result
-        db_row = await db.execute(stmt)
+        db_row = await db.exec(stmt)
         result: Row = db_row.first()
         if result:
             out: dict = dict(result._mapping)
@@ -420,7 +420,7 @@ class CRUDBase(
 
         stmt = stmt.offset(offset).limit(limit)
 
-        db_rows = await db.execute(stmt)
+        db_rows = await db.exec(stmt)
         data = [dict(row._mapping) for row in db_rows]
 
         total_count = await self.count(db=db, **kwargs)
@@ -459,7 +459,7 @@ class CRUDBase(
 
         stmt = update(self._model).filter_by(**kwargs).values(update_data)
 
-        await db.execute(stmt)
+        await db.exec(stmt)
         await db.commit()
 
     async def db_delete(self, db: AsyncSession, **kwargs: Any) -> None:
@@ -478,7 +478,7 @@ class CRUDBase(
         None
         """
         stmt = delete(self._model).filter_by(**kwargs)
-        await db.execute(stmt)
+        await db.exec(stmt)
         await db.commit()
 
     async def delete(self, db: AsyncSession, db_row: Row | None = None, **kwargs: Any) -> None:
@@ -507,10 +507,10 @@ class CRUDBase(
                 }
                 stmt = update(self._model).filter_by(**kwargs).values(object_dict)
 
-                await db.execute(stmt)
+                await db.exec(stmt)
                 await db.commit()
 
             else:
                 stmt = delete(self._model).filter_by(**kwargs)
-                await db.execute(stmt)
+                await db.exec(stmt)
                 await db.commit()

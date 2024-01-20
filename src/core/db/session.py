@@ -1,5 +1,5 @@
 # Third-Party Dependencies
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
