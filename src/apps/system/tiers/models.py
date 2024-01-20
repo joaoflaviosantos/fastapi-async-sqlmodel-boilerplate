@@ -7,7 +7,11 @@ from src.core.common.models import TimestampMixin, UUIDMixin, Base
 
 class TierBase(Base):
     """
-    SQLModel Base: TierBase
+    SQLModel Base
+
+    Description:
+    ----------
+    'TierBase' pydantic class.
     """
 
     # Data Columns
@@ -23,7 +27,11 @@ class TierBase(Base):
 
 class Tier(TierBase, UUIDMixin, TimestampMixin, table=True):
     """
-    Table: system_tier
+    SQLModel Table
+
+    Description:
+    ----------
+    'Tier' ORM class that maps the 'system_tier' database table.
     """
 
     __tablename__ = "system_tier"

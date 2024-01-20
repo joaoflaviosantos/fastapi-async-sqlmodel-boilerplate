@@ -8,12 +8,14 @@ from sqlmodel import Field
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
 
 
-class TokenBlacklist(Base, UUIDMixin, TimestampMixin, table=True):
+class TokenBlacklistBase(Base):
     """
-    Table: system_token_blacklist
-    """
+    SQLModel Base
 
-    __tablename__ = "system_token_blacklist"
+    Description:
+    ----------
+    'TokenBlacklistBase' pydantic class.
+    """
 
     # Data Columns
     token: str = Field(
@@ -27,3 +29,15 @@ class TokenBlacklist(Base, UUIDMixin, TimestampMixin, table=True):
         default=None,
         description="Timestamp indicating the expiration date and time of the token",
     )
+
+
+class TokenBlacklist(TokenBlacklistBase, UUIDMixin, TimestampMixin, table=True):
+    """
+    SQLModel Table
+
+    Description:
+    ----------
+    'TokenBlacklist' ORM class that maps the 'system_token_blacklist' database table.
+    """
+
+    __tablename__ = "system_token_blacklist"

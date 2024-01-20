@@ -9,11 +9,27 @@ from sqlmodel import SQLModel, Field, DateTime
 
 # Define a base class for declarative models with support for dataclasses
 class Base(SQLModel):
+    """
+    SQLModel Base
+
+    Description:
+    ----------
+    Main base class for generating Pydantic models and database tables with SQLModel.
+    """
+
     pass
 
 
 class UUIDMixin(SQLModel):
     """
+    SQLModel Base
+
+    Description:
+    ----------
+    'UUIDMixin' pydantic class.
+
+    Extra Info:
+    ----------
     Adds a UUID column as the primary key with a default value generated using uuid4.
     """
 
@@ -28,6 +44,14 @@ class UUIDMixin(SQLModel):
 
 class TimestampMixin(SQLModel):
     """
+    SQLModel Base
+
+    Description:
+    ----------
+    'TimestampMixin' pydantic class.
+
+    Extra Info:
+    ----------
     Adds 'created_at' and 'updated_at' fields with default values for the creation timestamp and update timestamp.
 
     Note: By default, 'updated_at' is set to the current timestamp on every update, which is useful for tracking the last
@@ -87,6 +111,14 @@ class TimestampMixin(SQLModel):
 
 class SoftDeleteMixin(SQLModel):
     """
+    SQLModel Base
+
+    Description:
+    ----------
+    'SoftDeleteMixin' pydantic class.
+
+    Extra Info:
+    ----------
     Adds 'deleted_at' and 'is_deleted' fields for soft deletion functionality.
     """
 

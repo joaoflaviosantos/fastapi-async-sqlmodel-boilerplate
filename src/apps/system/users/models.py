@@ -15,7 +15,11 @@ from src.core.common.models import (
 
 class UserBase(Base):
     """
-    SQLModel Base: UserBase
+    SQLModel Base
+
+    Description:
+    ----------
+    'UserBase' pydantic class.
     """
 
     # Data Columns
@@ -65,7 +69,11 @@ class UserBase(Base):
 
 class User(UserBase, UUIDMixin, TimestampMixin, SoftDeleteMixin, table=True):
     """
-    Table: system_user
+    SQLModel Table
+
+    Description:
+    ----------
+    'User' ORM class that maps the 'system_user' database table.
     """
 
     __tablename__ = "system_user"

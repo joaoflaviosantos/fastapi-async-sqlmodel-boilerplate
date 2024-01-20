@@ -10,7 +10,11 @@ from src.core.common.models import SoftDeleteMixin, TimestampMixin, UUIDMixin, B
 
 class PostBase(Base):
     """
-    SQLModel Base: PostBase
+    SQLModel Base
+
+    Description:
+    ----------
+    'PostBase' pydantic class.
     """
 
     # Data Columns
@@ -47,7 +51,11 @@ class PostBase(Base):
 
 class Post(PostBase, UUIDMixin, TimestampMixin, SoftDeleteMixin, table=True):
     """
-    Table: blog_post
+    SQLModel Table
+
+    Description:
+    ----------
+    'Post' ORM class that maps the 'blog_post' database table.
     """
 
     __tablename__ = "blog_post"

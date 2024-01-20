@@ -10,7 +10,11 @@ from src.core.common.models import TimestampMixin, UUIDMixin, Base
 
 class RateLimitBase(Base):
     """
-    SQLModel Base: RateLimitBase
+    SQLModel Base
+
+    Description:
+    ----------
+    'RateLimitBase' pydantic class.
     """
 
     name: str = Field(
@@ -49,7 +53,11 @@ class RateLimitBase(Base):
 
 class RateLimit(RateLimitBase, UUIDMixin, TimestampMixin, table=True):
     """
-    Table: system_rate_limit
+    SQLModel Table
+
+    Description:
+    ----------
+    'RateLimit' ORM class that maps the 'system_rate_limit' database table.
     """
 
     __tablename__ = "system_rate_limit"
