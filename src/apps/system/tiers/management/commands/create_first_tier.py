@@ -16,7 +16,7 @@ async def create_first_tier(session: AsyncSession) -> None:
 
     # Checking if tier already exists
     query = select(Tier).where(Tier.name == tier_name)
-    result = await session.execute(query)
+    result = await session.exec(query)
     tier = result.scalar_one_or_none()
 
     # Creating tier if it doesn't exist

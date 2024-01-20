@@ -1,59 +1,113 @@
 # Built-in Dependencies
-from typing import Annotated, Optional
+from typing import Annotated
 from datetime import datetime
-from uuid import UUID
 
 # Third-Party Dependencies
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 # Local Dependencies
-from src.core.common.schemas import (
-    UUIDSchema,
-    TimestampSchema,
-    PersistentDeletion,
+from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
+from src.core.utils.partial import optional
+from src.apps.system.users.models import (
+    UserPersonalInfoBase,
+    UserMediaBase,
+    UserTierBase,
+    UserPermissionBase,
+    UserSecurityBase,
 )
 
 
-class UserBase(BaseModel):
-    name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
-    username: Annotated[
-        str,
-        Field(
-            min_length=2,
-            max_length=20,
-            pattern=r"^[a-z0-9]+$",
-            examples=["userson"],
-        ),
-    ]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
+class UserBase(UserPersonalInfoBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Base schema for representing a user personal info.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    """
+
+    pass
 
 
-class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
-    profile_image_url: Annotated[str, Field(default="https://www.profileimageurl.com")]
-    hashed_password: str
-    is_superuser: bool = False
-    tier_id: UUID | None = None
+class User(
+    UserBase,
+    UserMediaBase,
+    UserTierBase,
+    UserPermissionBase,
+    UserSecurityBase,
+    UUIDMixin,
+    TimestampMixin,
+    SoftDeleteMixin,
+):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema representing a user, including media, tier, permission, and security information.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'profile_image_url': URL of the user's profile image.
+    - 'is_superuser': Indicates whether the user has superuser privileges.
+    - 'hashed_password': Hashed password for user authentication.
+    - 'tier_id': ID of the tier to which the user belongs.
+    - 'id': Unique identifier (UUID) for the user.
+    - 'created_at': Timestamp for the creation of the user record.
+    - 'updated_at': Timestamp for the last update of the user record.
+    - 'deleted_at': Timestamp for the deletion of the user record (soft deletion).
+    - 'is_deleted': Flag indicating whether the user record is deleted (soft deletion).
+    """
+
+    pass
 
 
-class UserRead(BaseModel):
-    id: UUID
+class UserRead(UserBase, UserMediaBase, UserTierBase, UUIDMixin):
+    """
+    API Schema
 
-    name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
-    username: Annotated[
-        str,
-        Field(
-            min_length=2,
-            max_length=20,
-            pattern=r"^[a-z0-9]+$",
-            examples=["userson"],
-        ),
-    ]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
-    profile_image_url: str
-    tier_id: UUID | None
+    Description:
+    ----------
+    Read-only schema for retrieving information about a user, including media and tier details.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'profile_image_url': URL of the user's profile image.
+    - 'tier_id': ID of the tier to which the user belongs.
+    - 'id': Unique identifier (UUID) for the user.
+    """
+
+    pass
 
 
 class UserCreate(UserBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for creating a new user.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'password': User's password.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     password: Annotated[
@@ -65,60 +119,108 @@ class UserCreate(UserBase):
     ]
 
 
-class UserCreateInternal(UserBase):
-    hashed_password: str
+class UserCreateInternal(UserBase, UserSecurityBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Internal schema for creating a new user, including security information.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'hashed_password': Hashed password for user authentication.
+    """
+
+    pass
 
 
-class UserUpdate(BaseModel):
+@optional()
+class UserUpdate(UserBase, UserMediaBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for updating an existing user, including media information.
+
+    Optional Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'profile_image_url': URL of the user's profile image.
+    """
+
     model_config = ConfigDict(extra="forbid")
-
-    name: Annotated[
-        Optional[str],
-        Field(
-            min_length=2,
-            max_length=30,
-            examples=["User Userberg"],
-            default=None,
-        ),
-    ]
-    username: Annotated[
-        Optional[str],
-        Field(
-            min_length=2,
-            max_length=20,
-            pattern=r"^[a-z0-9]+$",
-            examples=["userberg"],
-            default=None,
-        ),
-    ]
-    email: Annotated[
-        Optional[EmailStr],
-        Field(examples=["user.userberg@example.com"], default=None),
-    ]
-    profile_image_url: Annotated[
-        Optional[str],
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
-            examples=["https://www.profileimageurl.com"],
-            default=None,
-        ),
-    ]
 
 
 class UserUpdateInternal(UserUpdate):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Internal schema for updating an existing user, including media information and the last update timestamp.
+
+    Fields:
+    ----------
+    - 'name': User's full name.
+    - 'username': User's unique username.
+    - 'email': User's unique email address.
+    - 'profile_image_url': URL of the user's profile image.
+    - 'updated_at': Timestamp for the last update of the user record.
+    """
+
     updated_at: datetime
 
 
-class UserTierUpdate(BaseModel):
-    tier_id: UUID
+class UserTierUpdate(UserTierBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for updating the tier of a user.
+
+    Fields:
+    ----------
+    - 'tier_id': ID of the tier to which the user belongs.
+    """
+
+    pass
 
 
-class UserDelete(BaseModel):
+class UserDelete(SoftDeleteMixin):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for logically deleting a user.
+
+    Fields:
+    ----------
+    - 'is_deleted': Flag indicating whether the user record is deleted (soft deletion).
+    """
+
     model_config = ConfigDict(extra="forbid")
-
-    is_deleted: bool
-    deleted_at: datetime
 
 
 class UserRestoreDeleted(BaseModel):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for restoring a deleted user.
+
+    Fields:
+    ----------
+    - 'is_deleted': Flag indicating whether the user record is deleted (soft deletion).
+    """
+
     is_deleted: bool

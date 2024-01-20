@@ -1,13 +1,23 @@
-# Built-in Dependencies
-from datetime import datetime
-
 # Third-Party Dependencies
 from pydantic import BaseModel
+
+# Local Dependencies
+from src.apps.system.auth.models import TokenBlacklistBase
+from src.core.utils.partial import optional
 
 
 class Token(BaseModel):
     """
-    Token response schema.
+    API Schema
+
+    Description:
+    ----------
+    Response schema for representing a token.
+
+    Fields:
+    ----------
+    - 'access_token' (str): The access token.
+    - 'token_type' (str): The type of the token.
     """
 
     access_token: str
@@ -16,32 +26,51 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """
-    Token data schema.
+    API Schema
+
+    Description:
+    ----------
+    Response schema for representing token data.
+
+    Fields:
+    ----------
+    - 'username_or_email' (str): The username or email associated with the token.
     """
 
     username_or_email: str
 
 
-class TokenBlacklistBase(BaseModel):
-    """
-    Base schema for token blacklist.
-    """
-
-    token: str
-    expires_at: datetime
-
-
 class TokenBlacklistCreate(TokenBlacklistBase):
     """
+    API Schema
+
+    Description:
+    ----------
     Schema for creating a token blacklist entry.
+
+    Fields:
+    ----------
+    - 'token': Token value for authentication.
+    - 'expires_at': Timestamp indicating the expiration date and time of the token.
     """
 
     pass
 
 
+# All these fields are optional
+@optional()
 class TokenBlacklistUpdate(TokenBlacklistBase):
     """
+    API Schema
+
+    Description:
+    ----------
     Schema for updating a token blacklist entry.
+
+    Optional Fields:
+    ----------
+    - 'token': Token value for authentication.
+    - 'expires_at': Timestamp indicating the expiration date and time of the token.
     """
 
     pass

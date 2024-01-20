@@ -3,11 +3,11 @@ from typing import Any, Dict, Generic, List, Type, TypeVar, Union
 from datetime import datetime, UTC
 
 # Third-Party Dependencies
-from sqlalchemy import select, update, delete, func, and_, inspect
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select, update, delete, func, and_, inspect
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.engine.row import Row
 from sqlalchemy.sql import Join
-from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 # Local Dependencies
 from src.core.common.crud_helper import (
@@ -19,10 +19,10 @@ from src.core.common.crud_helper import (
 from src.core.common.models import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
-UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=BaseModel)
-DeleteSchemaType = TypeVar("DeleteSchemaType", bound=BaseModel)
+CreateSchemaType = TypeVar("CreateSchemaType", bound=SQLModel)
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=SQLModel)
+UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=SQLModel)
+DeleteSchemaType = TypeVar("DeleteSchemaType", bound=SQLModel)
 
 
 class CRUDBase(
@@ -53,12 +53,12 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         object : CreateSchemaType
-            The Pydantic schema containing the data to be saved.
+            The SQLModel (Pydantic) schema containing the data to be saved.
 
         Returns
-        -------
+        ----------
         ModelType
             The created database object.
         """
@@ -71,7 +71,7 @@ class CRUDBase(
     async def get(
         self,
         db: AsyncSession,
-        schema_to_select: Union[Type[BaseModel], List, None] = None,
+        schema_to_select: Union[Type[SQLModel], List, None] = None,
         **kwargs: Any,
     ) -> Dict | None:
         """
@@ -80,14 +80,14 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
-        schema_to_select : Union[Type[BaseModel], List, None], optional
-            Pydantic schema for selecting specific columns. Default is None to select all columns.
+            The SQLModel async session.
+        schema_to_select : Union[Type[SQLModel], List, None], optional
+            SQLModel (Pydantic) schema for selecting specific columns. Default is None to select all columns.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict | None
             The fetched database row or None if not found.
         """
@@ -96,7 +96,7 @@ class CRUDBase(
         )
         stmt = select(*to_select).filter_by(**kwargs)
 
-        db_row = await db.execute(stmt)
+        db_row = await db.exec(stmt)
         result: Row = db_row.first()
         if result is not None:
             out: dict = dict(result._mapping)
@@ -111,19 +111,19 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         bool
             True if a record exists, False otherwise.
         """
         to_select = _extract_matching_columns_from_kwargs(model=self._model, kwargs=kwargs)
         stmt = select(*to_select).filter_by(**kwargs).limit(1)
 
-        result = await db.execute(stmt)
+        result = await db.exec(stmt)
         return result.first() is not None
 
     async def count(self, db: AsyncSession, **kwargs: Any) -> int:
@@ -133,12 +133,12 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         int
             Total count of records that match the applied filters.
 
@@ -161,7 +161,7 @@ class CRUDBase(
         db: AsyncSession,
         offset: int = 0,
         limit: int = 100,
-        schema_to_select: Union[Type[BaseModel], List[Type[BaseModel]], None] = None,
+        schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """
@@ -170,18 +170,18 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         offset : int, optional
             Number of rows to skip before fetching. Default is 0.
         limit : int, optional
             Maximum number of rows to fetch. Default is 100.
-        schema_to_select : Union[Type[BaseModel], List[Type[BaseModel]], None], optional
-            Pydantic schema for selecting specific columns. Default is None to select all columns.
+        schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+            SQLModel (Pydantic) schema for selecting specific columns. Default is None to select all columns.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict[str, Any]
             Dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
         """
@@ -190,7 +190,7 @@ class CRUDBase(
         )
         stmt = select(*to_select).filter_by(**kwargs).offset(offset).limit(limit)
 
-        result = await db.execute(stmt)
+        result = await db.exec(stmt)
         data = [dict(row) for row in result.mappings()]
 
         total_count = await self.count(db=db, **kwargs)
@@ -203,8 +203,8 @@ class CRUDBase(
         join_model: Type[ModelType],
         join_prefix: str | None = None,
         join_on: Union[Join, None] = None,
-        schema_to_select: Union[Type[BaseModel], List, None] = None,
-        join_schema_to_select: Union[Type[BaseModel], List, None] = None,
+        schema_to_select: Union[Type[SQLModel], List, None] = None,
+        join_schema_to_select: Union[Type[SQLModel], List, None] = None,
         join_type: str = "left",
         **kwargs: Any,
     ) -> dict | None:
@@ -215,7 +215,7 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         join_model : Type[ModelType]
             The model to join with.
         join_prefix : Optional[str]
@@ -223,22 +223,22 @@ class CRUDBase(
         join_on : Join, optional
             SQLAlchemy Join object for specifying the ON clause of the join. If None, the join condition is
             auto-detected based on foreign keys.
-        schema_to_select : Union[Type[BaseModel], List, None], optional
-            Pydantic schema for selecting specific columns from the primary model.
-        join_schema_to_select : Union[Type[BaseModel], List, None], optional
-            Pydantic schema for selecting specific columns from the joined model.
+        schema_to_select : Union[Type[SQLModel], List, None], optional
+            SQLModel (Pydantic) schema for selecting specific columns from the primary model.
+        join_schema_to_select : Union[Type[SQLModel], List, None], optional
+            SQLModel (Pydantic) schema for selecting specific columns from the joined model.
         join_type : str, default "left"
             Specifies the type of join operation to perform. Can be "left" for a left outer join or "inner" for an inner join.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
-        -------
+        ----------
         Dict | None
             The fetched database row or None if not found.
 
         Examples
-        --------
+        ----------
         Simple example: Joining User and Tier models without explicitly providing join_on
         ```python
         result = await crud_user.get_joined(
@@ -266,19 +266,18 @@ class CRUDBase(
         Return example: prefix added, no schema_to_select or join_schema_to_select
         ```python
         {
-            "id": 1,
             "name": "John Doe",
             "username": "john_doe",
             "email": "johndoe@example.com",
             "hashed_password": "hashed_password_example",
             "profile_image_url": "https://profileimageurl.com/default.jpg",
-            "uuid": "123e4567-e89b-12d3-a456-426614174000",
+            "id": "123e4567-e89b-12d3-a456-426614174000",
             "created_at": "2023-01-01T12:00:00",
             "updated_at": "2023-01-02T12:00:00",
             "deleted_at": null,
             "is_deleted": false,
             "is_superuser": false,
-            "tier_id": 2,
+            "tier_id": "123b4566-e89b-12d3-a456-426614174111",
             "tier_name": "Premium",
             "tier_created_at": "2022-12-01T10:00:00",
             "tier_updated_at": "2023-01-01T11:00:00"
@@ -321,7 +320,7 @@ class CRUDBase(
                 stmt = stmt.where(getattr(self._model, key) == value)
 
         # Execute the statement and retrieve the result
-        db_row = await db.execute(stmt)
+        db_row = await db.exec(stmt)
         result: Row = db_row.first()
         if result:
             out: dict = dict(result._mapping)
@@ -335,8 +334,8 @@ class CRUDBase(
         join_model: Type[ModelType],
         join_prefix: str | None = None,
         join_on: Union[Join, None] = None,
-        schema_to_select: Union[Type[BaseModel], List[Type[BaseModel]], None] = None,
-        join_schema_to_select: Union[Type[BaseModel], List[Type[BaseModel]], None] = None,
+        schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
+        join_schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
         join_type: str = "left",
         offset: int = 0,
         limit: int = 100,
@@ -348,7 +347,7 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         join_model : Type[ModelType]
             The model to join with.
         join_prefix : Optional[str]
@@ -356,10 +355,10 @@ class CRUDBase(
         join_on : Join, optional
             SQLAlchemy Join object for specifying the ON clause of the join. If None, the join condition is
             auto-detected based on foreign keys.
-        schema_to_select : Union[Type[BaseModel], List[Type[BaseModel]], None], optional
-            Pydantic schema for selecting specific columns from the primary model.
-        join_schema_to_select : Union[Type[BaseModel], List[Type[BaseModel]], None], optional
-            Pydantic schema for selecting specific columns from the joined model.
+        schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+            SQLModel (Pydantic) schema for selecting specific columns from the primary model.
+        join_schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+            SQLModel (Pydantic) schema for selecting specific columns from the joined model.
         join_type : str, default "left"
             Specifies the type of join operation to perform. Can be "left" for a left outer join or "inner" for an inner join.
         offset : int, default 0
@@ -370,12 +369,12 @@ class CRUDBase(
             Filters to apply to the primary query.
 
         Returns
-        -------
+        ----------
         Dict[str, Any]
             A dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
 
         Examples
-        --------
+        ----------
         # Fetching multiple User records joined with Tier records, using left join
         users = await crud_user.get_multi_joined(
             db=session,
@@ -420,7 +419,7 @@ class CRUDBase(
 
         stmt = stmt.offset(offset).limit(limit)
 
-        db_rows = await db.execute(stmt)
+        db_rows = await db.exec(stmt)
         data = [dict(row._mapping) for row in db_rows]
 
         total_count = await self.count(db=db, **kwargs)
@@ -439,14 +438,14 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         object : Union[UpdateSchemaType, Dict[str, Any]]
-            The Pydantic schema or dictionary containing the data to be updated.
+            The SQLModel (Pydantic) schema or dictionary containing the data to be updated.
         kwargs : dict
             Filters for the update.
 
         Returns
-        -------
+        ----------
         None
         """
         if isinstance(object, dict):
@@ -459,7 +458,7 @@ class CRUDBase(
 
         stmt = update(self._model).filter_by(**kwargs).values(update_data)
 
-        await db.execute(stmt)
+        await db.exec(stmt)
         await db.commit()
 
     async def db_delete(self, db: AsyncSession, **kwargs: Any) -> None:
@@ -469,16 +468,16 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         kwargs : dict
             Filters for the delete.
 
         Returns
-        -------
+        ----------
         None
         """
         stmt = delete(self._model).filter_by(**kwargs)
-        await db.execute(stmt)
+        await db.exec(stmt)
         await db.commit()
 
     async def delete(self, db: AsyncSession, db_row: Row | None = None, **kwargs: Any) -> None:
@@ -488,14 +487,14 @@ class CRUDBase(
         Parameters
         ----------
         db : AsyncSession
-            The SQLAlchemy async session.
+            The SQLModel async session.
         db_row : Row | None, optional
             Existing database row to delete. If None, it will be fetched based on `kwargs`. Default is None.
         kwargs : dict
             Filters for fetching the database row if not provided.
 
         Returns
-        -------
+        ----------
         None
         """
         db_row = db_row or await self.exists(db=db, **kwargs)
@@ -507,10 +506,10 @@ class CRUDBase(
                 }
                 stmt = update(self._model).filter_by(**kwargs).values(object_dict)
 
-                await db.execute(stmt)
+                await db.exec(stmt)
                 await db.commit()
 
             else:
                 stmt = delete(self._model).filter_by(**kwargs)
-                await db.execute(stmt)
+                await db.exec(stmt)
                 await db.commit()

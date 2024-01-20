@@ -27,7 +27,7 @@ def _extract_matching_columns_from_schema(
         The Pydantic schema containing field names to be matched with the model's columns.
 
     Returns
-    -------
+    ----------
     List[Any]
         A list of ORM column objects from the model that correspond to the field names defined in the schema.
     """
@@ -81,7 +81,7 @@ def _auto_detect_join_condition(
         The SQLAlchemy model to join with the base model.
 
     Returns
-    -------
+    ----------
     Optional[ColumnElement]
         A SQLAlchemy ColumnElement representing the join condition, if successfully detected.
 
@@ -91,7 +91,7 @@ def _auto_detect_join_condition(
         If the join condition cannot be automatically determined, a ValueError is raised.
 
     Example
-    -------
+    ----------
     # Assuming User has a foreign key reference to Tier:
     join_condition = auto_detect_join_condition(User, Tier)
     """
@@ -126,7 +126,7 @@ def _add_column_with_prefix(column: Column, prefix: Optional[str]) -> Label:
         An optional prefix to prepend to the column's name.
 
     Returns
-    -------
+    ----------
     Label
         A labeled SQLAlchemy Column object.
     """

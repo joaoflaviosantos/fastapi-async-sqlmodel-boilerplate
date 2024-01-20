@@ -29,7 +29,7 @@ async def create_task(message: str) -> Dict[str, str]:
         The message or data to be processed by the task.
 
     Returns
-    -------
+    ----------
     Dict[str, str]
         A dictionary containing the ID of the created task.
     """
@@ -48,7 +48,7 @@ async def get_task(task_id: str) -> Optional[Any]:
         The ID of the task.
 
     Returns
-    -------
+    ----------
     Optional[Dict[str, Any]]
         A dictionary containing information about the task if found, or None otherwise.
     """

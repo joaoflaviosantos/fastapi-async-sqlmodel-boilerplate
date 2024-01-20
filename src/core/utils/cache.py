@@ -35,7 +35,7 @@ def _infer_resource_id(
         The expected type of the resource ID, which can be integer (int) or a string (str).
 
     Returns
-    -------
+    ----------
     Union[None, int, str]
         The inferred resource ID. If it cannot be inferred or does not match the expected type, it returns None.
 
@@ -73,12 +73,12 @@ def _extract_data_inside_brackets(input_string: str) -> List[str]:
         The input string in which to find data enclosed within curly brackets.
 
     Returns
-    -------
+    ----------
     List[str]
         A list of strings containing the data found inside the curly brackets within the input string.
 
     Example
-    -------
+    ----------
     >>> _extract_data_inside_brackets("The {quick} brown {fox} jumps over the {lazy} dog.")
     ['quick', 'fox', 'lazy']
     """
@@ -99,7 +99,7 @@ def _construct_data_dict(data_inside_brackets: List[str], kwargs: Dict[str, Any]
         A dictionary of keyword arguments.
 
     Returns
-    -------
+    ----------
     Dict[str, Any]: A dictionary with keys from data_inside_brackets and corresponding values from kwargs.
     """
     data_dict = {}
@@ -121,7 +121,7 @@ def _format_prefix(prefix: str, kwargs: Dict[str, Any]) -> str:
         A dictionary of keyword arguments.
 
     Returns
-    -------
+    ----------
     str: The formatted prefix.
     """
     data_inside_brackets = _extract_data_inside_brackets(prefix)
@@ -149,7 +149,7 @@ def _format_extra_data(
         A dictionary of keyword arguments.
 
     Returns
-    -------
+    ----------
         Dict[str, Any]: A dictionary where keys are formatted templates and values are associated keyword argument values.
     """
     formatted_extra = {}
@@ -251,12 +251,12 @@ def cache(
         This allows for bulk invalidation of cache keys based on a matching pattern.
 
     Returns
-    -------
+    ----------
     Callable
         A decorator function that can be applied to FastAPI endpoint functions.
 
     Example usage
-    -------------
+    ----------
 
     ```python
     from fastapi import FastAPI, Request
@@ -276,7 +276,7 @@ def cache(
     The cached data is retrieved for GET requests, and the cache is invalidated for other types of requests.
 
     Advanced Example Usage
-    -------------
+    ----------
     ```python
     from fastapi import FastAPI, Request
     from my_module import cache

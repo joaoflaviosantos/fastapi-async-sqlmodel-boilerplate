@@ -93,7 +93,7 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         Database session for performing database operations.
 
     Returns
-    -------
+    ----------
     TokenData | None
         An instance of TokenData representing the user if the token is valid.
         None is returned if the token is invalid or the user is not active.

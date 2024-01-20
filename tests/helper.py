@@ -16,12 +16,12 @@ def _get_token(username: str, password: str, client: TestClient):
         The FastAPI test client instance.
 
     Returns
-    -------
+    ----------
     response
         The response object containing the authentication token.
 
     Example
-    -------
+    ----------
     Obtaining an authentication token:
     ```python
     token_response = _get_token("example_user", "example_password", test_client_instance)

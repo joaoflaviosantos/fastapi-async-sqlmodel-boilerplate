@@ -1,116 +1,163 @@
 # Built-in Dependencies
 from datetime import datetime
-from typing import Annotated
-from uuid import UUID
 
 # Third-Party Dependencies
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import ConfigDict
 
 # Local Dependencies
-from src.core.common.schemas import (
-    UUIDSchema,
-    TimestampSchema,
-    PersistentDeletion,
-)
+from src.apps.blog.posts.models import PostContentBase, PostMediaBase, PostUserBase
+from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
 
 
-class PostBase(BaseModel):
-    title: Annotated[str, Field(min_length=2, max_length=30, examples=["This is my post"])]
-    text: Annotated[
-        str,
-        Field(
-            min_length=1,
-            max_length=63206,
-            examples=["This is the content of my post."],
-        ),
-    ]
+class PostBase(PostContentBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Base schema for representing a blog post.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    """
+
+    pass
 
 
-class Post(TimestampSchema, PostBase, UUIDSchema, PersistentDeletion):
-    media_url: Annotated[
-        str | None,
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
-            examples=["https://www.postimageurl.com"],
-            default=None,
-        ),
-    ]
-    user_id: UUID
+class Post(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin, SoftDeleteMixin):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema representing a blog post, including media and user information.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    - 'user_id': ID of the user associated with the post.
+    - 'id' (UUID): Unique identifier for the post.
+    - 'created_at': Timestamp for the creation of the post record.
+    - 'updated_at': Timestamp for the last update of the post record.
+    - 'deleted_at': Timestamp for the deletion of the post record (soft deletion).
+    - 'is_deleted': Flag indicating whether the post record is deleted (soft deletion).
+    """
+
+    pass
 
 
-class PostRead(BaseModel):
-    id: UUID
-    title: Annotated[str, Field(min_length=2, max_length=30, examples=["This is my post"])]
-    text: Annotated[
-        str,
-        Field(
-            min_length=1,
-            max_length=63206,
-            examples=["This is the content of my post."],
-        ),
-    ]
-    media_url: Annotated[
-        str | None,
-        Field(examples=["https://www.postimageurl.com"], default=None),
-    ]
-    user_id: UUID
-    created_at: datetime
+class PostRead(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Read-only schema for retrieving information about a blog post, including media and user details.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    - 'user_id': ID of the user associated with the post.
+    - 'id' (UUID): Unique identifier for the post.
+    - 'created_at': Timestamp for the creation of the post record.
+    - 'updated_at': Timestamp for the last update of the post record.
+    """
+
+    pass
 
 
-class PostCreate(PostBase):
+class PostCreate(PostBase, PostMediaBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Schema for creating a new blog post, including media information.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
-    media_url: Annotated[
-        str | None,
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
-            examples=["https://www.postimageurl.com"],
-            default=None,
-        ),
-    ]
+
+class PostCreateInternal(PostCreate, PostUserBase):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Internal schema for creating a new blog post, including media and user information.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    - 'user_id': ID of the user associated with the post.
+    """
+
+    pass
 
 
-class PostCreateInternal(PostCreate):
-    user_id: UUID
+class PostUpdate(PostContentBase, PostMediaBase):
+    """
+    API Schema
 
+    Description:
+    ----------
+    Schema for updating an existing blog post, including media information.
 
-class PostUpdate(BaseModel):
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    """
+
     model_config = ConfigDict(extra="forbid")
-
-    title: Annotated[
-        str | None,
-        Field(
-            min_length=2,
-            max_length=30,
-            examples=["This is my updated post"],
-            default=None,
-        ),
-    ]
-    text: Annotated[
-        str | None,
-        Field(
-            min_length=1,
-            max_length=63206,
-            examples=["This is the updated content of my post."],
-            default=None,
-        ),
-    ]
-    media_url: Annotated[
-        str | None,
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
-            examples=["https://www.postimageurl.com"],
-            default=None,
-        ),
-    ]
 
 
 class PostUpdateInternal(PostUpdate):
+    """
+    API Schema
+
+    Description:
+    ----------
+    Internal schema for updating an existing blog post, including media information and the last update timestamp.
+
+    Fields:
+    ----------
+    - 'title': Title of the post.
+    - 'text': Text content of the post.
+    - 'media_url': URL of the media associated with the post.
+    - 'updated_at': Timestamp for the last update of the post record.
+    """
+
     updated_at: datetime
 
 
-class PostDelete(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class PostDelete(SoftDeleteMixin):
+    """
+    API Schema
 
-    is_deleted: bool
-    deleted_at: datetime
+    Description:
+    ----------
+    Schema for logically deleting a blog post.
+
+    Fields:
+    ----------
+    - 'deleted_at': Timestamp for the deletion of the post (soft deletion).
+    - 'is_deleted': Flag indicating whether the post record is deleted (soft deletion).
+    """
+
+    model_config = ConfigDict(extra="forbid")

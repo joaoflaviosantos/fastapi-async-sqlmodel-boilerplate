@@ -78,7 +78,7 @@ This project aims to provide a robust structure while serving as an excellent to
 - [x] Implement a robust logging system to track and manage application events efficiently.
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
-- [ ] Implement using SQLModel to streamline the interaction between the database and the API.
+- [x] Implement using SQLModel to streamline the interaction between the database and the API.
 - [ ] Enhance scalability with NGINX reverse proxy and load balancing.
 - [ ] Implement containerization of the application with Docker for easy deployment and scalability.
 

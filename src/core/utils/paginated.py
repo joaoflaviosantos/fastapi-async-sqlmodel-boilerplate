@@ -35,7 +35,7 @@ def paginated_response(crud_data: dict, page: int, items_per_page: int) -> Dict[
         Number of items per page.
 
     Returns
-    -------
+    ----------
     Dict[str, Any]
         A structured paginated response dict containing the list of items, total count, pagination flags, and numbers.
 
@@ -69,12 +69,12 @@ def compute_offset(page: int, items_per_page: int) -> int:
         The number of items to be displayed on each page.
 
     Returns
-    -------
+    ----------
     int
         The calculated offset.
 
     Examples
-    --------
+    ----------
     >>> offset(1, 10)
     0
     >>> offset(3, 10)

@@ -218,7 +218,7 @@ def create_application(
         Extra keyword arguments passed directly to the FastAPI constructor.
 
     Returns
-    -------
+    ----------
     FastAPI
         A fully configured FastAPI application instance.
     """

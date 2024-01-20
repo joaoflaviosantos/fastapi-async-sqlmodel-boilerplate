@@ -21,14 +21,14 @@ async def create_first_user(session: AsyncSession) -> None:
 
     # Checking if user already exists
     query = select(User).filter_by(email=email)
-    result = await session.execute(query)
+    result = await session.exec(query)
     user = result.scalar_one_or_none()
 
     # Creating admin user if it doesn't exist
     if user is None:
         # Getting default tier to assign to first user/admin
         query = select(Tier).where(Tier.name == settings.TIER_NAME_DEFAULT)
-        result = await session.execute(query)
+        result = await session.exec(query)
         tier = result.scalar_one_or_none()
 
         if tier is None:
