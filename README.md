@@ -42,13 +42,15 @@
 
 🚧 _Note: This project is currently under development and is a work in progress._ 🚧
 
-## Project Overview
+## 🔍 Project Overview
 
-This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **ARQ**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/auth` and `blog/posts` showcase the optimal balance between modularity and clarity.
+This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **ARQ**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**.
 
-## Featured Aspects
+It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and structural principles.
 
-This project aims to offer a strong foundation for API development, incorporating a blend of cutting-edge technologies and structural principles:
+## 📦 Featured Aspects
+
+This project seeks to provide a **strong foundation for API development**, incorporating a blend of cutting-edge technologies and structural principles:
 
 - ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
 - 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
@@ -67,9 +69,7 @@ This project aims to offer a strong foundation for API development, incorporatin
 - 🚚 **Docker Compose:** Easily run the project with Docker Compose.
 - ⚖️ **NGINX Reverse Proxy and Load Balancing:** Enhance scalability with NGINX reverse proxy and load balancing.
 
-This project aims to provide a robust structure while serving as an excellent tool for quick POC validations and MVP launches. It's crafted to attract enthusiasts who appreciate how Django operates.
-
-## Project Goals 🎯
+## 🎯 Project Goals
 
 - [x] Leverage the power of FastAPI for building high-performance APIs.
 - [x] Implement asynchronous programming wherever applicable for optimal performance.
@@ -83,7 +83,7 @@ This project aims to provide a robust structure while serving as an excellent to
 - [ ] Utilize supervisorctl for managing FastAPI and ARQ services.
 - [ ] Implement containerization of the application with Docker for easy deployment and scalability.
 
-## Prerequisites
+## 📋 Prerequisites
 
 Before you begin, ensure you have the following prerequisites installed and configured:
 
@@ -116,7 +116,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
 4. With Poetry installed, you can now proceed to install the project dependencies.
 
-## Installation
+## 🛠️ Installation
 
 1. Clone the repository:
 
@@ -154,7 +154,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
      poetry run python -c "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))"
      ```
 
-## Database Migration
+## 🔀 Database Migration
 
 To create tables in the database, run Alembic migrations:
 
@@ -168,7 +168,7 @@ And to apply the migration:
 poetry run alembic upgrade head
 ```
 
-## Running the Backend
+## 🚀 Running the Backend
 
 Start the FastAPI application:
 
@@ -182,7 +182,7 @@ Start the ARQ worker:
 poetry run arq src.worker.WorkerSettings
 ```
 
-## Running Tests
+## 🧪 Running Tests
 
 Run tests using pytest:
 
@@ -190,9 +190,19 @@ Run tests using pytest:
 poetry run python -m pytest -vv ./tests
 ```
 
+## 🚧 Pre-Commit Instructions
+
+Before committing changes, ensure that you've activated the virtual environment in 'backend/.venv' at the root of the project. This step is crucial for the successful execution of pre-commit hooks. Activate the virtual environment using the following command in the root folder of your project:
+
+```bash
+source backend/.venv/bin/activate
+```
+
+After activating the virtual environment, pre-commit hooks will check your commits before they are committed.
+
 Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
 
-## Reference Projects 🌐
+## 🌐 Reference Projects
 
 - [FastAPI Boilerplate by Igor Magalhães](https://github.com/igorbenav/FastAPI-boilerplate)
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
