@@ -80,6 +80,7 @@ This project aims to provide a robust structure while serving as an excellent to
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
 - [ ] Enhance scalability with NGINX reverse proxy and load balancing.
+- [ ] Utilize supervisorctl for managing FastAPI and ARQ services.
 - [ ] Implement containerization of the application with Docker for easy deployment and scalability.
 
 ## Prerequisites
@@ -126,7 +127,7 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 2. Navigate to the project directory:
 
    ```bash
-   cd fastapi-async-sqlmodel-boilerplate
+   cd fastapi-async-sqlmodel-boilerplate/backend
    ```
 
 3. Install dependencies using Poetry:

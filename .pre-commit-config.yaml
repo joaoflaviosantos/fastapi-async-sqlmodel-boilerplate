@@ -10,7 +10,7 @@ repos:
     hooks:
       - id: unit_test
         name: pytest
-        entry: poetry run python -m pytest -vv ./tests
+        entry: bash -c 'cd ./backend && poetry run python -m pytest -vv ./tests'
         language: system
         pass_filenames: false
         always_run: true
