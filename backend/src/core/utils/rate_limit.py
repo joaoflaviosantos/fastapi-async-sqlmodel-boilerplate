@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 
 # Third-Party Dependencies
 from redis.asyncio import Redis, ConnectionPool
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import FastAPI, APIRouter
 
 # Local Dependencies

@@ -2,7 +2,7 @@
 import asyncio
 
 # Third-Party Dependencies
-from sqlalchemy import select
+from sqlmodel import select
 
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
@@ -26,14 +26,14 @@ async def create_first_post(session: AsyncSession) -> None:
         Post.media_url == test_post["media_url"],
     )
     result = await session.exec(query)
-    post = result.scalar_one_or_none()
+    post = result.one_or_none()
 
     # Creating post if it doesn't exist
     if post is None:
         # Getting admin user as post author
         query = select(User).where(User.username == settings.ADMIN_USERNAME)
         result = await session.exec(query)
-        user = result.scalar_one_or_none()
+        user = result.one_or_none()
 
         if user is None:
             raise Exception("Admin user not found")

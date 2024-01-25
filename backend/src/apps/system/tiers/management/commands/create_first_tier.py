@@ -2,7 +2,7 @@
 import asyncio
 
 # Third-Party Dependencies
-from sqlalchemy import select
+from sqlmodel import select
 
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
@@ -17,7 +17,7 @@ async def create_first_tier(session: AsyncSession) -> None:
     # Checking if tier already exists
     query = select(Tier).where(Tier.name == tier_name)
     result = await session.exec(query)
-    tier = result.scalar_one_or_none()
+    tier = result.one_or_none()
 
     # Creating tier if it doesn't exist
     if tier is None:

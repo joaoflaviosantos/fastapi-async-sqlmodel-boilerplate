@@ -4,7 +4,7 @@ from datetime import timedelta
 
 # Third-party Dependencies
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import Response, Request, Depends
 from jose import JWTError
 import fastapi

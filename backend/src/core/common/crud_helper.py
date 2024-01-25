@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeMeta
 from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql import ColumnElement
 from sqlalchemy.sql.schema import Column
-from sqlalchemy import inspect
+from sqlmodel import inspect
 from pydantic import BaseModel
 
 # Local Dependencies

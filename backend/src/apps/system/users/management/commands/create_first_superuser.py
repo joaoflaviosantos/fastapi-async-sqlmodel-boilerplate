@@ -2,7 +2,7 @@
 import asyncio
 
 # Third-Party Dependencies
-from sqlalchemy import select
+from sqlmodel import select
 
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
@@ -22,14 +22,14 @@ async def create_first_user(session: AsyncSession) -> None:
     # Checking if user already exists
     query = select(User).filter_by(email=email)
     result = await session.exec(query)
-    user = result.scalar_one_or_none()
+    user = result.one_or_none()
 
     # Creating admin user if it doesn't exist
     if user is None:
         # Getting default tier to assign to first user/admin
         query = select(Tier).where(Tier.name == settings.TIER_NAME_DEFAULT)
         result = await session.exec(query)
-        tier = result.scalar_one_or_none()
+        tier = result.one_or_none()
 
         if tier is None:
             raise Exception("Default tier not found")

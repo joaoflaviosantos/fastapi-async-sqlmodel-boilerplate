@@ -3,7 +3,7 @@ from typing import Annotated, Union, Any
 
 # Third-Party Dependencies
 from fastapi import Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
 from src.apps.system.rate_limits.crud import crud_rate_limits
