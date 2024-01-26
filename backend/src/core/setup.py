@@ -234,6 +234,7 @@ def create_application(
                 "name": settings.CONTACT_NAME,
                 "email": settings.CONTACT_EMAIL,
             },
+            "version": settings.APP_VERSION,
             "license_info": {"name": settings.LICENSE_NAME},
         }
         kwargs.update(to_update)
@@ -297,9 +298,18 @@ def create_application(
             async def openapi() -> Dict[str, Any]:
                 out: dict = get_openapi(
                     title=application.title,
+                    description=application.description,
+                    contact=application.contact,
                     version=application.version,
                     routes=application.routes,
                 )
+
+                # Add license info if it exists
+                if application.license_info.get("name") is not None:
+                    out.update(
+                        info={**out["info"], "license": application.license_info},
+                    )
+
                 return out
 
             # Include custom routes for API documentation

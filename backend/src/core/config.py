@@ -16,10 +16,10 @@ config = Config(env_path)
 
 
 class AppSettings(BaseSettings):
-    PROJECT_NAME: str = config("PROJECT_NAME", default="FastAPI app")
+    PROJECT_NAME: str = config("PROJECT_NAME", default="FastAPI Async SQLModel Boilerplate")
     PROJECT_DESCRIPTION: str | None = config("PROJECT_DESCRIPTION", default=None)
-    APP_VERSION: str | None = config("APP_VERSION", default=None)
-    LICENSE_NAME: str | None = config("LICENSE", default=None)
+    APP_VERSION: str | None = config("APP_VERSION", default="0.0.1")
+    LICENSE_NAME: str | None = config("LICENSE_NAME", default=None)
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
 
