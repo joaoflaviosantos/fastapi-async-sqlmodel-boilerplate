@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Function to print text in color
+# Function to print colored text
 print_color() {
     COLOR=$1
     TEXT=$2
@@ -44,7 +44,7 @@ print_color "0;32" "Supercharge your FastAPI development. A backend for perfecti
 # Display help menu initially
 display_help
 
-# Ask user for action
+# Step 0: Ask user for action
 choice=$(read_color "1;37" "\nEnter the number corresponding to your choice: ")
 
 # Process user choice
@@ -52,13 +52,13 @@ case $choice in
     1)
         print_color "1;31" "\n-> You chose Local Development Mode...\n"
 
-        # Step 2: Navigate to the project directory
+        # Step 1.1: Navigate to the project directory
         cd backend/
 
-        # Step 3: Install dependencies
+        # Step 1.2: Install dependencies
         poetry install
 
-        # Step 4: Check if .env file exists before copying
+        # Step 1.3: Check if .env file exists before copying
         if [ ! -f ".env" ]; then
             cp .env.example .env
             print_color "0;32" "\nCopied '.env.example' to '.env'.\n"
@@ -66,7 +66,7 @@ case $choice in
             print_color "0;33" "\n'.env' file already exists. Skipping copy step.\n"
         fi
 
-        # Step 5: Check if SECRET_KEY is placeholder before generating
+        # Step 1.4: Check if SECRET_KEY is a placeholder before generating
         secret_key_placeholder="here-should-be-a-secret-key"
         current_secret_key=$(grep -E '^SECRET_KEY=' .env | awk -F'=' '{print $2}' | tr -d '"')
         if [ "$current_secret_key" == "$secret_key_placeholder" ]; then
@@ -77,13 +77,13 @@ case $choice in
             print_color "0;33" "'SECRET_KEY' in '.env' is already set. Skipping generation step.\n"
         fi
 
-        # Inform the user to modify other environment variables in ".env"
+        # Step 1.5: Inform the user to modify other environment variables in ".env"
         print_color "1;34" "Please modify other environment variables in 'backend/.env' as needed.\n"
 
-        # Display a success message for Local Development Mode
+        # Step 1.6: Display a success message for Local Development Mode
         print_color "1;31" "-> Setup complete for Local Development Mode...\n"
         
-        # Ask the user if they want to perform additional actions
+        # Step 1.7: Ask the user if they want to perform additional actions
         print_color "1;37" "Do you want to perform any additional actions?\n"
         echo "1 - Start the FastAPI server"
         echo "2 - Start the ARQ worker"
@@ -92,40 +92,45 @@ case $choice in
         echo "5 - Commit and Push Changes"
         echo "6 - Exit"
 
+        # Step 1.8: Ask the user for additional action choice
         additional_action=$(read_color "1;37" "\nEnter the number corresponding to your choice: ")
 
         # Process user's additional action choice
         case $additional_action in
-            1)
+            1)  
                 print_color "1;31" "\n-> Starting the FastAPI server...\n"
+                # Step 1.1.1: Start the FastAPI server
                 poetry run uvicorn src.main:app --reload
                 print_color "1;31" "\n-> Stopping the FastAPI server...\n"
                 ;;
             2)
                 print_color "1;31" "\n-> Running the ARQ worker...\n"
+                # Step 1.2.1: Start the ARQ worker
                 poetry run arq src.worker.WorkerSettings
                 print_color "1;31" "\n-> Finished running the ARQ worker...\n"
                 ;;
             3)
                 print_color "1;31" "\n-> Running unit tests...\n"
+                # Step 1.3.1: Run unit tests
                 poetry run python -m pytest -vv ./tests
                 print_color "1;31" "\n-> Finished running unit tests...\n"
                 ;;
             4)
                 print_color "1;31" "\n-> Running linting and formatting checks...\n"
+                # Step 1.4.1: Run linting and formatting checks
                 poetry run python -m black .
                 print_color "1;31" "\n-> Finished running linting and formatting checks...\n"
                 ;;
             5)
                 print_color "1;31" "\n-> Committing and pushing changes...\n"
 
-                # Return to root directory
+                # Step 1.5.1: Return to the root directory
                 cd ..
 
-                # Ask the user if they want to include all files in the commit
+                # Step 1.5.2: Ask the user which files they want to include in the commit
                 read -p "Do you want to include all files in this commit? (y/n): " include_all_files
 
-                if [ "$include_all_files" = "y" ]; then
+                if [ "$include_all_files" = "y" ] || [ "$include_all_files" = "yes" ]; then
                     # Include all files
                     git add .
                 else
@@ -136,21 +141,21 @@ case $choice in
                     git add $files_to_commit
                 fi
 
-                # Clean the variables at the beginning
+                # Step 1.5.3: Clean the variables at the beginning
                 BRANCH=""
                 MESSAGE=""
                 DESCRIPTION=""
 
-                # Get the current branch name
+                # Step 1.5.4: Get the current branch name
                 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-                # Check if BRANCH is not empty
+                # Step 1.5.5: Check if BRANCH is not empty
                 if [ -z "$BRANCH" ]; then
                     print_color "1;31" "\n-> Error: Unable to determine the current branch name. Please try again.\n"
                     exit 1
                 fi
 
-                # Loop until MESSAGE is not empty
+                # Step 1.5.6: Loop until MESSAGE is not empty
                 while [ -z "$MESSAGE" ]; do
                     # Get the commit message from the user
                     MESSAGE=$(read_color "1;37" "Please enter the commit message: ")
@@ -164,11 +169,11 @@ case $choice in
                     fi
                 done
 
-                # Ask the user if they want to include an additional commit description (optional)
+                # Step 1.5.7: Ask the user if they want to include an additional commit description (optional)
                 read -p "Do you want to include an additional commit description? (y/n): " include_description
 
                 # Check if the user wants to include an additional description
-                if [ "$include_description" = "y" ]; then
+                if [ "$include_description" = "y" ] || [ "$include_description" = "yes" ]; then
                     # Loop until DESCRIPTION is not empty
                     while [ -z "$DESCRIPTION" ]; do
                         # Get the commit description message from the user
@@ -188,9 +193,10 @@ case $choice in
                     done
                 fi
 
+                # Step 1.5.8: Activate the virtual environment to use pre-commit installation
                 source backend/.venv/bin/activate
-
-                # Commit and push changes
+                
+                # Step 1.5.9: Commit and push changes
                 if [ -z "$DESCRIPTION" ]; then
                     git commit -m "$MESSAGE"
                 else
@@ -198,13 +204,14 @@ case $choice in
                 fi
                 git push origin $BRANCH
 
+                # Step 1.5.10: Deactivate the virtual environment
                 deactivate
 
-                # Navigate to the project directory (to correctly finish the setup.sh script)
+                # Step 1.5.11: Navigate to the project directory (to correctly finish the setup.sh script)
                 cd backend/
 
-                # Inform the user that changes have been committed and pushed
-                print_color "0;32" "\nChanges have been committed and pushed to the branch '$BRANCH'.\n"
+                # Step 1.5.12: Inform the user that changes have been committed and pushed
+                print_color "1;31" "\nChanges have been committed and pushed to the branch '$BRANCH'.\n"
                 ;;
             6)
                 echo "\nExiting...\n"

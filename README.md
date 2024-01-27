@@ -54,7 +54,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 
 - ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
 - 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
-- 🧰 **SQLModel 2.0:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
+- 🧰 **SQLModel:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
 - 🔐 **JWT User Authentication:** Secure user authentication using JSON Web Tokens.
 - 🍪 **Cookie-based Refresh Token:** Implement a refresh token mechanism using cookies.
 - 🏬 **Easy Redis Caching:** Utilize Redis for simple and effective caching.
@@ -79,9 +79,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
-- [ ] Enhance scalability with NGINX reverse proxy and load balancing.
-- [ ] Utilize supervisorctl for managing FastAPI and ARQ services.
-- [ ] Implement containerization of the application with Docker for easy deployment and scalability.
+- [ ] Provide diverse deployment options to ensure flexibility and accessibility.
 
 ## 📋 Prerequisites
 
