@@ -85,19 +85,35 @@ class RedisCacheSettings(BaseSettings):
 
 
 class RedisQueueSettings(BaseSettings):
-    REDIS_QUEUE_HOST: str = config("REDIS_QUEUE_HOST", default="localhost")
+    REDIS_QUEUE_HOST: str | None = config("REDIS_QUEUE_HOST", default=None)
     REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
     REDIS_QUEUE_USERNAME: str | None = config("REDIS_QUEUE_USERNAME", default=None)
     REDIS_QUEUE_PASSWORD: str | None = config("REDIS_QUEUE_PASSWORD", default=None)
     REDIS_QUEUE_URL: str = f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
 
+    @field_validator("REDIS_QUEUE_URL", mode="after")
+    def assemble_redis_queue_connection(cls, v: str | None, info: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            if info.data["REDIS_QUEUE_HOST"] == "":
+                redis_cache_settings = RedisCacheSettings()
+                return redis_cache_settings.REDIS_CACHE_URL
+        return v
+
 
 class RedisRateLimiterSettings(BaseSettings):
-    REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="localhost")
+    REDIS_RATE_LIMIT_HOST: str | None = config("REDIS_RATE_LIMIT_HOST", default=None)
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
     REDIS_RATE_LIMIT_USERNAME: str | None = config("REDIS_RATE_LIMIT_USERNAME", default=None)
     REDIS_RATE_LIMIT_PASSWORD: str | None = config("REDIS_RATE_LIMIT_PASSWORD", default=None)
     REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
+
+    @field_validator("REDIS_RATE_LIMIT_URL", mode="after")
+    def assemble_redis_rate_limit_connection(cls, v: str | None, info: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            if info.data["REDIS_RATE_LIMIT_HOST"] == "":
+                redis_cache_settings = RedisCacheSettings()
+                return redis_cache_settings.REDIS_CACHE_URL
+        return v
 
 
 class RedisHashSettings(BaseSettings):

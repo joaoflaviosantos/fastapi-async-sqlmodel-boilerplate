@@ -136,14 +136,12 @@ async def close_redis_cache_pool() -> None:
 # --------------------------------------
 # Function to create Redis queue pool during startup
 async def create_redis_queue_pool() -> None:
-    queue.pool = await create_pool(
-        RedisSettings(
-            host=settings.REDIS_QUEUE_HOST,
-            port=settings.REDIS_QUEUE_PORT,
-            username=settings.REDIS_QUEUE_USERNAME,
-            password=settings.REDIS_QUEUE_PASSWORD,
-        )
+    queue.pool = redis.ConnectionPool.from_url(
+        settings.REDIS_QUEUE_URL,
+        encoding="utf8",
+        decode_responses=True,
     )
+    queue.client = redis.Redis.from_pool(queue.pool)  # type: ignore
 
 
 # Function to close Redis queue pool during shutdown
@@ -156,7 +154,11 @@ async def close_redis_queue_pool() -> None:
 # --------------------------------------
 # Function to create Redis rate limit pool during startup
 async def create_redis_rate_limit_pool() -> None:
-    rate_limit.pool = redis.ConnectionPool.from_url(settings.REDIS_RATE_LIMIT_URL)
+    rate_limit.pool = redis.ConnectionPool.from_url(
+        settings.REDIS_RATE_LIMIT_URL,
+        encoding="utf8",
+        decode_responses=True,
+    )
     rate_limit.client = redis.Redis.from_pool(rate_limit.pool)  # type: ignore
 
 

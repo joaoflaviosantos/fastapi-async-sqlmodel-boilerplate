@@ -50,7 +50,7 @@ choice=$(read_color "1;37" "\nEnter the number corresponding to your choice: ")
 # Process user choice
 case $choice in
     1)
-        print_color "1;31" "\n-> You chose Local Development Mode."
+        print_color "1;31" "\n-> You chose Local Development Mode..."
 
         # Step 2: Navigate to the project directory
         cd backend/
@@ -78,7 +78,7 @@ case $choice in
         print_color "1;34" "Please modify other environment variables in 'backend/.env' as needed.\n"
 
         # Display a success message for Local Development Mode
-        echo -e "Setup complete for Local Development Mode.\n"
+        print_color "1;31" "\n-> Setup complete for Local Development Mode...\n"
         
         # Ask the user if they want to perform additional actions
         print_color "1;37" "Do you want to perform any additional actions?\n"
