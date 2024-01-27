@@ -93,11 +93,8 @@ async def shutdown(ctx: Worker) -> None:
 # --------------- CLASS ----------------
 # --------------------------------------
 class WorkerSettings:
-    redis_settings = RedisSettings(
-        host=settings.REDIS_QUEUE_HOST,
-        port=settings.REDIS_QUEUE_PORT,
-        username=settings.REDIS_QUEUE_USERNAME,
-        password=settings.REDIS_QUEUE_PASSWORD,
+    redis_settings = RedisSettings.from_dsn(
+        dsn=settings.REDIS_QUEUE_URL,
     )
     on_startup = startup
     on_shutdown = shutdown
