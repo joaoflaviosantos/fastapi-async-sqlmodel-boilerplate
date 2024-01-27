@@ -122,30 +122,41 @@ case $choice in
                 # Return to root directory
                 cd ..
 
-                # Add all files
-                # TODO: allow the user to define which files or folders should be committed
-                git add .
+                # Ask the user if they want to include all files in the commit
+                read -p "Do you want to include all files in this commit? (y/n): " include_all_files
+
+                if [ "$include_all_files" = "y" ]; then
+                    # Include all files
+                    git add .
+                else
+                    # Ask the user to enter the files to include in the commit
+                    read -p "Please enter the files to include in the commit (space-separated): " files_to_commit
+
+                    # Include the specified files
+                    git add $files_to_commit
+                fi
 
                 # Clean the variables at the beginning
                 BRANCH=""
                 MESSAGE=""
                 DESCRIPTION=""
 
-                # Loop until BRANCH is not empty
-                while [ -z "$BRANCH" ]; do
-                    # Get the branch name from the user
-                    BRANCH=$(read_color "1;37" "Please enter the branch name: ")
+                # Get the current branch name
+                BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-                    # Check if BRANCH is not empty
-                    if [ -z "$BRANCH" ]; then
-                        print_color "1;31" "\n-> Error: Branch name cannot be empty. Please try again.\n"
-                    fi
-                done
+                # Check if BRANCH is not empty
+                if [ -z "$BRANCH" ]; then
+                    print_color "1;31" "\n-> Error: Unable to determine the current branch name. Please try again.\n"
+                    exit 1
+                fi
 
                 # Loop until MESSAGE is not empty
                 while [ -z "$MESSAGE" ]; do
                     # Get the commit message from the user
                     MESSAGE=$(read_color "1;37" "Please enter the commit message: ")
+
+                    # Remove double quotes from the 'MESSAGE' variable
+                    MESSAGE=$(echo "$MESSAGE" | sed 's/"//g')
 
                     # Check if MESSAGE is not empty
                     if [ -z "$MESSAGE" ]; then
@@ -166,6 +177,9 @@ case $choice in
 
                         # Use 'cat' to capture the user's multiline input
                         DESCRIPTION=$(cat)
+
+                        # Remove double quotes from the 'DESCRIPTION' variable
+                        DESCRIPTION=$(echo "$DESCRIPTION" | sed 's/"//g')
 
                         # Check if DESCRIPTION is not empty
                         if [ -z "$DESCRIPTION" ]; then
@@ -188,11 +202,6 @@ case $choice in
 
                 # Navigate to the project directory (to correctly finish the setup.sh script)
                 cd backend/
-
-                # Clean the variables at the end
-                BRANCH=""
-                MESSAGE=""
-                DESCRIPTION=""
 
                 # Inform the user that changes have been committed and pushed
                 print_color "0;32" "\nChanges have been committed and pushed to the branch '$BRANCH'.\n"
