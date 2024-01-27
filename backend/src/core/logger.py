@@ -40,6 +40,7 @@ root_logger.handlers.clear()
 root_logger.addHandler(hdlr=file_handler)
 root_logger.addHandler(hdlr=console_handler)
 
+
 # Function to configure logging with a custom log file name
 def configure_logging(log_file: str = LOG_FILE_NAME) -> None:
     """

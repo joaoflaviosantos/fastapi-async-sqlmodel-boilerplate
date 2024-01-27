@@ -20,6 +20,7 @@ from src.core.exceptions.cache_exceptions import (
 pool: ConnectionPool | None = None
 client: Redis | None = None
 
+
 # Helper Function
 def _infer_resource_id(
     kwargs: Dict[str, Any], resource_id_type: Union[type, Tuple[type, ...]]

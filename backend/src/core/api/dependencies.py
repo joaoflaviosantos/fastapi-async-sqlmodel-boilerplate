@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_LIMIT = settings.DEFAULT_RATE_LIMIT_LIMIT
 DEFAULT_PERIOD = settings.DEFAULT_RATE_LIMIT_PERIOD
 
+
 # Function to get the current user based on the provided authentication token
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],

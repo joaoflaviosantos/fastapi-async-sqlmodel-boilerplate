@@ -42,6 +42,7 @@ from src.core.config import (
 # Logger instance for the current module
 logger = logging.getLogger(__name__)
 
+
 # --------------------------------------
 # -------------- LOGGING ---------------
 # --------------------------------------

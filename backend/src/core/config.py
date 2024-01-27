@@ -81,7 +81,9 @@ class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
     REDIS_CACHE_USERNAME: str | None = config("REDIS_CACHE_USERNAME", default=None)
     REDIS_CACHE_PASSWORD: str | None = config("REDIS_CACHE_PASSWORD", default=None)
-    REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
+    REDIS_CACHE_URL: str = (
+        f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
+    )
 
 
 class RedisQueueSettings(BaseSettings):
@@ -89,7 +91,9 @@ class RedisQueueSettings(BaseSettings):
     REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
     REDIS_QUEUE_USERNAME: str | None = config("REDIS_QUEUE_USERNAME", default=None)
     REDIS_QUEUE_PASSWORD: str | None = config("REDIS_QUEUE_PASSWORD", default=None)
-    REDIS_QUEUE_URL: str = f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
+    REDIS_QUEUE_URL: str = (
+        f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
+    )
 
     @field_validator("REDIS_QUEUE_URL", mode="after")
     def assemble_redis_queue_connection(cls, v: str | None, info: ValidationInfo) -> Any:
@@ -105,7 +109,9 @@ class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
     REDIS_RATE_LIMIT_USERNAME: str | None = config("REDIS_RATE_LIMIT_USERNAME", default=None)
     REDIS_RATE_LIMIT_PASSWORD: str | None = config("REDIS_RATE_LIMIT_PASSWORD", default=None)
-    REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
+    REDIS_RATE_LIMIT_URL: str = (
+        f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
+    )
 
     @field_validator("REDIS_RATE_LIMIT_URL", mode="after")
     def assemble_redis_rate_limit_connection(cls, v: str | None, info: ValidationInfo) -> Any:

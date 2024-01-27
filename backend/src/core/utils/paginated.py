@@ -7,6 +7,7 @@ from pydantic import BaseModel
 # Generic type variable for the schema used in the list response
 SchemaType = TypeVar("SchemaType", bound=BaseModel)
 
+
 # Generic BaseModel for a list response
 class ListResponse(BaseModel, Generic[SchemaType]):
     data: List[SchemaType]

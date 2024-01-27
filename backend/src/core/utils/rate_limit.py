@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 pool: ConnectionPool | None = None
 client: Redis | None = None
 
+
 # Function to normalize a route path, removing consultation parameters
 def normalize_route_path(route_path: str) -> str:
     """

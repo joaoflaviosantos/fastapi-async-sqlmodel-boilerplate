@@ -24,6 +24,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 # OAuth2PasswordBearer instance for handling token retrieval from requests
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/system/auth/login")
 
+
 # Function to verify plain password against hashed password
 async def verify_password(plain_password: str, hashed_password: str) -> bool:
     correct_password: bool = bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
