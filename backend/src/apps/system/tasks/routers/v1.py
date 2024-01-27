@@ -10,6 +10,8 @@ from src.core.api.dependencies import rate_limiter
 from src.apps.system.tasks.schemas import Job
 from src.core.utils import queue
 
+print(queue.pool)
+
 router = APIRouter(prefix="/system/tasks", tags=["System - Tasks"])
 
 

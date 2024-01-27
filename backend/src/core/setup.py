@@ -136,12 +136,11 @@ async def close_redis_cache_pool() -> None:
 # --------------------------------------
 # Function to create Redis queue pool during startup
 async def create_redis_queue_pool() -> None:
-    queue.pool = redis.ConnectionPool.from_url(
-        settings.REDIS_QUEUE_URL,
-        encoding="utf8",
-        decode_responses=True,
+    queue.pool = await create_pool(
+        RedisSettings.from_dsn(
+            dsn=settings.REDIS_QUEUE_URL,
+        )
     )
-    queue.client = redis.Redis.from_pool(queue.pool)  # type: ignore
 
 
 # Function to close Redis queue pool during shutdown
