@@ -1,9 +1,5 @@
 # Built-in Dependencies
 from typing import Union, Dict, Any
-import subprocess
-import platform
-import socket
-import os
 
 # Third-Party Dependencies
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
@@ -13,7 +9,6 @@ from arq.connections import RedisSettings
 from arq import create_pool
 import redis.asyncio as redis
 import fastapi
-import psutil
 import anyio
 
 # Local Dependencies
@@ -23,6 +18,7 @@ from src.apps.system.tiers.management.commands import create_first_tier
 from src.apps.blog.posts.management.commands import create_first_post
 from src.core.api.dependencies import get_current_superuser
 from src.core.db.session import async_engine as engine
+from src.core.utils.log import log_system_info
 from src.core.utils import cache, rate_limit
 from src.core.common.models import Base
 from src.core.config import settings
@@ -48,49 +44,8 @@ logger = logging.getLogger(__name__)
 # --------------------------------------
 # Function to configure logging during startup
 async def startup_logging() -> None:
-    # Obtain username and machine IP
-    user_name = os.getenv("USER") or os.getenv("LOGNAME") or os.getenv("USERNAME")
-    ip_address = socket.gethostbyname(socket.gethostname())
-
-    try:
-        # Run 'lscpu' command to get detailed CPU information
-        cpu_info_process = subprocess.run(["lscpu"], capture_output=True, text=True)
-        cpu_info_output = cpu_info_process.stdout
-
-        # Extract relevant CPU information
-        relevant_info = [
-            "Architecture",
-            "CPU op-mode(s)",
-            "Model name",
-            "CPU family",
-            "Model",
-            "Thread(s) per core",
-            "Core(s) per socket",
-            "Socket(s)",
-            "BogoMIPS",
-            "Virtualization",
-        ]
-
-        relevant_cpu_info = {
-            info.strip(): line.split(":", 1)[1].strip()
-            for line in cpu_info_output.splitlines()
-            if (info := line.split(":", 1)[0].strip()) in relevant_info
-        }
-
-        # Log with detailed information, including relevant CPU details
-        logger.info(
-            f"API started on machine: system={platform.system()}, user={user_name}, IP={ip_address}, "
-            f"RAM_available={psutil.virtual_memory().available / (1024 ** 3):.2f} GB, "
-            f"machine_model_name='{relevant_cpu_info.get('Model name', '')}', "
-            f"threads_per_core={int(relevant_cpu_info.get('Thread(s) per core', 1))}, "
-            f"cores_per_socket={int(relevant_cpu_info.get('Core(s) per socket', 1))}, "
-            f"sockets={int(relevant_cpu_info.get('Socket(s)', 1))}, "
-            f"virtualization='{relevant_cpu_info.get('Virtualization', '')}', "
-            f"CPU_cores={psutil.cpu_count(logical=False)}, CPU_speed={psutil.cpu_freq().max:.2f} MHz"
-        )
-    except Exception as e:
-        # Log an error if there's an issue retrieving CPU information
-        logger.error(f"Error getting CPU information: {e}")
+    # Log system information
+    log_system_info(logger=logger)
 
 
 # Function to configure logging during shutdown

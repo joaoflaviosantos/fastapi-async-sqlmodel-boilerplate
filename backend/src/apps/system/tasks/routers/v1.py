@@ -10,8 +10,6 @@ from src.core.api.dependencies import rate_limiter
 from src.apps.system.tasks.schemas import Job
 from src.core.utils import queue
 
-print(queue.pool)
-
 router = APIRouter(prefix="/system/tasks", tags=["System - Tasks"])
 
 
@@ -39,7 +37,7 @@ async def create_task(message: str) -> Dict[str, str]:
     return {"id": job.job_id}
 
 
-@router.get("/system/task/{task_id}")
+@router.get("/task/{task_id}")
 async def get_task(task_id: str) -> Optional[Any]:
     """
     Get information about a specific background task.
