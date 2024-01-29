@@ -144,6 +144,13 @@ class RateLimitUpdateInternal(RateLimitUpdate):
     Fields:
     ----------
     - 'updated_at' (datetime): Timestamp for the last update of the rate limit record.
+
+    Optional Fields:
+    ----------
+    - 'path' (str): API path for rate limit (optional).
+    - 'limit' (int): Number of requests allowed in the specified period (optional).
+    - 'period' (int): Time period (in seconds) during which the limit applies (optional).
+    - 'name' (str): Rate limit name (optional).
     """
 
     updated_at: datetime

@@ -17,7 +17,7 @@ ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 test_rate_limit_id = None
 test_rate_limit = {
     "name": "Test Rate Limit",
-    "path": "/api/v1/system/tasks/task",
+    "path": "/api/v1/system/task",
     "limit": 100,
     "period": 3600,
 }

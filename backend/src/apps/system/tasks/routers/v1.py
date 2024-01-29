@@ -1,20 +1,21 @@
 # Built-in Dependencies
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 
 # Third-Party Dependencies
 from arq.jobs import Job as ArqJob
-from fastapi import APIRouter, Depends
+from arq.jobs import JobResult
+from fastapi import APIRouter, Depends, Request
 
 # Local Dependencies
 from src.core.api.dependencies import rate_limiter
 from src.apps.system.tasks.schemas import Job
 from src.core.utils import queue
 
-router = APIRouter(prefix="/system/tasks", tags=["System - Tasks"])
+router = APIRouter(tags=["System - Tasks"])
 
 
 @router.post(
-    "/task",
+    "/system/task",
     response_model=Job,
     status_code=201,
     dependencies=[Depends(rate_limiter)],
@@ -37,7 +38,16 @@ async def create_task(message: str) -> Dict[str, str]:
     return {"id": job.job_id}
 
 
-@router.get("/task/{task_id}")
+@router.get("/system/tasks")
+async def read_tasks(request: Request) -> List[JobResult]:
+    """
+    Get results for all jobs in Redis.
+    """
+    jobs = await queue.pool.all_job_results()
+    return jobs
+
+
+@router.get("/system/task/{task_id}")
 async def get_task(task_id: str) -> Optional[Any]:
     """
     Get information about a specific background task.

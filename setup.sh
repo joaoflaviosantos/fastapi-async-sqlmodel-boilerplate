@@ -63,27 +63,32 @@ case $choice in
             cp .env.example .env
             print_color "0;32" "\nCopied '.env.example' to '.env'.\n"
         else
-            print_color "0;33" "\n'.env' file already exists. Skipping copy step.\n"
+            print_color "0;33" "\n'.env' file already exists. Skipping copy step."
         fi
 
-        # Step 1.4: Check if SECRET_KEY is a placeholder before generating
-        secret_key_placeholder="here-should-be-a-secret-key"
+        # Step 1.4: Check if SECRET_KEY is empty before generating
         current_secret_key=$(grep -E '^SECRET_KEY=' .env | awk -F'=' '{print $2}' | tr -d '"')
-        if [ "$current_secret_key" == "$secret_key_placeholder" ]; then
+        if [ -z "$current_secret_key" ]; then
             secret_key=$(poetry run python -c "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))")
-            sed -i "s/${secret_key_placeholder}/${secret_key}/" .env
+            sed -i "s/^SECRET_KEY=.*/SECRET_KEY=${secret_key}/" .env
             print_color "0;32" "\nGenerated and set a secure secret key in '.env'.\n"
         else
-            print_color "0;33" "'SECRET_KEY' in '.env' is already set. Skipping generation step.\n"
+            print_color "0;33" "\n'SECRET_KEY' in '.env' is already set. Skipping generation step.\n"
         fi
 
         # Step 1.5: Inform the user to modify other environment variables in ".env"
         print_color "1;34" "Please modify other environment variables in 'backend/.env' as needed.\n"
 
-        # Step 1.6: Display a success message for Local Development Mode
-        print_color "1;31" "-> Setup complete for Local Development Mode...\n"
+        # TODO: Include other steps to user input DATABASE and REDIS environment variables
+
+        # Step 1.6: Run Alembic migrations
+        print_color "0;32" "Running Alembic migrations...\n"
+        poetry run alembic upgrade head
+
+        # Step 1.7: Display a success message for Local Development Mode
+        print_color "1;31" "\n-> Setup complete for Local Development Mode...\n"
         
-        # Step 1.7: Ask the user if they want to perform additional actions
+        # Step 1.8: Ask the user if they want to perform additional actions
         print_color "1;37" "Do you want to perform any additional actions?\n"
         echo "1 - Start the FastAPI server"
         echo "2 - Start the ARQ worker"
@@ -92,7 +97,7 @@ case $choice in
         echo "5 - Commit and Push Changes"
         echo "6 - Exit"
 
-        # Step 1.8: Ask the user for additional action choice
+        # Step 1.9: Ask the user for additional action choice
         additional_action=$(read_color "1;37" "\nEnter the number corresponding to your choice: ")
 
         # Process user's additional action choice
