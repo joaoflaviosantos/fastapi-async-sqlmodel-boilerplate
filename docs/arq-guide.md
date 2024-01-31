@@ -18,10 +18,9 @@ ARQ is a high-performance Python library for handling background tasks, designed
 
 To start the ARQ worker, follow these steps:
 
----bash
+```bash
 poetry run arq src.worker.WorkerSettings
-
----
+```
 
 This command launches the ARQ worker, allowing for efficient background task queue management.
 

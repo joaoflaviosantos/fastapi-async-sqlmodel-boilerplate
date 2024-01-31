@@ -18,10 +18,9 @@ Running the FastAPI application asynchronously is made possible with Uvicorn. Uv
 
 To start the FastAPI application asynchronously using Uvicorn, follow these steps:
 
----bash
+```bash
 poetry run uvicorn src.main:app --reload
-
----
+```
 
 This command launches the FastAPI application, enabling asynchronous functionality with automatic reloading during development.
 
