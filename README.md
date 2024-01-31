@@ -166,6 +166,8 @@ And to apply the migration:
 poetry run alembic upgrade head
 ```
 
+For detailed instructions on database migration using Alembic, refer to the [Database Migrations Guide](docs/database-migration-guide.md) in the project's documentation.
+
 ## 🚀 Running the Backend
 
 Start the FastAPI application:
@@ -174,11 +176,15 @@ Start the FastAPI application:
 poetry run uvicorn src.main:app --reload
 ```
 
+For more details on running the backend with Uvicorn, consult the [Uvicorn Guide](docs/uvicorn-guide.md) in the project's documentation.
+
 Start the ARQ worker:
 
 ```bash
 poetry run arq src.worker.WorkerSettings
 ```
+
+For more details on running the ARQ worker, refer to the [ARQ Guide](docs/arq-guide.md) in the project's documentation.
 
 ## 🧪 Running Tests
 
@@ -187,6 +193,8 @@ Run tests using pytest:
 ```bash
 poetry run python -m pytest -vv ./tests
 ```
+
+For detailed guidance on running tests and confirming the application's behavior, refer to the [Testing Guide](docs/testing-guide.md) in the project's documentation.
 
 ## 🚧 Pre-Commit Instructions
 
@@ -198,10 +206,12 @@ source backend/.venv/bin/activate
 
 After activating the virtual environment, pre-commit hooks will check your commits before they are committed.
 
-Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
+Explore comprehensive instructions for setting up pre-commit steps and understanding their benefits in the [Pre-Commit Guide](docs/pre-commit-instructions.md) located within the project's documentation.
 
 ## 🌐 Reference Projects
 
 - [FastAPI Boilerplate by Igor Magalhães](https://github.com/igorbenav/FastAPI-boilerplate)
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
 - [The Ultimate FastAPI Async Setup by Evgeniy Tretyakov](https://github.com/ETretyakov/hero-app)
+
+Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
