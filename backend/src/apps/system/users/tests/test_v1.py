@@ -15,10 +15,15 @@ TEST_PASSWORD = settings.TEST_PASSWORD
 ADMIN_USERNAME = settings.ADMIN_USERNAME
 ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 
+# Test global variables
+user_id = None
+
 
 def test_post_user(client: TestClient) -> None:
+    global user_id
+
     response = client.post(
-        "/api/v1/system/user",
+        "/api/v1/system/users",
         json={
             "name": TEST_NAME,
             "username": TEST_USERNAME,
@@ -26,45 +31,70 @@ def test_post_user(client: TestClient) -> None:
             "password": TEST_PASSWORD,
         },
     )
+
+    user_id = response.json()["id"]
+
     assert response.status_code == 201
 
 
 def test_get_user(client: TestClient) -> None:
-    response = client.get(f"/api/v1/system/user/{TEST_USERNAME}")
+    global user_id
+    assert user_id is not None
+
+    response = client.get(f"/api/v1/system/users/{user_id}")
+
+    assert response.json()["username"] == TEST_USERNAME
     assert response.status_code == 200
 
 
 def test_get_multiple_users(client: TestClient) -> None:
     response = client.get("/api/v1/system/users")
+
+    assert len(response.json()["data"]) > 0
     assert response.status_code == 200
 
 
 def test_update_user(client: TestClient) -> None:
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+    global user_id
+    assert user_id is not None
+
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.patch(
-        f"/api/v1/system/user/{TEST_USERNAME}",
+        f"/api/v1/system/users/{user_id}",
         json={"name": f"Updated {TEST_NAME}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
+
+    assert response.json() == {"message": "User updated"}
     assert response.status_code == 200
 
 
 def test_delete_user(client: TestClient) -> None:
+    global user_id
+    assert user_id is not None
+
     token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/user/{TEST_USERNAME}",
+        f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
+
+    assert response.json() == {"message": "User deleted"}
     assert response.status_code == 200
 
 
 def test_delete_db_user(client: TestClient) -> None:
+    global user_id
+    assert user_id is not None
+
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/db_user/{TEST_USERNAME}",
+        f"/api/v1/system/db_users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
+
+    assert response.json() == {"message": "User deleted from the database"}
     assert response.status_code == 200

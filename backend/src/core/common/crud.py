@@ -10,7 +10,7 @@ from sqlalchemy.sql import Join
 from sqlmodel import SQLModel
 
 # Local Dependencies
-from src.core.common.crud_helper import (
+from src.core.utils.crud import (
     _extract_matching_columns_from_schema,
     _extract_matching_columns_from_kwargs,
     _auto_detect_join_condition,

@@ -10,8 +10,6 @@ from src.core.utils.partial import optional
 
 class Tier(TimestampMixin, TierBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema representing tier data.
@@ -27,8 +25,6 @@ class Tier(TimestampMixin, TierBase):
 
 class TierRead(TierBase):
     """
-    API Schema
-
     Description:
     ----------
     Read-only schema for retrieving tier data.
@@ -45,8 +41,6 @@ class TierRead(TierBase):
 
 class TierCreate(TierBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for creating a tier entry.
@@ -61,8 +55,6 @@ class TierCreate(TierBase):
 
 class TierCreateInternal(TierCreate):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for creating a tier entry.
@@ -78,8 +70,6 @@ class TierCreateInternal(TierCreate):
 @optional()
 class TierUpdate(TierBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating a tier entry.
@@ -94,8 +84,6 @@ class TierUpdate(TierBase):
 
 class TierUpdateInternal(TierUpdate):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for updating a tier entry.
@@ -110,8 +98,6 @@ class TierUpdateInternal(TierUpdate):
 
 class TierDelete(Base):
     """
-    API Schema
-
     Description:
     ----------
     Schema for deleting a tier entry.

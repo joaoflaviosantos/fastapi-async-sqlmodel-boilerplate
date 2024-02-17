@@ -23,7 +23,7 @@ class PostContentBase(Base):
 
     Examples:
     ----------
-    Examples of valid data for each field:
+    Example of a valid data:
     - 'title': "This is an example post"
     - 'text': "This is the content of an example post."
     """
@@ -59,7 +59,7 @@ class PostMediaBase(Base):
 
     Examples:
     ----------
-    Example of valid data:
+    Example of a valid data:
     - 'media_url': "https://www.imageurl.com/example_post.jpg"
     """
 
@@ -127,6 +127,19 @@ class Post(
     - 'updated_at': Timestamp for the last update of the post record.
     - 'deleted_at': Timestamp for the deletion of the post record (soft deletion).
     - 'is_deleted': Flag indicating whether the post record is deleted (soft deletion).
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'title': "This is an example post"
+    - 'text': "This is the content of an example post."
+    - 'media_url': "https://www.imageurl.com/example_post.jpg"
+    - 'user_id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'created_at': datetime.utcnow()
+    - 'updated_at': datetime.utcnow()
+    - 'deleted_at': None or datetime.utcnow()
+    - 'is_deleted': False or True
 
     Table Name:
     ----------

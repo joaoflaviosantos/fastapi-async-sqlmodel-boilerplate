@@ -23,7 +23,7 @@ def test_post_post(client: TestClient) -> None:
 
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
     response = client.post(
-        f"/api/v1/blog/{ADMIN_USERNAME}/post",
+        f"/api/v1/blog/{ADMIN_USERNAME}/posts",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -35,7 +35,7 @@ def test_post_post(client: TestClient) -> None:
 
 def test_get_user_post(client: TestClient) -> None:
 
-    response = client.get(f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}")
+    response = client.get(f"/api/v1/blog/{ADMIN_USERNAME}/posts/{test_post_id}")
     post = response.json()
 
     assert response.status_code == 200
@@ -54,7 +54,7 @@ def test_update_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.patch(
-        f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}",
+        f"/api/v1/blog/{ADMIN_USERNAME}/posts/{test_post_id}",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -65,7 +65,7 @@ def test_delete_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/blog/{ADMIN_USERNAME}/post/{test_post_id}",
+        f"/api/v1/blog/{ADMIN_USERNAME}/posts/{test_post_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200
@@ -75,7 +75,7 @@ def test_delete_db_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/blog/{ADMIN_USERNAME}/db_post/{test_post_id}",
+        f"/api/v1/blog/{ADMIN_USERNAME}/db_posts/{test_post_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200

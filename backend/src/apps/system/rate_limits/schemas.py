@@ -17,8 +17,6 @@ from src.core.utils.partial import optional
 
 class RateLimitBase(RateLimitConfigBase):
     """
-    API Schema
-
     Description:
     ----------
     Base schema for representing rate limit configuration.
@@ -38,8 +36,6 @@ class RateLimitBase(RateLimitConfigBase):
 
 class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for representing rate limit data.
@@ -58,8 +54,6 @@ class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitTierB
 
 class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
     """
-    API Schema
-
     Description:
     ----------
     Read-only schema for retrieving rate limit data.
@@ -75,8 +69,6 @@ class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBa
 
 class RateLimitCreate(RateLimitBase, RateLimitNameBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for creating a rate limit entry.
@@ -94,8 +86,6 @@ class RateLimitCreate(RateLimitBase, RateLimitNameBase):
 
 class RateLimitCreateInternal(RateLimitCreate, RateLimitTierBase):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for creating a rate limit entry.
@@ -116,8 +106,6 @@ class RateLimitCreateInternal(RateLimitCreate, RateLimitTierBase):
 @optional()
 class RateLimitUpdate(RateLimitBase, RateLimitNameBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating a rate limit entry.
@@ -135,8 +123,6 @@ class RateLimitUpdate(RateLimitBase, RateLimitNameBase):
 
 class RateLimitUpdateInternal(RateLimitUpdate):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for updating a rate limit entry.
@@ -158,8 +144,6 @@ class RateLimitUpdateInternal(RateLimitUpdate):
 
 class RateLimitDelete(Base):
     """
-    API Schema
-
     Description:
     ----------
     Schema for deleting a rate limit entry.

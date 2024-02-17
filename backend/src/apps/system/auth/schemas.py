@@ -8,8 +8,6 @@ from src.core.utils.partial import optional
 
 class Token(BaseModel):
     """
-    API Schema
-
     Description:
     ----------
     Response schema for representing a token.
@@ -26,8 +24,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """
-    API Schema
-
     Description:
     ----------
     Response schema for representing token data.
@@ -42,8 +38,6 @@ class TokenData(BaseModel):
 
 class TokenBlacklistCreate(TokenBlacklistBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for creating a token blacklist entry.
@@ -61,8 +55,6 @@ class TokenBlacklistCreate(TokenBlacklistBase):
 @optional()
 class TokenBlacklistUpdate(TokenBlacklistBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating a token blacklist entry.

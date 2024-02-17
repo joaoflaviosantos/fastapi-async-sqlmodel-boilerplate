@@ -1,138 +1,45 @@
 # Built-in Dependencies
-from typing import Any, Generic, TypeVar
-from collections.abc import Sequence
-from datetime import datetime, UTC
-import uuid as uuid_pkg
-from math import ceil
+from typing import Generic, TypeVar, List
 
 # Third-Party Dependencies
-from fastapi_pagination.bases import AbstractPage, AbstractParams
-from pydantic import Field, field_serializer, BaseModel
-from fastapi_pagination import Params, Page
+from pydantic import BaseModel
 
-DataType = TypeVar("DataType")
-T = TypeVar("T")
+# Generic type variable for the schema used in the list response
+SchemaType = TypeVar("SchemaType", bound=BaseModel)
 
 
-class PageBase(Page[T], Generic[T]):
+# Generic BaseModel for a list response
+class ListResponse(BaseModel, Generic[SchemaType]):
     """
-    Base class for paginated responses. Adds previous and next page numbers.
-    """
+    Description:
+    ----------
+    Schema for representing a list response.
 
-    previous_page: int | None = Field(None, description="Page number of the previous page")
-    next_page: int | None = Field(None, description="Page number of the next page")
-
-
-class IResponseBase(BaseModel, Generic[T]):
-    """
-    Base class for API response. Contains message, metadata, and data.
+    Fields:
+    ----------
+    - 'data' (List[SchemaType]): List of items in the response.
     """
 
-    message: str = ""
-    meta: dict = {}
-    data: T | None
+    data: List[SchemaType]
 
 
-class IGetResponsePaginated(AbstractPage[T], Generic[T]):
+# BaseModel for a paginated list response, inheriting from the generic ListResponse
+class PaginatedListResponse(ListResponse[SchemaType]):
     """
-    API response class for paginated GET requests. Extends IResponseBase with pagination details.
-    """
+    Description:
+    ----------
+    Schema for representing a paginated list response.
 
-    message: str | None = ""
-    meta: dict = {}
-    data: PageBase[T]
-
-    __params_type__ = Params  # Set params related to Page
-
-    @classmethod
-    def create(
-        cls,
-        items: Sequence[T],
-        total: int,
-        params: AbstractParams,
-    ) -> PageBase[T] | None:
-        """
-        Create paginated response based on provided items, total count, and request params.
-        """
-        if params.size is not None and total is not None and params.size != 0:
-            pages = ceil(total / params.size)
-        else:
-            pages = 0
-
-        return cls(
-            data=PageBase[T](
-                items=items,
-                page=params.page,
-                size=params.size,
-                total=total,
-                pages=pages,
-                next_page=params.page + 1 if params.page < pages else None,
-                previous_page=params.page - 1 if params.page > 1 else None,
-            )
-        )
-
-
-class IGetResponseBase(IResponseBase[DataType], Generic[DataType]):
-    """
-    API response class for basic GET requests.
+    Fields:
+    ----------
+    - 'data' (List[SchemaType]): List of items in the response.
+    - 'total_count' (int): Total number of items.
+    - 'has_more' (bool): Whether there are more items beyond the current page.
+    - 'page' (int | None): Current page number.
+    - 'items_per_page' (int | None): Number of items per page.
     """
 
-    message: str | None = "Data got correctly"
-
-
-class IPostResponseBase(IResponseBase[DataType], Generic[DataType]):
-    """
-    API response class for POST requests.
-    """
-
-    message: str | None = "Data created correctly"
-
-
-class IPutResponseBase(IResponseBase[DataType], Generic[DataType]):
-    """
-    API response class for PUT requests.
-    """
-
-    message: str | None = "Data updated correctly"
-
-
-class IDeleteResponseBase(IResponseBase[DataType], Generic[DataType]):
-    """
-    API response class for DELETE requests.
-    """
-
-    message: str | None = "Data deleted correctly"
-
-
-def create_response(
-    data: DataType,
-    message: str | None = None,
-    meta: dict | Any | None = {},
-) -> (
-    IResponseBase[DataType]
-    | IGetResponsePaginated[DataType]
-    | IGetResponseBase[DataType]
-    | IPutResponseBase[DataType]
-    | IDeleteResponseBase[DataType]
-    | IPostResponseBase[DataType]
-):
-    """
-    Create a generic API response based on the provided data, message, and metadata.
-    """
-    if isinstance(data, IGetResponsePaginated):
-        data.message = "Data paginated correctly" if message is None else message
-        data.meta = meta
-        return data
-    if message is None:
-        return {"data": data, "meta": meta}
-    return {"data": data, "message": message, "meta": meta}
-
-
-class HealthCheck(BaseModel):
-    """
-    Health check response schema.
-    """
-
-    name: str
-    version: str
-    description: str
+    total_count: int  # Total number of items
+    has_more: bool  # Whether there are more items beyond the current page
+    page: int | None = None  # Current page number
+    items_per_page: int | None = None  # Number of items per page

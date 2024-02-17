@@ -19,8 +19,6 @@ from src.apps.system.users.models import (
 
 class UserBase(UserPersonalInfoBase):
     """
-    API Schema
-
     Description:
     ----------
     Base schema for representing a user personal info.
@@ -46,8 +44,6 @@ class User(
     SoftDeleteMixin,
 ):
     """
-    API Schema
-
     Description:
     ----------
     Schema representing a user, including media, tier, permission, and security information.
@@ -73,8 +69,6 @@ class User(
 
 class UserRead(UserBase, UserMediaBase, UserTierBase, UUIDMixin):
     """
-    API Schema
-
     Description:
     ----------
     Read-only schema for retrieving information about a user, including media and tier details.
@@ -94,8 +88,6 @@ class UserRead(UserBase, UserMediaBase, UserTierBase, UUIDMixin):
 
 class UserCreate(UserBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for creating a new user.
@@ -121,8 +113,6 @@ class UserCreate(UserBase):
 
 class UserCreateInternal(UserBase, UserSecurityBase):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for creating a new user, including security information.
@@ -141,8 +131,6 @@ class UserCreateInternal(UserBase, UserSecurityBase):
 @optional()
 class UserUpdate(UserBase, UserMediaBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating an existing user, including media information.
@@ -160,8 +148,6 @@ class UserUpdate(UserBase, UserMediaBase):
 
 class UserUpdateInternal(UserUpdate):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for updating an existing user, including media information and the last update timestamp.
@@ -180,8 +166,6 @@ class UserUpdateInternal(UserUpdate):
 
 class UserTierUpdate(UserTierBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating the tier of a user.
@@ -196,8 +180,6 @@ class UserTierUpdate(UserTierBase):
 
 class UserDelete(SoftDeleteMixin):
     """
-    API Schema
-
     Description:
     ----------
     Schema for logically deleting a user.
@@ -212,8 +194,6 @@ class UserDelete(SoftDeleteMixin):
 
 class UserRestoreDeleted(BaseModel):
     """
-    API Schema
-
     Description:
     ----------
     Schema for restoring a deleted user.

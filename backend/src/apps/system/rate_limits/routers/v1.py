@@ -35,7 +35,7 @@ router = fastapi.APIRouter(tags=["System - Rate Limits"])
 
 
 @router.post(
-    "/system/tier/{tier_name}/rate_limit",
+    "/system/tiers/{tier_name}/rate_limits",
     dependencies=[Depends(get_current_superuser)],
     status_code=201,
 )
@@ -65,7 +65,7 @@ async def write_rate_limit(
 
 
 @router.get(
-    "/system/tier/{tier_name}/rate_limits",
+    "/system/tiers/{tier_name}/rate_limitss",
     response_model=PaginatedListResponse[RateLimitRead],
 )
 async def read_rate_limits(
@@ -90,7 +90,7 @@ async def read_rate_limits(
     return paginated_response(crud_data=rate_limits_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/tier/{tier_name}/rate_limit/{id}", response_model=RateLimitRead)
+@router.get("/system/tiers/{tier_name}/rate_limits/{id}", response_model=RateLimitRead)
 async def read_rate_limit(
     request: Request,
     tier_name: str,
@@ -111,7 +111,7 @@ async def read_rate_limit(
 
 
 @router.patch(
-    "/system/tier/{tier_name}/rate_limit/{id}",
+    "/system/tiers/{tier_name}/rate_limits/{id}",
     dependencies=[Depends(get_current_superuser)],
 )
 async def patch_rate_limit(
@@ -156,7 +156,7 @@ async def patch_rate_limit(
 
 
 @router.delete(
-    "/system/tier/{tier_name}/rate_limit/{id}",
+    "/system/tiers/{tier_name}/rate_limits/{id}",
     dependencies=[Depends(get_current_superuser)],
 )
 async def erase_rate_limit(

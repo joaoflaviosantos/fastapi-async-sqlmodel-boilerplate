@@ -29,7 +29,7 @@ class UserPersonalInfoBase(Base):
 
     Examples:
     ----------
-    Examples of valid data for each field:
+    Example of a valid data:
     - 'name': "User Userson"
     - 'username': "userson"
     - 'email': "user.userson@example.com"
@@ -201,6 +201,22 @@ class User(
     Relationships:
     ----------
     - 'system_tier': Relationship with the 'system_tier' table.
+
+    Examples:
+    ----------
+    - Example of a valid data:
+    - 'name': "John Doe"
+    - 'username': "johndoe"
+    - 'email': "userson@example.com"
+    - 'profile_image_url': "https://www.imageurl.com/profile_image.jpg"
+    - 'is_superuser': False
+    - 'hashed_password': "hashed_password_value"
+    - 'tier_id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'created_at': datetime.utcnow()
+    - 'updated_at': datetime.utcnow()
+    - 'deleted_at': None
+    - 'is_deleted': False
 
     Table Name:
     ----------

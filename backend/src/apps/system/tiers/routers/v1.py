@@ -1,8 +1,10 @@
 # Built-in Dependencies
 from typing import Annotated, Dict
+from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from fastapi import Request, Depends
 import fastapi
 
@@ -12,6 +14,7 @@ from src.apps.system.tiers.crud import crud_tiers
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
     DuplicateValueException,
+    ForbiddenException,
     NotFoundException,
 )
 from src.apps.system.tiers.schemas import (
@@ -30,7 +33,7 @@ router = fastapi.APIRouter(tags=["System - Tiers"])
 
 
 @router.post(
-    "/system/tier",
+    "/system/tiers",
     dependencies=[Depends(get_current_superuser)],
     status_code=201,
 )
@@ -65,43 +68,45 @@ async def read_tiers(
     return paginated_response(crud_data=tiers_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/tier/{name}", response_model=TierRead)
+@router.get("/system/tiers/{id}", response_model=TierRead)
 async def read_tier(
     request: Request,
-    name: str,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, name=name)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
     if db_tier is None:
         raise NotFoundException("Tier not found")
 
     return db_tier
 
 
-@router.patch("/system/tier/{name}", dependencies=[Depends(get_current_superuser)])
+@router.patch("/system/tiers/{id}", dependencies=[Depends(get_current_superuser)])
 async def patch_tier(
     request: Request,
     values: TierUpdate,
-    name: str,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, name=name)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
     if db_tier is None:
         raise NotFoundException("Tier not found")
 
-    await crud_tiers.update(db=db, object=values, name=name)
+    await crud_tiers.update(db=db, object=values, id=id)
     return {"message": "Tier updated"}
 
 
-@router.delete("/system/tier/{name}", dependencies=[Depends(get_current_superuser)])
+@router.delete("/system/tiers/{id}", dependencies=[Depends(get_current_superuser)], status_code=200)
 async def erase_tier(
     request: Request,
-    name: str,
+    id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, name=name)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
     if db_tier is None:
         raise NotFoundException("Tier not found")
-
-    await crud_tiers.delete(db=db, db_row=db_tier, name=name)
+    try:
+        await crud_tiers.delete(db=db, db_row=db_tier, id=id)
+    except IntegrityError:
+        raise ForbiddenException(detail="Tier cannot be deleted")
     return {"message": "Tier deleted"}

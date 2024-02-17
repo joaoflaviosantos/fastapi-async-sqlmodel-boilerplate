@@ -21,7 +21,7 @@ def test_create_task(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        f"/api/v1/system/task?message={test_task_message}",
+        f"/api/v1/system/tasks?message={test_task_message}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -31,17 +31,23 @@ def test_create_task(client: TestClient) -> None:
     assert response.status_code == 201
 
 
-def test_read_tasks(client: TestClient) -> None:
-    response = client.get("/api/v1/system/tasks")
-
-    assert response.status_code == 200
-
-
 def test_get_task(client: TestClient) -> None:
     global test_task_id
     assert test_task_id is not None
 
-    response = client.get(f"/api/v1/system/task/{test_task_id}")
+    response = client.get(f"/api/v1/system/tasks/{test_task_id}")
 
     assert response.status_code == 200
     assert response.json()["args"][0] == test_task_message
+
+
+def test_read_processed_tasks(client: TestClient) -> None:
+    response = client.get("/api/v1/system/tasks/processed")
+
+    assert response.status_code == 200
+
+
+def test_read_pending_tasks(client: TestClient) -> None:
+    response = client.get("/api/v1/system/tasks/pending")
+
+    assert response.status_code == 200

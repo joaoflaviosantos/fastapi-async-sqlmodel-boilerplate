@@ -222,8 +222,9 @@ def create_application(
         application.add_event_handler("shutdown", close_redis_cache_pool)
 
     if isinstance(settings, ClientSideCacheSettings):
-        # Add middleware for client-side caching with specified max age
-        application.add_middleware(ClientCacheMiddleware, max_age=settings.CLIENT_CACHE_MAX_AGE)
+        # Add middleware for client-side caching with specified max age if environment is not local (development)
+        if settings.ENVIRONMENT.value != "local":
+            application.add_middleware(ClientCacheMiddleware, max_age=settings.CLIENT_CACHE_MAX_AGE)
 
     if isinstance(settings, RedisQueueSettings):
         # Add event handlers for Redis queue pool setup and shutdown

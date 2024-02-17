@@ -33,7 +33,7 @@ from src.core.utils.paginated import (
 router = fastapi.APIRouter(tags=["Blog - Posts"])
 
 
-@router.post("/blog/{username}/post", response_model=PostRead, status_code=201)
+@router.post("/blog/{username}/posts", response_model=PostRead, status_code=201)
 async def write_post(
     request: Request,
     username: str,
@@ -88,7 +88,7 @@ async def read_posts(
     return paginated_response(crud_data=posts_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/blog/{username}/post/{id}", response_model=PostRead)
+@router.get("/blog/{username}/posts/{id}", response_model=PostRead)
 @cache(key_prefix="{username}_post_cache", resource_id_name="id")
 async def read_post(
     request: Request,
@@ -115,7 +115,7 @@ async def read_post(
     return db_post
 
 
-@router.patch("/blog/{username}/post/{id}")
+@router.patch("/blog/{username}/posts/{id}")
 @cache(
     "{username}_post_cache",
     resource_id_name="id",
@@ -146,7 +146,7 @@ async def patch_post(
     return {"message": "Post updated"}
 
 
-@router.delete("/blog/{username}/post/{id}")
+@router.delete("/blog/{username}/posts/{id}")
 @cache(
     "{username}_post_cache",
     resource_id_name="id",
@@ -178,7 +178,7 @@ async def erase_post(
 
 
 @router.delete(
-    "/blog/{username}/db_post/{id}",
+    "/blog/{username}/db_posts/{id}",
     dependencies=[Depends(get_current_superuser)],
 )
 @cache(

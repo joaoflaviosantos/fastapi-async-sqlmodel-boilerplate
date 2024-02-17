@@ -29,8 +29,8 @@ def normalize_route_path(route_path: str) -> str:
         str: The normalized route path.
 
     Example:
-        >>> normalize_route_path("/user?name=john")
-        "/user"
+        >>> normalize_route_path("/users?name=john")
+        "/users"
     """
     return route_path.split("?")[0]
 

@@ -23,7 +23,7 @@ class TokenBlacklistBase(Base):
 
     Examples:
     ----------
-    Examples of valid data for each field:
+    Example of a valid data:
     - 'token': "example_token_value"
     - 'expires_at': "2024-01-20T12:00:00"
 
@@ -59,6 +59,15 @@ class TokenBlacklist(TokenBlacklistBase, UUIDMixin, TimestampMixin, table=True):
     - 'id': Unique identifier (UUID) for the token blacklist entry.
     - 'created_at': Timestamp for the creation of the token blacklist entry.
     - 'updated_at': Timestamp for the last update of the token blacklist entry.
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'token': "example_token_value"
+    - 'expires_at': "2024-01-20T12:00:00"
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'created_at': datetime.utcnow()
+    - 'updated_at': datetime.utcnow()
 
     Table Name:
     ----------

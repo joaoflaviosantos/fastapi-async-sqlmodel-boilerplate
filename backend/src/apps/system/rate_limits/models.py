@@ -24,7 +24,7 @@ class RateLimitConfigBase(Base):
 
     Examples:
     ----------
-    Examples of valid data for each field:
+    Example of a valid data:
     - 'path': "users"
     - 'limit': 5
     - 'period': 60
@@ -64,7 +64,7 @@ class RateLimitNameBase(Base):
 
     Examples:
     ----------
-    Example of valid data:
+    Example of a valid data:
     - 'name': "users:5:60"
     """
 
@@ -124,6 +124,18 @@ class RateLimit(
     - 'id': Unique identifier (UUID) for the rate limit.
     - 'created_at': Timestamp for the creation of the rate limit record.
     - 'updated_at': Timestamp for the last update of the rate limit record.
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'path': "users"
+    - 'limit': 5
+    - 'period': 60
+    - 'name': "users:5:60"
+    - 'tier_id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'created_at': datetime.utcnow()
+    - 'updated_at': datetime.utcnow()
 
     Table Name:
     ----------

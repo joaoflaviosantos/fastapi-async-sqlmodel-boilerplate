@@ -19,6 +19,7 @@ class TierBase(Base):
 
     Examples:
     ----------
+    Example of a valid data:
     - 'name': "Free"
     """
 
@@ -47,6 +48,14 @@ class Tier(TierBase, UUIDMixin, TimestampMixin, table=True):
     - 'id' (UUID): Unique identifier for the tier.
     - 'created_at' (datetime): Timestamp for the creation of the tier record.
     - 'updated_at' (datetime): Timestamp for the last update of the tier record.
+
+    Examples:
+    ----------
+    Example of a valid data:
+    - 'name': "Free"
+    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
+    - 'created_at': datetime.utcnow()
+    - 'updated_at': datetime.utcnow()
 
     Table Name:
     ----------

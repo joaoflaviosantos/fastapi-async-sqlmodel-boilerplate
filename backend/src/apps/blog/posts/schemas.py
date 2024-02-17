@@ -11,8 +11,6 @@ from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
 
 class PostBase(PostContentBase):
     """
-    API Schema
-
     Description:
     ----------
     Base schema for representing a blog post.
@@ -28,8 +26,6 @@ class PostBase(PostContentBase):
 
 class Post(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin, SoftDeleteMixin):
     """
-    API Schema
-
     Description:
     ----------
     Schema representing a blog post, including media and user information.
@@ -52,8 +48,6 @@ class Post(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin, Sof
 
 class PostRead(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin):
     """
-    API Schema
-
     Description:
     ----------
     Read-only schema for retrieving information about a blog post, including media and user details.
@@ -74,8 +68,6 @@ class PostRead(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin)
 
 class PostCreate(PostBase, PostMediaBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for creating a new blog post, including media information.
@@ -92,8 +84,6 @@ class PostCreate(PostBase, PostMediaBase):
 
 class PostCreateInternal(PostCreate, PostUserBase):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for creating a new blog post, including media and user information.
@@ -111,8 +101,6 @@ class PostCreateInternal(PostCreate, PostUserBase):
 
 class PostUpdate(PostContentBase, PostMediaBase):
     """
-    API Schema
-
     Description:
     ----------
     Schema for updating an existing blog post, including media information.
@@ -129,8 +117,6 @@ class PostUpdate(PostContentBase, PostMediaBase):
 
 class PostUpdateInternal(PostUpdate):
     """
-    API Schema
-
     Description:
     ----------
     Internal schema for updating an existing blog post, including media information and the last update timestamp.
@@ -148,8 +134,6 @@ class PostUpdateInternal(PostUpdate):
 
 class PostDelete(SoftDeleteMixin):
     """
-    API Schema
-
     Description:
     ----------
     Schema for logically deleting a blog post.
