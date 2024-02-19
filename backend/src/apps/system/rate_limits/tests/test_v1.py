@@ -29,7 +29,7 @@ def test_post_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limits",
+        f"/api/v1/system/rate-limits/tier/{settings.TIER_NAME_DEFAULT}",
         json=test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -45,7 +45,7 @@ def test_post_invalid_rate_limit_tier_name(client: TestClient) -> None:
     invalid_tier_name = f"invalid-tier-{uuid4()}"
 
     response = client.post(
-        f"/api/v1/system/tiers/{invalid_tier_name}/rate_limits",
+        f"/api/v1/system/rate-limits/tier/{invalid_tier_name}",
         json=test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -60,7 +60,7 @@ def test_post_invalid_rate_limit_path(client: TestClient) -> None:
     invalid_test_rate_limit["path"] = "/api/v1/invalid/route"
 
     response = client.post(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limits",
+        f"/api/v1/system/rate-limits/tier/{settings.TIER_NAME_DEFAULT}",
         json=invalid_test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -72,7 +72,7 @@ def test_get_multiple_rate_limits(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limitss",
+        f"/api/v1/system/rate-limits/tier/{settings.TIER_NAME_DEFAULT}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -84,7 +84,7 @@ def test_get_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limits/{test_rate_limit_id}",
+        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{settings.TIER_NAME_DEFAULT}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     rate_limit = response.json()
@@ -106,7 +106,7 @@ def test_update_rate_limit(client: TestClient) -> None:
     }
 
     response = client.patch(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limits/{test_rate_limit_id}",
+        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{settings.TIER_NAME_DEFAULT}",
         json=updated_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -117,7 +117,7 @@ def test_erase_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/tiers/{settings.TIER_NAME_DEFAULT}/rate_limits/{test_rate_limit_id}",
+        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{settings.TIER_NAME_DEFAULT}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
     assert response.status_code == 200

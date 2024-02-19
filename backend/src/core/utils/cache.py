@@ -213,6 +213,7 @@ async def _delete_keys_by_pattern(pattern: str) -> None:
                 await client.delete(*keys)
 
         except Exception as e:
+            # TODO: Log the error
             print(f"Error in SCAN operation: {e}")
             break
 

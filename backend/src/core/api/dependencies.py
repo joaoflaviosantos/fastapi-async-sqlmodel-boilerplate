@@ -95,7 +95,7 @@ async def get_optional_user(
 # Function to get the current superuser based on the provided current user information
 async def get_current_superuser(current_user: Annotated[dict, Depends(get_current_user)]) -> dict:
     if not current_user["is_superuser"]:
-        raise ForbiddenException("You do not have enough privileges.")
+        raise ForbiddenException(detail="You do not have enough privileges.")
 
     return current_user
 

@@ -68,45 +68,48 @@ async def read_tiers(
     return paginated_response(crud_data=tiers_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/tiers/{id}", response_model=TierRead)
+@router.get("/system/tiers/{tier_id}", response_model=TierRead)
 async def read_tier(
     request: Request,
-    id: UUID,
+    tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
     if db_tier is None:
-        raise NotFoundException("Tier not found")
+        raise NotFoundException(detail="Tier not found")
 
     return db_tier
 
 
-@router.patch("/system/tiers/{id}", dependencies=[Depends(get_current_superuser)])
+@router.patch("/system/tiers/{tier_id}", dependencies=[Depends(get_current_superuser)])
 async def patch_tier(
     request: Request,
     values: TierUpdate,
-    id: UUID,
+    tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
     if db_tier is None:
-        raise NotFoundException("Tier not found")
+        raise NotFoundException(detail="Tier not found")
 
-    await crud_tiers.update(db=db, object=values, id=id)
+    await crud_tiers.update(db=db, object=values, id=tier_id)
     return {"message": "Tier updated"}
 
 
-@router.delete("/system/tiers/{id}", dependencies=[Depends(get_current_superuser)], status_code=200)
+@router.delete("/system/tiers/{tier_id}", dependencies=[Depends(get_current_superuser)])
 async def erase_tier(
     request: Request,
-    id: UUID,
+    tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=id)
+    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
     if db_tier is None:
-        raise NotFoundException("Tier not found")
+        raise NotFoundException(detail="Tier not found")
+
+    # Delete tier from the database
     try:
-        await crud_tiers.delete(db=db, db_row=db_tier, id=id)
+        await crud_tiers.delete(db=db, db_row=db_tier, id=tier_id)
     except IntegrityError:
         raise ForbiddenException(detail="Tier cannot be deleted")
+
     return {"message": "Tier deleted"}

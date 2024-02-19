@@ -95,12 +95,17 @@ async def read_pending_tasks() -> List[JobDef]:
 @router.get("/system/tasks/queue-health/")
 async def read_queue_health(queue_name: Optional[str] = None) -> QueueHealth:
     """
-    Get the number of pending and processed tasks in the queue.
+    Get the current health status of the queue, including the number of pending and processed tasks.
+
+    Parameters
+    ----------
+    queue_name: Optional[str] (default: 'queue')
+        The name of the queue. If not provided, defaults to 'queue'.
 
     Returns
     ----------
-    Dict[str, int]
-        A dictionary containing the number of pending and processed tasks.
+    QueueHealth
+        An object containing the current health status of the queue, including the number of completed, failed, retried, and ongoing tasks, as well as the number of tasks currently queued.
     """
 
     if queue_name is None:
@@ -109,7 +114,7 @@ async def read_queue_health(queue_name: Optional[str] = None) -> QueueHealth:
     health_queue_from_redis = await queue.pool.get(f"arq:{queue_name}:health-check")
 
     if not health_queue_from_redis:
-        raise NotFoundException("Task queue not found")
+        raise NotFoundException(detail=f"Queue with name '{queue_name}' not found on broker.")
 
     queue_health = QueueHealth.from_string(health_queue_from_redis.decode("utf-8"))
     return queue_health
