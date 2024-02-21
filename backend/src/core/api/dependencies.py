@@ -127,7 +127,17 @@ async def rate_limiter(
             limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
     else:
         # If no user is present, apply default rate limit settings based on the client host
-        user_id = request.client.host
+        if hasattr(request, "client") and hasattr(request.client, "host"):
+            # Check this issue comment if you are using Gunicorn:
+            # https://github.com/tiangolo/full-stack-fastapi-postgresql/issues/224#issuecomment-1429593840
+            user_id = request.client.host
+        else:
+            x_forwarded_for = request.headers.get("x-forwarded-for", None)
+            x_real_ip = request.headers.get("x-real-ip", None)
+            user_id = (
+                x_forwarded_for if x_forwarded_for else (x_real_ip if x_real_ip else "Unknown")
+            )
+
         limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
 
     # Check if the user is rate-limited for the given path
