@@ -130,8 +130,8 @@ def test_delete_already_deleted_post_as_admin(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"detail": "Post already deleted (soft delete)."}
     assert response.status_code == 404
+    assert response.json() == {"detail": "Post already deleted (soft delete)."}
 
 
 def test_delete_db_post(client: TestClient) -> None:

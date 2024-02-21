@@ -21,6 +21,7 @@ user_id = None
 
 def test_post_user(client: TestClient) -> None:
     global user_id
+    assert user_id is None
 
     response = client.post(
         "/api/v1/system/users",
@@ -35,6 +36,7 @@ def test_post_user(client: TestClient) -> None:
     user_id = response.json()["id"]
 
     assert response.status_code == 201
+    assert user_id is not None
 
 
 def test_get_own_user_data(client: TestClient) -> None:
@@ -59,15 +61,15 @@ def test_get_user(client: TestClient) -> None:
 
     response = client.get(f"/api/v1/system/users/{user_id}")
 
-    assert response.json()["username"] == TEST_USERNAME
     assert response.status_code == 200
+    assert response.json()["username"] == TEST_USERNAME
 
 
 def test_get_multiple_users(client: TestClient) -> None:
     response = client.get("/api/v1/system/users")
 
-    assert len(response.json()["data"]) > 0
     assert response.status_code == 200
+    assert len(response.json()["data"]) > 0
 
 
 def test_update_your_own_user(client: TestClient) -> None:
@@ -82,8 +84,8 @@ def test_update_your_own_user(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "User updated"}
     assert response.status_code == 200
+    assert response.json() == {"message": "User updated"}
 
 
 def test_update_user_as_admin(client: TestClient) -> None:
@@ -98,8 +100,8 @@ def test_update_user_as_admin(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "User updated"}
     assert response.status_code == 200
+    assert response.json() == {"message": "User updated"}
 
 
 def test_delete_user(client: TestClient) -> None:
@@ -113,8 +115,8 @@ def test_delete_user(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "User deleted"}
     assert response.status_code == 200
+    assert response.json() == {"message": "User deleted"}
 
 
 def test_delete_already_deleted_user_as_admin(client: TestClient) -> None:
@@ -128,8 +130,8 @@ def test_delete_already_deleted_user_as_admin(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"detail": "User already deleted (soft delete)."}
     assert response.status_code == 404
+    assert response.json() == {"detail": "User already deleted (soft delete)."}
 
 
 def test_delete_db_user(client: TestClient) -> None:
@@ -143,5 +145,5 @@ def test_delete_db_user(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "User deleted from the database"}
     assert response.status_code == 200
+    assert response.json() == {"message": "User deleted from the database"}

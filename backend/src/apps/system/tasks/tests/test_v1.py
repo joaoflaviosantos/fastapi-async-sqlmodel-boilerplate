@@ -27,8 +27,8 @@ def test_create_task(client: TestClient) -> None:
 
     test_task_id = response.json()["id"]
 
-    assert test_task_id is not None
     assert response.status_code == 201
+    assert test_task_id is not None
 
 
 def test_get_task(client: TestClient) -> None:
@@ -51,3 +51,16 @@ def test_read_pending_tasks(client: TestClient) -> None:
     response = client.get("/api/v1/system/tasks/pending")
 
     assert response.status_code == 200
+
+
+def test_get_health_check_from_inexistent_queue(client: TestClient) -> None:
+    inexistent_queue_name = "inexistent_queue"
+
+    response = client.get(
+        "/api/v1/system/tasks/queue-health/", params={"queue_name": f"{inexistent_queue_name}"}
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": f"Queue with name '{inexistent_queue_name}' not found on broker."
+    }

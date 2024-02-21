@@ -28,15 +28,15 @@ def test_post_tier(client: TestClient) -> None:
 
     test_tier_id = response.json()["id"]
 
-    assert test_tier_id is not None
     assert response.status_code == 201
+    assert test_tier_id is not None
 
 
 def test_get_multiple_tiers(client: TestClient) -> None:
     response = client.get("/api/v1/system/tiers")
 
-    assert len(response.json()["data"]) > 0
     assert response.status_code == 200
+    assert len(response.json()["data"]) > 0
 
 
 def test_get_tier(client: TestClient) -> None:
@@ -45,8 +45,8 @@ def test_get_tier(client: TestClient) -> None:
 
     response = client.get(f"/api/v1/system/tiers/{test_tier_id}")
 
-    assert response.json()["name"] == test_tier["name"]
     assert response.status_code == 200
+    assert response.json()["name"] == test_tier["name"]
 
 
 def test_update_tier(client: TestClient) -> None:
@@ -63,8 +63,8 @@ def test_update_tier(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "Tier updated"}
     assert response.status_code == 200
+    assert response.json() == {"message": "Tier updated"}
 
 
 def test_delete_tier(client: TestClient) -> None:
@@ -79,5 +79,5 @@ def test_delete_tier(client: TestClient) -> None:
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
-    assert response.json() == {"message": "Tier deleted"}
     assert response.status_code == 200
+    assert response.json() == {"message": "Tier deleted"}

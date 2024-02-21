@@ -16,7 +16,7 @@ def log_system_info(logger: logging.Logger) -> None:
     ip_address = socket.gethostbyname(socket.gethostname())
 
     try:
-        # Run 'lscpu' command to get detailed CPU information
+        # Run 'lscpu' command to get detailed CPU information on Linux
         cpu_info_process = subprocess.run(["lscpu"], capture_output=True, text=True)
         cpu_info_output = cpu_info_process.stdout
 
@@ -48,6 +48,19 @@ def log_system_info(logger: logging.Logger) -> None:
             f"cores_per_socket={int(relevant_cpu_info.get('Core(s) per socket', 1))}, "
             f"sockets={int(relevant_cpu_info.get('Socket(s)', 1))}, "
             f"virtualization='{relevant_cpu_info.get('Virtualization', '')}', "
+            f"CPU_cores={psutil.cpu_count(logical=False)}, CPU_speed={psutil.cpu_freq().max:.2f} MHz"
+        )
+    except FileNotFoundError:
+        # Use platform.processor() on Windows if 'lscpu' is not available
+        cpu_info_output = (
+            f"Model name: {platform.processor()}, "
+            f"Physical cores: {psutil.cpu_count(logical=False)}, "
+            f"Total cores: {psutil.cpu_count(logical=True)}"
+        )
+        logger.info(
+            f"API started on machine: system={platform.system()}, user={user_name}, IP={ip_address}, "
+            f"RAM_available={psutil.virtual_memory().available / (1024 ** 3):.2f} GB, "
+            f"{cpu_info_output}, "
             f"CPU_cores={psutil.cpu_count(logical=False)}, CPU_speed={psutil.cpu_freq().max:.2f} MHz"
         )
     except Exception as e:

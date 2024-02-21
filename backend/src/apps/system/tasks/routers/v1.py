@@ -22,7 +22,7 @@ router = APIRouter(tags=["System - Tasks"])
     status_code=201,
     dependencies=[Depends(rate_limiter)],
 )
-async def create_task(message: str) -> Dict[str, str]:
+async def create_task(request: Request, message: str) -> Dict[str, str]:
     """
     Create a new background task.
 
@@ -42,7 +42,7 @@ async def create_task(message: str) -> Dict[str, str]:
 
 
 @router.get("/system/tasks/{task_id}")
-async def get_task(task_id: str) -> Optional[JobDef]:
+async def get_task(request: Request, task_id: str) -> Optional[JobDef]:
     """
     Get information about a specific background task.
 
@@ -63,7 +63,7 @@ async def get_task(task_id: str) -> Optional[JobDef]:
 
 
 @router.get("/system/tasks/processed/")
-async def read_processed_tasks() -> List[JobResult]:
+async def read_processed_tasks(request: Request) -> List[JobResult]:
     """
     Get results for all background tasks that have been processed.
 
@@ -78,7 +78,7 @@ async def read_processed_tasks() -> List[JobResult]:
 
 
 @router.get("/system/tasks/pending/")
-async def read_pending_tasks() -> List[JobDef]:
+async def read_pending_tasks(request: Request) -> List[JobDef]:
     """
     Get results for all background tasks that have pending processing.
 
@@ -93,7 +93,7 @@ async def read_pending_tasks() -> List[JobDef]:
 
 
 @router.get("/system/tasks/queue-health/")
-async def read_queue_health(queue_name: Optional[str] = None) -> QueueHealth:
+async def read_queue_health(request: Request, queue_name: Optional[str] = None) -> QueueHealth:
     """
     Get the current health status of the queue, including the number of pending and processed tasks.
 

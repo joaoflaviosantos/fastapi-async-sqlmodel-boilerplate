@@ -30,9 +30,9 @@ def test_auth_login(client: TestClient) -> None:
     test_token_type = response_json["token_type"]
     test_refresh_token_cookie = response.cookies.get("refresh_token")
 
+    assert response.status_code == 200
     assert test_access_token is not None
     assert test_token_type == "bearer"
-    assert response.status_code == 200
 
 
 def test_auth_refresh(client: TestClient) -> None:
@@ -44,9 +44,9 @@ def test_auth_refresh(client: TestClient) -> None:
     new_access_token = response_json["access_token"]
     token_type = response_json["token_type"]
 
+    assert response.status_code == 200
     assert new_access_token is not None
     assert token_type == "bearer"
-    assert response.status_code == 200
 
 
 def test_auth_logout(client: TestClient) -> None:
@@ -59,5 +59,4 @@ def test_auth_logout(client: TestClient) -> None:
 
     assert response_logout.status_code == 200
     assert response_json_logout == {"message": "Logged out successfully"}
-
     assert "refresh_token" not in response_logout.cookies
