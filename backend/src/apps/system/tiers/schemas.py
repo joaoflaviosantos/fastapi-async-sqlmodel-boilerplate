@@ -17,6 +17,7 @@ class Tier(TimestampMixin, TierBase):
     Fields:
     ----------
     - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     - 'created_at' (datetime): Timestamp for the creation of the tier record.
     """
 
@@ -31,6 +32,8 @@ class TierRead(TierBase):
 
     Fields:
     ----------
+    - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     - 'id' (UUID): Unique identifier for the tier.
     - 'created_at' (datetime): Timestamp for the creation of the tier record.
     """
@@ -48,6 +51,7 @@ class TierCreate(TierBase):
     Fields:
     ----------
     - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     """
 
     pass
@@ -62,6 +66,7 @@ class TierCreateInternal(TierCreate):
     Fields:
     ----------
     - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     """
 
     pass
@@ -76,10 +81,12 @@ class TierUpdate(TierBase):
 
     Optional Fields:
     ----------
-    - 'name' (str): Tier name (optional).
+    - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     """
 
     name: str | None = None
+    default: bool | None = None
 
 
 class TierUpdateInternal(TierUpdate):
@@ -90,6 +97,8 @@ class TierUpdateInternal(TierUpdate):
 
     Fields:
     ----------
+    - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     - 'updated_at' (datetime): Timestamp for the last update of the tier record.
     """
 

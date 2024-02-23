@@ -34,19 +34,22 @@ async def create_first_user(session: AsyncSession) -> None:
         if tier is None:
             raise Exception("Default tier not found")
 
-        # Creating first user/admin
-        session.add(
-            User(
-                name=name,
-                email=email,
-                username=username,
-                hashed_password=hashed_password,
-                is_superuser=True,
-                profile_image_url="https://www.imageurl.com/first_user.jpg",
-                tier_id=tier.id,
-            )
+        # Validating user data
+        # See: https://github.com/tiangolo/sqlmodel/issues/52#issuecomment-1311987732
+        db_user = User.model_validate(
+            {
+                "name": name,
+                "email": email,
+                "username": username,
+                "hashed_password": hashed_password,
+                "is_superuser": True,
+                "profile_image_url": "https://www.imageurl.com/first_user.jpg",
+                "tier_id": tier.id,
+            }
         )
 
+        # Creating first user/admin
+        session.add(db_user)
         await session.commit()
 
 

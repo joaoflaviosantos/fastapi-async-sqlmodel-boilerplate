@@ -15,14 +15,18 @@ async def create_first_tier(session: AsyncSession) -> None:
     tier_name = settings.TIER_NAME_DEFAULT
 
     # Checking if tier already exists
-    query = select(Tier).where(Tier.name == tier_name)
+    query = select(Tier).where(Tier.name == tier_name, Tier.default == True)
     result = await session.exec(query)
     tier = result.one_or_none()
 
     # Creating tier if it doesn't exist
     if tier is None:
-        session.add(Tier(name=tier_name))
+        # Validating tier data
+        # See: https://github.com/tiangolo/sqlmodel/issues/52#issuecomment-1311987732
+        tier_db = Tier.model_validate({"name": tier_name, "default": True})
 
+        # Creating default tier
+        session.add(tier_db)
         await session.commit()
 
 

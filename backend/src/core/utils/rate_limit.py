@@ -17,7 +17,7 @@ pool: ConnectionPool | None = None
 client: Redis | None = None
 
 
-# Function to normalize a route path, removing consultation parameters
+# Function to normalize a route path, removing query parameters
 def normalize_route_path(route_path: str) -> str:
     """
     Normalize a route path by removing any query parameters.

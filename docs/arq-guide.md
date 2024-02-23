@@ -28,4 +28,4 @@ For more details and advanced configuration options when running the ARQ worker,
 
 ---
 
-[Back to Main README](../README.md)
+[Back to backend README](../backend/README.md)

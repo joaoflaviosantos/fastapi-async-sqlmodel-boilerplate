@@ -16,11 +16,13 @@ class TierBase(Base):
     Fields:
     ----------
     - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
 
     Examples:
     ----------
     Example of a valid data:
     - 'name': "Free"
+    - 'default': False
     """
 
     # Data Columns
@@ -31,6 +33,10 @@ class TierBase(Base):
         unique=True,
         description="Tier name",
         schema_extra={"examples": ["Free"]},
+    )
+    default: bool = Field(
+        default=False,
+        description="Indicates whether the tier is the default tier",
     )
 
 
@@ -45,6 +51,7 @@ class Tier(TierBase, UUIDMixin, TimestampMixin, table=True):
     Fields:
     ----------
     - 'name' (str): Tier name.
+    - 'default' (bool): Indicates whether the tier is the default tier.
     - 'id' (UUID): Unique identifier for the tier.
     - 'created_at' (datetime): Timestamp for the creation of the tier record.
     - 'updated_at' (datetime): Timestamp for the last update of the tier record.
@@ -53,6 +60,7 @@ class Tier(TierBase, UUIDMixin, TimestampMixin, table=True):
     ----------
     Example of a valid data:
     - 'name': "Free"
+    - 'default': True
     - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
     - 'created_at': datetime.utcnow()
     - 'updated_at': datetime.utcnow()

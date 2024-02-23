@@ -1,8 +1,8 @@
-"""First Revision
+"""first_revision
 
-Revision ID: 04bc7c0466d4
+Revision ID: ec4e823d7dc2
 Revises: 
-Create Date: 2024-01-21 11:13:53.207867
+Create Date: 2024-02-23 02:49:05.752181
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "04bc7c0466d4"
+revision: str = "ec4e823d7dc2"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,6 +28,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("default", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
