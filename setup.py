@@ -1,8 +1,12 @@
 # Built-in Dependencies
 import subprocess
+import platform
 import tempfile
 import os
 import re
+
+# Global variable to store the operating system type
+OPERATING_SYSTEM = platform.system()
 
 # Function to print colored text
 def print_color(color, text):
@@ -20,14 +24,22 @@ def display_help():
     print("2 - Production Deployment Setup")
     print("3 - Exit")
 
-# Check if Python 3.11 and Poetry are installed
+# Check if Python and Poetry are installed
 def check_dependencies():
-    python_installed = subprocess.run(["python3.11", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    if OPERATING_SYSTEM == 'Windows':
+        python_check = subprocess.run(["py", "--list-paths"], capture_output=True, text=True)
+        python_paths = re.findall(r'\s-V:3\.11\s+\*\s+(\S+)', python_check.stdout)
+        python_installed = bool(python_paths)
+        python_path = python_paths[0] if python_installed else None
+    else:
+        python_installed = subprocess.run(["python3.11", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+        python_path = subprocess.run(["which", "python3.11"], capture_output=True, text=True).stdout.strip()
+
     poetry_installed = subprocess.run(["poetry", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
-    return python_installed, poetry_installed
+    return python_installed, python_path, poetry_installed
 
 # Step 0: Check dependencies
-python_installed, poetry_installed = check_dependencies()
+python_installed, python_path, poetry_installed = check_dependencies()
 if not python_installed or not poetry_installed:
     print_color("RED", "\nError: Python 3.11 and Poetry are required. Please install them before running this setup.")
     exit(1)
@@ -52,17 +64,23 @@ if choice == "1":
     # Step 1.1: Navigate to the project directory
     os.chdir("backend/")
 
-    # Step 1.2: Install dependencies
+    # Step 1.2: Force Poetry to use Python 3.11
+    subprocess.run(["poetry", "env", "use", python_path])
+
+    # Step 1.3 Install dependencies
     subprocess.run(["poetry", "install"])
 
-    # Step 1.3: Check if .env file exists before copying
+    # Step 1.4: Check if .env file exists before copying
     if not os.path.isfile(".env"):
-        subprocess.run(["cp", ".env.example", ".env"])
+        if OPERATING_SYSTEM == 'Windows':
+            subprocess.run(["copy", ".env.example", ".env"], shell=True)
+        else:
+            subprocess.run(["cp", ".env.example", ".env"])
         print_color("GREEN", "\nCopied '.env.example' to '.env'.")
     else:
         print_color("YELLOW", "\n'.env' file already exists. Skipping copy step.")
 
-    # Step 1.4: Check if SECRET_KEY is empty before generating
+    # Step 1.5: Check if SECRET_KEY is empty before generating
     secret_key_generated = False
     with open(".env", "r") as f:
         lines = f.readlines()
@@ -86,39 +104,39 @@ if choice == "1":
     else:
         print_color("YELLOW", "\n'SECRET_KEY' in '.env' is already set. Skipping generation step.\n")
 
-    # Step 1.5: Inform the user to modify other environment variables in ".env"
+    # Step 1.6: Inform the user to modify other environment variables in ".env"
     print_color("BLUE", "Please modify other environment variables in 'backend/.env' as needed.\n")
 
-    # Step 1.6: Check if all required environment variables are defined
+    # Step 1.7: Check if all required environment variables are defined
     # Define a list of dictionaries for database environment variables
     database_env_vars = [
-        {"name": "POSTGRES_USER", "type": "string"},
-        {"name": "POSTGRES_PASSWORD", "type": "string"},
-        {"name": "POSTGRES_SERVER", "type": "string"},
+        {"name": "POSTGRES_USER", "type": "string", "min_length": 2},
+        {"name": "POSTGRES_PASSWORD", "type": "string", "min_length": 8},
+        {"name": "POSTGRES_SERVER", "type": "string", "min_length": 4},
         {"name": "POSTGRES_PORT", "type": "numeric"},
-        {"name": "POSTGRES_DB", "type": "string"}
+        {"name": "POSTGRES_DB", "type": "string", "min_length": 2}
     ]
 
     # Define a list of dictionaries for Redis for caching environment variables
     redis_env_vars = [
-        {"name": "REDIS_CACHE_HOST", "type": "string"},
+        {"name": "REDIS_CACHE_HOST", "type": "string", "min_length": 4},
         {"name": "REDIS_CACHE_PORT", "type": "numeric"},
         {"name": "REDIS_CACHE_DB", "type": "numeric"},
-        {"name": "REDIS_CACHE_USERNAME", "type": "string"},
-        {"name": "REDIS_CACHE_PASSWORD", "type": "string"}
+        {"name": "REDIS_CACHE_USERNAME", "type": "string", "min_length": 1},
+        {"name": "REDIS_CACHE_PASSWORD", "type": "string", "min_length": 6},
     ]
 
     # Define a list of dictionaries for the first admin user environment variable
     first_admin_user_env_vars = [
-        {"name": "ADMIN_NAME", "type": "string"},
-        {"name": "ADMIN_EMAIL", "type": "email"},
-        {"name": "ADMIN_USERNAME", "type": "string"},
-        {"name": "ADMIN_PASSWORD", "type": "string"}
+        {"name": "ADMIN_NAME", "type": "string", "min_length": 4},
+        {"name": "ADMIN_EMAIL", "type": "email", "min_length": 5},
+        {"name": "ADMIN_USERNAME", "type": "string", "min_length": 2},
+        {"name": "ADMIN_PASSWORD", "type": "string", "min_length": 2}
     ]
 
     # Define a list of dictionaries for the default tier environment variable
     default_tier_env_vars = [
-        {"name": "TIER_NAME_DEFAULT", "type": "string"}
+        {"name": "TIER_NAME_DEFAULT", "type": "string", "min_length": 2}
     ]
 
     # Combine all sets of environment variables into a single list
@@ -160,6 +178,9 @@ if choice == "1":
                                     # User wants to change the value, ask for new value
                                     new_value = read_color("\033[1;37m", f"Enter the new value for {var['name']}: ")
                                     if var["type"] == "string":
+                                        while not len(new_value) >= var["min_length"]:
+                                            print(f"Invalid value. Please enter a valid value for {var['name']}.")
+                                            new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
                                         f.write(f"{var['name']}=\"{new_value}\"\n")
                                     else:
                                         f.write(f"{var['name']}={new_value}\n")
@@ -167,31 +188,46 @@ if choice == "1":
                                     f.write(line)
                             else:
                                 # Value does not exist, ask the user for new value
-                                if var["type"] == "email":
-                                    # Special case for email, ensure it's a valid email address
-                                    # While loop to ensure a valid email address is provided
-                                    new_value = read_color("\033[1;37m", f"Enter a valid email address for {var['name']}: ")
-                                    while not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_value):
-                                        print("Invalid email address. Please enter a valid email.")
-                                        new_value = read_color("\033[1;37m", f"Enter a valid email address for {var['name']}: ")
-                                    f.write(f"{var['name']}=\"{new_value}\"\n")
+                                if var["name"] == "REDIS_CACHE_PASSWORD":
+                                    has_redis_password = read_color("\033[1;37m", f"Does your Redis server require a password? (y/n): ").lower()
+                                    if has_redis_password in {"n", "no"}:
+                                        f.write(f"{var['name']}=\"nosecurity\"\n")
+                                    else:
+                                        new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
+                                        while not len(new_value) >= var["min_length"]:
+                                            print(f"Invalid value. Please enter a valid value for {var['name']}.")
+                                            new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
+                                        f.write(f"{var['name']}=\"{new_value}\"\n")
                                 else:
-                                    new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
-                                    if var["type"] == "string":
+                                    # Value does not exist, ask the user for new value
+                                    if var["type"] == "email":
+                                        # Special case for email, ensure it's a valid email address
+                                        # While loop to ensure a valid email address is provided
+                                        new_value = read_color("\033[1;37m", f"Enter a valid email address for {var['name']}: ")
+                                        while not len(new_value) >= var["min_length"] or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_value):
+                                            print("Invalid email address. Please enter a valid email.")
+                                            new_value = read_color("\033[1;37m", f"Enter a valid email address for {var['name']}: ")
                                         f.write(f"{var['name']}=\"{new_value}\"\n")
                                     else:
-                                        f.write(f"{var['name']}={new_value}\n")
+                                        new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
+                                        if var["type"] == "string":
+                                            while not len(new_value) >= var["min_length"]:
+                                                print(f"Invalid value. Please enter a valid value for {var['name']}.")
+                                                new_value = read_color("\033[1;37m", f"Enter the value for {var['name']}: ")
+                                            f.write(f"{var['name']}=\"{new_value}\"\n")
+                                        else:
+                                            f.write(f"{var['name']}={new_value}\n")
                         else:
                             f.write(line)
 
-    # Step 1.7: Run Alembic migrations
+    # Step 1.8: Run Alembic migrations
     print_color("GREEN", "\nRunning Alembic migrations...\n")
     subprocess.run(["poetry", "run", "alembic", "upgrade", "head"])
 
-    # Step 1.8: Display a success message for Local Development Mode
+    # Step 1.9: Display a success message for Local Development Mode
     print_color("RED", "\n-> Setup complete for Local Development Mode...\n")
 
-    # Step 1.9: Ask the user if they want to perform additional actions
+    # Step 1.10: Ask the user if they want to perform additional actions
     print_color("BLUE", "Do you want to perform any additional actions?\n")
     print("1 - Start the FastAPI server")
     print("2 - Start the ARQ worker")
@@ -200,7 +236,7 @@ if choice == "1":
     print("5 - Commit and Push Changes")
     print("6 - Exit")
 
-    # Step 1.10: Ask the user for additional action choice
+    # Step 1.11: Ask the user for additional action choice
     additional_action = read_color("\033[1;37m", "\nEnter the number corresponding to your choice: ")
 
     # Process user's additional action choice
@@ -272,37 +308,47 @@ if choice == "1":
 
         # Check if the user wants to include an additional description
         if include_description in {"y", "yes"}:
-            # Use a temporary file to capture the commit description
-            with tempfile.NamedTemporaryFile(suffix=".txt") as tmp_file:
-                # Open the temporary file in the appropriate text editor based on the operating system
-                if os.name == 'nt':  # Windows
-                    subprocess.call(['notepad.exe', tmp_file.name])
-                else:  # Linux
-                    editor = os.environ.get('EDITOR', 'nano')
-                    subprocess.call([editor, tmp_file.name])
-                # Read the content of the temporary file
-                with open(tmp_file.name, "r") as f:
-                    description = f.read().strip()
-                    
+            while description == "":
+                print("Please enter the commit description (one line at a time). Press ENTER on a blank line when you're done.")
+                # Use a temporary file to capture the commit description
+                with tempfile.NamedTemporaryFile(suffix=".txt") as tmp_file:
+                    # Open the temporary file in the appropriate text editor based on the operating system
+                    if OPERATING_SYSTEM == 'Windows':  # Windows
+                        description_lines = []
+                        # Capture the description lines until the user enters a blank line
+                        while True:
+                            line = input("> ")
+                            if not line:
+                                break
+                            description_lines.append(line)
+                    else:  # Linux or macOS
+                        editor = os.environ.get('EDITOR', 'nano')
+                        subprocess.Popen([editor, tmp_file.name])
+
+                    # Read the content of the temporary file
+                    if OPERATING_SYSTEM == 'Windows':
+                        description = '\n'.join(description_lines)
+                    else:
+                        with open(tmp_file.name, "r") as f:
+                            description = f.read().strip()
+
             # Remove double quotes from the 'description' variable
             description = description.replace('"', '')
 
-            # Check if the description is not empty
-            if not description:
-                print_color("RED", "\n-> Error: Description cannot be empty. Please try again.\n")
-
         # Step 1.5.8: Activate the virtual environment to use pre-commit installation
         # Determine the virtual environment activation script path based on the operating system
-        if os.name == 'nt':  # Windows
+        if OPERATING_SYSTEM == 'Windows':  # Windows
             venv_folder = 'Scripts'
-        else:  # Linux
+        else:  # Linux or macOS
             venv_folder = 'bin'
-            
+
         activate_script = os.path.join('backend', '.venv', venv_folder, 'activate')
+        command = "cmd" if OPERATING_SYSTEM == 'Windows' else "bash"
+        sub_command = "/c" if OPERATING_SYSTEM == 'Windows' else "-c"
 
         # Activate the virtual environment
-        activate_command = f"source {activate_script}" if os.name != 'nt' else activate_script
-        subprocess.run(["bash", "-c", activate_command], check=True)
+        activate_command = f"source {activate_script}" if OPERATING_SYSTEM != 'Windows' else activate_script
+        subprocess.run([command, sub_command, activate_command], check=True)
 
         # Step 1.5.9: Commit and push changes
         if not description:

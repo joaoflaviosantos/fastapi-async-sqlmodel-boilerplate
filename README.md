@@ -40,8 +40,6 @@
   </a>
 </p>
 
-🚧 _Note: This project is currently under development and is a work in progress._ 🚧
-
 ## 🔍 Project Overview
 
 This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **ARQ**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**.
@@ -114,15 +112,15 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
 4. With Poetry installed, you can now proceed to install the project dependencies.
 
-### Running the Backend on Development Mode
+## 🤖 Running the Project CLI
 
-To run the backend, you can use the following command on **root project directory**:
+To streamline the usage of this boilerplate, we've provided a convenient CLI tool. From the root project directory, execute the following command:
 
 ```bash
 python3 setup.py
 ```
 
-Select **1 - Local Development Mode** option from the menu and follow the prompts to set up your environment.
+This command automates various setup tasks, making it easier to get started with the project.
 
 For more details for a manual setup, please refer to the [Backend README](backend/README.md) section.
 

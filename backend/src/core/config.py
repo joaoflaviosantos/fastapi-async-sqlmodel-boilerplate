@@ -79,18 +79,29 @@ class TestSettings(BaseSettings):
 class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_HOST: str = config("REDIS_CACHE_HOST", default="localhost")
     REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
-    REDIS_CACHE_USERNAME: str | None = config("REDIS_CACHE_USERNAME", default=None)
-    REDIS_CACHE_PASSWORD: str | None = config("REDIS_CACHE_PASSWORD", default=None)
+    REDIS_CACHE_USERNAME: str = config("REDIS_CACHE_USERNAME", default="")
+    REDIS_CACHE_PASSWORD: str = config("REDIS_CACHE_PASSWORD", default="nosecurity")
     REDIS_CACHE_URL: str = (
         f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
     )
 
+    @field_validator("REDIS_CACHE_URL", mode="after")
+    def assemble_redis_cache_connection(cls, v: str | None, info: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            # If username and password are not set, use Redis URL connection string without security credentials
+            if info.data["REDIS_CACHE_USERNAME"] == "" and info.data["REDIS_CACHE_PASSWORD"] == "":
+                return f"redis://{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}"
+            # If username and password are set, but without security, use Redis URL connection string without password
+            if info.data["REDIS_CACHE_PASSWORD"] == "nosecurity":
+                return f"redis://{info.data['REDIS_CACHE_USERNAME']}@{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}"
+        return v
+
 
 class RedisQueueSettings(BaseSettings):
-    REDIS_QUEUE_HOST: str | None = config("REDIS_QUEUE_HOST", default=None)
+    REDIS_QUEUE_HOST: str = config("REDIS_QUEUE_HOST", default="")
     REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
-    REDIS_QUEUE_USERNAME: str | None = config("REDIS_QUEUE_USERNAME", default=None)
-    REDIS_QUEUE_PASSWORD: str | None = config("REDIS_QUEUE_PASSWORD", default=None)
+    REDIS_QUEUE_USERNAME: str = config("REDIS_QUEUE_USERNAME", default="")
+    REDIS_QUEUE_PASSWORD: str = config("REDIS_QUEUE_PASSWORD", default="")
     REDIS_QUEUE_URL: str = (
         f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
     )
@@ -98,17 +109,24 @@ class RedisQueueSettings(BaseSettings):
     @field_validator("REDIS_QUEUE_URL", mode="after")
     def assemble_redis_queue_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
+            # If host is not set, use 'REDIS_CACHE_URL' as Redis Queue URL connection string
             if info.data["REDIS_QUEUE_HOST"] == "":
                 redis_cache_settings = RedisCacheSettings()
                 return redis_cache_settings.REDIS_CACHE_URL
+            # If username and password are not set, use Redis URL connection string without security credentials
+            if info.data["REDIS_QUEUE_USERNAME"] == "" and info.data["REDIS_QUEUE_PASSWORD"] == "":
+                return f"redis://{info.data['REDIS_QUEUE_HOST']}:{info.data['REDIS_QUEUE_PORT']}"
+            # If username and password are set, but without security, use Redis URL connection string without password
+            if info.data["REDIS_QUEUE_PASSWORD"] == "nosecurity":
+                return f"redis://{info.data['REDIS_QUEUE_USERNAME']}@{info.data['REDIS_QUEUE_HOST']}:{info.data['REDIS_QUEUE_PORT']}"
         return v
 
 
 class RedisRateLimiterSettings(BaseSettings):
-    REDIS_RATE_LIMIT_HOST: str | None = config("REDIS_RATE_LIMIT_HOST", default=None)
+    REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="")
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
-    REDIS_RATE_LIMIT_USERNAME: str | None = config("REDIS_RATE_LIMIT_USERNAME", default=None)
-    REDIS_RATE_LIMIT_PASSWORD: str | None = config("REDIS_RATE_LIMIT_PASSWORD", default=None)
+    REDIS_RATE_LIMIT_USERNAME: str = config("REDIS_RATE_LIMIT_USERNAME", default="")
+    REDIS_RATE_LIMIT_PASSWORD: str = config("REDIS_RATE_LIMIT_PASSWORD", default="")
     REDIS_RATE_LIMIT_URL: str = (
         f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
     )
@@ -116,9 +134,19 @@ class RedisRateLimiterSettings(BaseSettings):
     @field_validator("REDIS_RATE_LIMIT_URL", mode="after")
     def assemble_redis_rate_limit_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
+            # If host is not set, use 'REDIS_CACHE_URL' as Redis Queue URL connection string
             if info.data["REDIS_RATE_LIMIT_HOST"] == "":
                 redis_cache_settings = RedisCacheSettings()
                 return redis_cache_settings.REDIS_CACHE_URL
+            # If username and password are not set, use Redis URL connection string without security credentials
+            if (
+                info.data["REDIS_RATE_LIMIT_USERNAME"] == ""
+                and info.data["REDIS_RATE_LIMIT_PASSWORD"] == ""
+            ):
+                return f"redis://{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}"
+            # If username and password are set, but without security, use Redis URL connection string without password
+            if info.data["REDIS_RATE_LIMIT_PASSWORD"] == "nosecurity":
+                return f"redis://{info.data['REDIS_RATE_LIMIT_USERNAME']}@{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}"
         return v
 
 
