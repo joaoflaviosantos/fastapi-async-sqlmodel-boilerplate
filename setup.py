@@ -105,7 +105,7 @@ if choice == "1":
         print_color("YELLOW", "\n'SECRET_KEY' in '.env' is already set. Skipping generation step.\n")
 
     # Step 1.6: Inform the user to modify other environment variables in ".env"
-    print_color("BLUE", "Please modify other environment variables in 'backend/.env' as needed.\n")
+    print_color("BLUE", "Please modify other environment variables in 'backend/.env' as needed.")
 
     # Step 1.7: Check if all required environment variables are defined
     # Define a list of dictionaries for database environment variables

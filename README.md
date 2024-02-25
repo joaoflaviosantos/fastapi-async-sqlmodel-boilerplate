@@ -110,7 +110,15 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
    This should display the installed Poetry version.
 
-4. With Poetry installed, you can now proceed to install the project dependencies.
+### Cloning the Repository
+
+To clone the repository, run the following command:
+
+```bash
+git clone https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate.git
+```
+
+Now that the repository is cloned, you can begin working on your project.
 
 ## 🤖 Running the Project CLI
 

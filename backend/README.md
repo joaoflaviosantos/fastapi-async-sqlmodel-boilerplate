@@ -1,5 +1,7 @@
 # Backend - Manual Instructions
 
+After completing the requirements outlined in the **📋 Prerequisites** section of the section on main [README.md](../README.md) project file, proceed with the following steps:
+
 ## 🛠️ Installation
 
 1. Clone the repository:
