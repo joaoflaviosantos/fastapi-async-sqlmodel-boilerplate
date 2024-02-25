@@ -358,7 +358,8 @@ if choice == "1":
         subprocess.run(["git", "push", "origin", branch])
 
         # Step 1.5.10: Deactivate the virtual environment
-        subprocess.run(["deactivate"])
+        if OPERATING_SYSTEM != 'Windows':
+            subprocess.run(["deactivate"])
 
         # Step 1.5.11: Navigate to the project directory (to correctly finish the setup.sh script)
         os.chdir("backend/")

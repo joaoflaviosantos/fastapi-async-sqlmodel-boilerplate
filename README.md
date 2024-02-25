@@ -114,13 +114,13 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
 ## 🤖 Running the Project CLI
 
-To streamline the usage of this boilerplate, we've provided a convenient CLI tool. From the root project directory, execute the following command:
+To streamline the usage of this boilerplate, we've provided a convenient **CLI tool**. From the **root project directory**, execute the following command:
 
 ```bash
 python3 setup.py
 ```
 
-This command automates various setup tasks, making it easier to get started with the project.
+This command automates various **setup tasks**, making it easier to **get started** with the project.
 
 For more details for a manual setup, please refer to the [Backend README](backend/README.md) section.
 
