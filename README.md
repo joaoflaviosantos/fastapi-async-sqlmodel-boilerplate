@@ -46,7 +46,7 @@ This **FastAPI** boilerplate for high-performance APIs leverages async programmi
 
 It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and structural principles.
 
-## 📦 Featured Aspects
+## 🌟 Key Features
 
 This project seeks to provide a **strong foundation for API development**, incorporating a blend of cutting-edge technologies and structural principles:
 
@@ -77,6 +77,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
+- [ ] Provide a CLI tool for easy project execution and management.
 - [ ] Provide diverse deployment options to ensure flexibility and accessibility.
 
 ## 📋 Prerequisites
@@ -110,19 +111,25 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
 
    This should display the installed Poetry version.
 
-### Cloning the Repository
+Now that the requirements are met, you can begin working on your project.
 
-To clone the repository, run the following command:
+## 🤖 Running the Project CLI
+
+To streamline the usage of this boilerplate, we've provided a convenient **CLI tool**. From the **root project directory**, execute the following steps:
+
+1. Clone the repository, running the following command:
 
 ```bash
 git clone https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate.git
 ```
 
-Now that the repository is cloned, you can begin working on your project.
+2. Navigate to the cloned repository:
 
-## 🤖 Running the Project CLI
+```bash
+cd fastapi-async-sqlmodel-boilerplate
+```
 
-To streamline the usage of this boilerplate, we've provided a convenient **CLI tool**. From the **root project directory**, execute the following command:
+3. Run the setup (**CLI tool**) command:
 
 ```bash
 python3 setup.py

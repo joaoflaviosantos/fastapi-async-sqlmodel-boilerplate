@@ -39,7 +39,7 @@ async def get_current_user(
 ) -> Union[dict[str, Any], None]:
     token_data = await verify_token(token, db)
     if token_data is None:
-        raise UnauthorizedException("User not authenticated.")
+        raise UnauthorizedException(detail="User not authenticated.")
 
     # Check if the authentication token represents an email or username and retrieve the user information
     if "@" in token_data.username_or_email:
@@ -54,7 +54,7 @@ async def get_current_user(
         return user
 
     # Raise an exception if the user is not authenticated
-    raise UnauthorizedException("User not authenticated.")
+    raise UnauthorizedException(detail="User not authenticated.")
 
 
 # Function to get the optional user based on the provided request
@@ -151,4 +151,4 @@ async def rate_limiter(
     )
     if is_limited:
         # Raise an exception if the user exceeds the rate limit
-        raise RateLimitException("Rate limit exceeded.")
+        raise RateLimitException(detail="Rate limit exceeded.")

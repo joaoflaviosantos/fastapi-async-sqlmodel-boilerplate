@@ -12,18 +12,23 @@ from src.core.config import settings
 
 async def create_first_tier(session: AsyncSession) -> None:
     # First tier data
-    tier_name = settings.TIER_NAME_DEFAULT
+    default_tier_name = settings.TIER_NAME_DEFAULT
 
     # Checking if tier already exists
-    query = select(Tier).where(Tier.name == tier_name, Tier.default == True)
+    query = select(Tier).where(Tier.default == True)
     result = await session.exec(query)
     tier = result.one_or_none()
+
+    if tier is not None and tier.name != default_tier_name:
+        raise Exception(
+            f"The current value of the TIER_NAME_DEFAULT environment variable is '{settings.TIER_NAME_DEFAULT}', but a default tier already exists in the database with the name '{tier.name}'. Please adjust this before proceeding."
+        )
 
     # Creating tier if it doesn't exist
     if tier is None:
         # Validating tier data
         # See: https://github.com/tiangolo/sqlmodel/issues/52#issuecomment-1311987732
-        tier_db = Tier.model_validate({"name": tier_name, "default": True})
+        tier_db = Tier.model_validate({"name": default_tier_name, "default": True})
 
         # Creating default tier
         session.add(tier_db)

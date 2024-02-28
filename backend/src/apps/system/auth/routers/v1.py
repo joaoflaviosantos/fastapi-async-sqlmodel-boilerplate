@@ -37,7 +37,7 @@ async def login_for_access_token(
         username_or_email=form_data.username, password=form_data.password, db=db
     )
     if not user:
-        raise UnauthorizedException("Wrong username, email or password.")
+        raise UnauthorizedException(detail="Wrong username, email or password.")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
@@ -65,11 +65,11 @@ async def refresh_access_token(
 ) -> Dict[str, str]:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        raise UnauthorizedException("Refresh token missing.")
+        raise UnauthorizedException(detail="Refresh token missing.")
 
     user_data = await verify_token(refresh_token, db)
     if not user_data:
-        raise UnauthorizedException("Invalid refresh token.")
+        raise UnauthorizedException(detail="Invalid refresh token.")
 
     new_access_token = await create_access_token(data={"sub": user_data.username_or_email})
     return {"access_token": new_access_token, "token_type": "bearer"}
@@ -88,4 +88,4 @@ async def logout(
         return {"message": "Logged out successfully"}
 
     except JWTError:
-        raise UnauthorizedException("Invalid token.")
+        raise UnauthorizedException(detail="Invalid token.")

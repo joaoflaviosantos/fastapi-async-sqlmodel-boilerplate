@@ -308,12 +308,12 @@ if choice == "1":
 
         # Check if the user wants to include an additional description
         if include_description in {"y", "yes"}:
-            while description == "":
-                print("Please enter the commit description (one line at a time). Press ENTER on a blank line when you're done.")
-                # Use a temporary file to capture the commit description
-                with tempfile.NamedTemporaryFile(suffix=".txt") as tmp_file:
-                    # Open the temporary file in the appropriate text editor based on the operating system
-                    if OPERATING_SYSTEM == 'Windows':  # Windows
+            # Use a temporary file to capture the commit description
+            with tempfile.NamedTemporaryFile(suffix=".txt") as tmp_file:
+                # Open the temporary file in the appropriate text editor based on the operating system
+                if OPERATING_SYSTEM == 'Windows':  # Windows
+                    while description == "":
+                        print("Please enter the commit description (one line at a time). Press ENTER on a blank line when you're done.")
                         description_lines = []
                         # Capture the description lines until the user enters a blank line
                         while True:
@@ -321,16 +321,16 @@ if choice == "1":
                             if not line:
                                 break
                             description_lines.append(line)
-                    else:  # Linux or macOS
-                        editor = os.environ.get('EDITOR', 'nano')
-                        subprocess.Popen([editor, tmp_file.name])
+                else:  # Linux or macOS
+                    editor = os.environ.get('EDITOR', 'nano')
+                    subprocess.Popen([editor, tmp_file.name])
 
-                    # Read the content of the temporary file
-                    if OPERATING_SYSTEM == 'Windows':
-                        description = '\n'.join(description_lines)
-                    else:
-                        with open(tmp_file.name, "r") as f:
-                            description = f.read().strip()
+                # Read the content of the temporary file
+                if OPERATING_SYSTEM == 'Windows':
+                    description = '\n'.join(description_lines)
+                else:
+                    with open(tmp_file.name, "r") as f:
+                        description = f.read().strip()
 
             # Remove double quotes from the 'description' variable
             description = description.replace('"', '')

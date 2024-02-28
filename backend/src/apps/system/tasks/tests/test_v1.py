@@ -21,7 +21,7 @@ def test_create_task(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        f"/api/v1/system/tasks?message={test_task_message}",
+        url=f"/api/v1/system/tasks?message={test_task_message}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -35,7 +35,7 @@ def test_get_task(client: TestClient) -> None:
     global test_task_id
     assert test_task_id is not None
 
-    response = client.get(f"/api/v1/system/tasks/{test_task_id}")
+    response = client.get(url=f"/api/v1/system/tasks/{test_task_id}")
 
     assert response.status_code == 200
     assert response.json()["args"][0] == test_task_message

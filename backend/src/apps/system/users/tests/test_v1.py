@@ -15,6 +15,9 @@ TEST_PASSWORD = settings.TEST_PASSWORD
 ADMIN_USERNAME = settings.ADMIN_USERNAME
 ADMIN_PASSWORD = settings.ADMIN_PASSWORD
 
+# Test data: default tier
+DEFAULT_TIER_NAME = settings.TIER_NAME_DEFAULT
+
 # Test global variables
 user_id = None
 
@@ -46,7 +49,7 @@ def test_get_own_user_data(client: TestClient) -> None:
     token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/users/me/",
+        url=f"/api/v1/system/users/me/",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -59,7 +62,7 @@ def test_get_user(client: TestClient) -> None:
     global user_id
     assert user_id is not None
 
-    response = client.get(f"/api/v1/system/users/{user_id}")
+    response = client.get(url=f"/api/v1/system/users/{user_id}")
 
     assert response.status_code == 200
     assert response.json()["username"] == TEST_USERNAME
@@ -79,7 +82,7 @@ def test_update_your_own_user(client: TestClient) -> None:
     token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
     response = client.patch(
-        f"/api/v1/system/users/{user_id}",
+        url=f"/api/v1/system/users/{user_id}",
         json={"name": f"Updated {TEST_NAME}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -95,13 +98,28 @@ def test_update_user_as_admin(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.patch(
-        f"/api/v1/system/users/{user_id}",
+        url=f"/api/v1/system/users/{user_id}",
         json={"name": f"Updated {TEST_NAME} (again)"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 200
     assert response.json() == {"message": "User updated"}
+
+
+def test_get_user_tier(client: TestClient) -> None:
+    global user_id
+    assert user_id is not None
+
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/users/{user_id}/tier",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["tier_name"] == DEFAULT_TIER_NAME
 
 
 def test_delete_user(client: TestClient) -> None:
@@ -111,7 +129,7 @@ def test_delete_user(client: TestClient) -> None:
     token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/users/{user_id}",
+        url=f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -126,7 +144,7 @@ def test_delete_already_deleted_user_as_admin(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/users/{user_id}",
+        url=f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -141,7 +159,7 @@ def test_delete_db_user(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/users/{user_id}/db",
+        url=f"/api/v1/system/users/{user_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 

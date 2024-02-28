@@ -45,7 +45,7 @@ async def write_tier(
     tier_internal_dict = tier.model_dump()
     db_tier = await crud_tiers.exists(db=db, name=tier_internal_dict["name"])
     if db_tier:
-        raise DuplicateValueException("Tier Name not available")
+        raise DuplicateValueException(detail="Tier Name not available")
 
     tier_internal = TierCreateInternal(**tier_internal_dict)
     return await crud_tiers.create(db=db, object=tier_internal)

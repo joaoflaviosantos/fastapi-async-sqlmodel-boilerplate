@@ -111,11 +111,11 @@ class UserCreate(UserBase):
     ]
 
 
-class UserCreateInternal(UserBase, UserSecurityBase):
+class UserCreateInternal(UserBase, UserSecurityBase, UserTierBase):
     """
     Description:
     ----------
-    Internal schema for creating a new user, including security information.
+    Internal schema for creating a new user, including security information and tier information.
 
     Fields:
     ----------
@@ -123,6 +123,7 @@ class UserCreateInternal(UserBase, UserSecurityBase):
     - 'username': User's unique username.
     - 'email': User's unique email address.
     - 'hashed_password': Hashed password for user authentication.
+    - 'tier_id': ID of the tier to which the user belongs (optional).
     """
 
     pass

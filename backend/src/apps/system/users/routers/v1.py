@@ -20,6 +20,7 @@ from src.core.exceptions.http_exceptions import (
     DuplicateValueException,
     NotFoundException,
     ForbiddenException,
+    BadRequestException,
 )
 from src.apps.system.users.schemas import (
     User,
@@ -49,17 +50,25 @@ async def write_user(
 ) -> UserRead:
     email_row = await crud_users.exists(db=db, email=user.email)
     if email_row:
-        raise DuplicateValueException("Email is already registered")
+        raise DuplicateValueException(detail="Email is already registered")
 
     username_row = await crud_users.exists(db=db, username=user.username)
     if username_row:
-        raise DuplicateValueException("Username not available")
+        raise DuplicateValueException(detail="Username not available")
 
     user_internal_dict = user.model_dump()
     user_internal_dict["hashed_password"] = get_password_hash(
         password=user_internal_dict["password"]
     )
     del user_internal_dict["password"]
+
+    default_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, default=True)
+    if default_tier is None:
+        raise BadRequestException(
+            detail="No default tier found. Please create a default tier first."
+        )
+
+    user_internal_dict["tier_id"] = default_tier["id"]
 
     user_internal = UserCreateInternal(**user_internal_dict)
     return await crud_users.create(db=db, object=user_internal)
@@ -123,12 +132,12 @@ async def patch_user(
     if values.username != db_user["username"]:
         existing_username = await crud_users.exists(db=db, username=values.username)
         if existing_username:
-            raise DuplicateValueException("Username not available")
+            raise DuplicateValueException(detail="Username not available")
 
     if values.email != db_user["email"]:
         existing_email = await crud_users.exists(db=db, email=values.email)
         if existing_email:
-            raise DuplicateValueException("Email is already registered")
+            raise DuplicateValueException(detail="Email is already registered")
 
     await crud_users.update(db=db, object=values, id=user_id)
     return {"message": "User updated"}
@@ -217,7 +226,7 @@ async def read_user_rate_limits(
     return db_user
 
 
-@router.get("/system/users/{user_id}/tiers")
+@router.get("/system/users/{user_id}/tier")
 async def read_user_tier(
     request: Request,
     user_id: UUID,
@@ -229,7 +238,9 @@ async def read_user_tier(
 
     db_tier = await crud_tiers.exists(db=db, id=db_user["tier_id"])
     if not db_tier:
-        raise NotFoundException(detail="Tier not found")
+        raise NotFoundException(
+            detail="Current user tier not found. Please update user tier first."
+        )
 
     joined = await crud_users.get_joined(
         db=db,
@@ -244,7 +255,7 @@ async def read_user_tier(
 
 
 @router.patch(
-    "/system/users/{user_id}/tiers",
+    "/system/users/{user_id}/tier",
     dependencies=[Depends(get_current_superuser)],
 )
 async def patch_user_tier(

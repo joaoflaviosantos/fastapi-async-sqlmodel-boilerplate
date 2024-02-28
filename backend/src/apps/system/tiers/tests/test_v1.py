@@ -43,7 +43,7 @@ def test_get_tier(client: TestClient) -> None:
     global test_tier_id
     assert test_tier_id is not None
 
-    response = client.get(f"/api/v1/system/tiers/{test_tier_id}")
+    response = client.get(url=f"/api/v1/system/tiers/{test_tier_id}")
 
     assert response.status_code == 200
     assert response.json()["name"] == test_tier["name"]
@@ -58,7 +58,7 @@ def test_update_tier(client: TestClient) -> None:
     updated_tier_name = "Updated Test Tier"
 
     response = client.patch(
-        f"/api/v1/system/tiers/{test_tier_id}",
+        url=f"/api/v1/system/tiers/{test_tier_id}",
         json={"name": updated_tier_name},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -75,7 +75,7 @@ def test_delete_tier(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/tiers/{test_tier_id}",
+        url=f"/api/v1/system/tiers/{test_tier_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 

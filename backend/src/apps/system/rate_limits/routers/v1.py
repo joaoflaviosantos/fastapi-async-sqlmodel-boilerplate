@@ -54,11 +54,11 @@ async def write_rate_limit(
 
     # Checks if the path is a valid route
     if not is_valid_path(path=rate_limit.path, app=request.app):
-        raise UnprocessableEntityException("Invalid path")
+        raise UnprocessableEntityException(detail="Invalid path")
 
     db_rate_limit = await crud_rate_limits.exists(db=db, name=rate_limit_internal_dict["name"])
     if db_rate_limit:
-        raise DuplicateValueException("Rate Limit Name not available")
+        raise DuplicateValueException(detail="Rate Limit Name not available")
 
     rate_limit_internal = RateLimitCreateInternal(**rate_limit_internal_dict)
     return await crud_rate_limits.create(db=db, object=rate_limit_internal)
@@ -139,7 +139,7 @@ async def patch_rate_limit(
         # Checks if there is already a rate limit for this path
         db_rate_limit_path = await crud_rate_limits.exists(db=db, tier_id=tier_id, path=values.path)
         if db_rate_limit_path:
-            raise DuplicateValueException("There is already a rate limit for this path")
+            raise DuplicateValueException(detail="There is already a rate limit for this path")
 
     if values.name is not None:
         db_rate_limit_name = await crud_rate_limits.exists(
@@ -147,7 +147,7 @@ async def patch_rate_limit(
             name=values.name,
         )
         if db_rate_limit_name:
-            raise DuplicateValueException("There is already a rate limit with this name")
+            raise DuplicateValueException(detail="There is already a rate limit with this name")
 
     await crud_rate_limits.update(db=db, object=values, id=rate_limit_id)
     return {"message": "Rate Limit updated"}
@@ -171,7 +171,7 @@ async def erase_rate_limit(
         db=db, schema_to_select=RateLimitRead, tier_id=tier_id, id=rate_limit_id
     )
     if db_rate_limit is None:
-        raise RateLimitException("Rate Limit not found")
+        raise RateLimitException(detail="Rate Limit not found")
 
     await crud_rate_limits.delete(db=db, db_row=db_rate_limit, id=rate_limit_id)
     return {"message": "Rate Limit deleted"}

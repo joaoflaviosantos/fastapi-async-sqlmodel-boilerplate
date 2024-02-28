@@ -26,7 +26,7 @@ def test_get_post_user_data(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/users/me/",
+        url=f"/api/v1/system/users/me/",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -46,7 +46,7 @@ def test_create_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        f"/api/v1/blog/posts/user/{test_post_user_id}",
+        url=f"/api/v1/blog/posts/user/{test_post_user_id}",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -63,7 +63,7 @@ def test_get_created_post(client: TestClient) -> None:
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    response = client.get(f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}")
+    response = client.get(url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}")
     post = response.json()
 
     assert response.status_code == 200
@@ -76,7 +76,7 @@ def test_get_multiple_user_posts(client: TestClient) -> None:
     global test_post_user_id
     assert test_post_user_id is not None
 
-    response = client.get(f"/api/v1/blog/posts/user/{test_post_user_id}")
+    response = client.get(url=f"/api/v1/blog/posts/user/{test_post_user_id}")
 
     assert response.status_code == 200
     assert len(response.json()["data"]) > 0
@@ -91,7 +91,7 @@ def test_update_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.patch(
-        f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
+        url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -109,7 +109,7 @@ def test_delete_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
+        url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -126,7 +126,7 @@ def test_delete_already_deleted_post_as_admin(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
+        url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -143,7 +143,7 @@ def test_delete_db_post(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}/db",
+        url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 

@@ -28,7 +28,7 @@ def test_get_related_tier_data(client: TestClient) -> None:
     global test_related_tier_id
     assert test_related_tier_id is None
 
-    response = client.get(f"/api/v1/system/tiers")
+    response = client.get(url=f"/api/v1/system/tiers")
     tiers_data = response.json()["data"]
 
     # Create a dictionary to map tier names to IDs
@@ -50,7 +50,7 @@ def test_post_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
         json=test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -66,7 +66,7 @@ def test_post_invalid_rate_limit_related_tier_id(client: TestClient) -> None:
     invalid_related_tier_id = f"{uuid4()}"
 
     response = client.post(
-        f"/api/v1/system/rate-limits/tier/{invalid_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/tier/{invalid_related_tier_id}",
         json=test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -84,7 +84,7 @@ def test_post_invalid_rate_limit_path(client: TestClient) -> None:
     invalid_test_rate_limit["path"] = "/api/v1/invalid/route"
 
     response = client.post(
-        f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
         json=invalid_test_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -99,7 +99,7 @@ def test_get_multiple_rate_limits(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -116,7 +116,7 @@ def test_get_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -144,7 +144,7 @@ def test_update_rate_limit(client: TestClient) -> None:
     }
 
     response = client.patch(
-        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
         json=updated_rate_limit,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -162,7 +162,7 @@ def test_erase_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
