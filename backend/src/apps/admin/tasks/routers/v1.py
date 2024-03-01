@@ -17,7 +17,7 @@ from src.apps.admin.users.schemas import (
 )
 from src.core.utils import queue
 
-router = APIRouter(tags=["Administration - Tasks"])
+router = APIRouter(tags=["Admin - Tasks"])
 
 
 @router.post(

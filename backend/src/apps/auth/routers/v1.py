@@ -24,7 +24,7 @@ from src.core.security import (
     blacklist_token,
 )
 
-router = fastapi.APIRouter(tags=["System - Authentication"])
+router = fastapi.APIRouter(tags=["Authentication"])
 
 
 @router.post("/system/auth/login", response_model=Token)

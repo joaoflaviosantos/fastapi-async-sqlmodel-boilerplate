@@ -95,7 +95,7 @@ class PostUserBase(Base):
     # Relationships Columns
     user_id: UUID = Field(
         description="User ID associated with the post",
-        foreign_key="system_user.id",
+        foreign_key="admin_user.id",
         index=True,
     )
 

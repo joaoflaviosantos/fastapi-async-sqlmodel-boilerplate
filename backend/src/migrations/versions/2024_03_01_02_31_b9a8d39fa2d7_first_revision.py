@@ -1,8 +1,8 @@
-"""first_revision
+"""first revision
 
-Revision ID: ec4e823d7dc2
+Revision ID: b9a8d39fa2d7
 Revises: 
-Create Date: 2024-02-23 02:49:05.752181
+Create Date: 2024-03-01 02:31:36.301157
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "ec4e823d7dc2"
+revision: str = "b9a8d39fa2d7"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("default", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column("default", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -48,6 +48,31 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_system_token_blacklist_token"), "system_token_blacklist", ["token"], unique=False
     )
+    op.create_table(
+        "admin_user",
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
+        sa.Column("tier_id", sqlmodel.sql.sqltypes.GUID(), nullable=True),
+        sa.Column("hashed_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("is_superuser", sa.Boolean(), nullable=False),
+        sa.Column("profile_image_url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["tier_id"],
+            ["system_tier.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_admin_user_email"), "admin_user", ["email"], unique=True)
+    op.create_index(op.f("ix_admin_user_id"), "admin_user", ["id"], unique=False)
+    op.create_index(op.f("ix_admin_user_is_deleted"), "admin_user", ["is_deleted"], unique=False)
+    op.create_index(op.f("ix_admin_user_tier_id"), "admin_user", ["tier_id"], unique=False)
+    op.create_index(op.f("ix_admin_user_username"), "admin_user", ["username"], unique=True)
     op.create_table(
         "system_rate_limit",
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
@@ -70,31 +95,6 @@ def upgrade() -> None:
         op.f("ix_system_rate_limit_tier_id"), "system_rate_limit", ["tier_id"], unique=False
     )
     op.create_table(
-        "system_user",
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
-        sa.Column("tier_id", sqlmodel.sql.sqltypes.GUID(), nullable=True),
-        sa.Column("hashed_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("is_superuser", sa.Boolean(), nullable=False),
-        sa.Column("profile_image_url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["tier_id"],
-            ["system_tier.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_system_user_email"), "system_user", ["email"], unique=True)
-    op.create_index(op.f("ix_system_user_id"), "system_user", ["id"], unique=False)
-    op.create_index(op.f("ix_system_user_is_deleted"), "system_user", ["is_deleted"], unique=False)
-    op.create_index(op.f("ix_system_user_tier_id"), "system_user", ["tier_id"], unique=False)
-    op.create_index(op.f("ix_system_user_username"), "system_user", ["username"], unique=True)
-    op.create_table(
         "blog_post",
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
@@ -107,7 +107,7 @@ def upgrade() -> None:
         sa.Column("text", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["user_id"],
-            ["system_user.id"],
+            ["admin_user.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -123,15 +123,15 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_blog_post_is_deleted"), table_name="blog_post")
     op.drop_index(op.f("ix_blog_post_id"), table_name="blog_post")
     op.drop_table("blog_post")
-    op.drop_index(op.f("ix_system_user_username"), table_name="system_user")
-    op.drop_index(op.f("ix_system_user_tier_id"), table_name="system_user")
-    op.drop_index(op.f("ix_system_user_is_deleted"), table_name="system_user")
-    op.drop_index(op.f("ix_system_user_id"), table_name="system_user")
-    op.drop_index(op.f("ix_system_user_email"), table_name="system_user")
-    op.drop_table("system_user")
     op.drop_index(op.f("ix_system_rate_limit_tier_id"), table_name="system_rate_limit")
     op.drop_index(op.f("ix_system_rate_limit_id"), table_name="system_rate_limit")
     op.drop_table("system_rate_limit")
+    op.drop_index(op.f("ix_admin_user_username"), table_name="admin_user")
+    op.drop_index(op.f("ix_admin_user_tier_id"), table_name="admin_user")
+    op.drop_index(op.f("ix_admin_user_is_deleted"), table_name="admin_user")
+    op.drop_index(op.f("ix_admin_user_id"), table_name="admin_user")
+    op.drop_index(op.f("ix_admin_user_email"), table_name="admin_user")
+    op.drop_table("admin_user")
     op.drop_index(op.f("ix_system_token_blacklist_token"), table_name="system_token_blacklist")
     op.drop_index(op.f("ix_system_token_blacklist_id"), table_name="system_token_blacklist")
     op.drop_table("system_token_blacklist")

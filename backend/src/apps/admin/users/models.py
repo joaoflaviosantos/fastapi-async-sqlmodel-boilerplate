@@ -223,4 +223,4 @@ class User(
     'system_user'
     """
 
-    __tablename__ = "system_user"
+    __tablename__ = "admin_user"

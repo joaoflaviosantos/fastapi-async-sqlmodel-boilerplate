@@ -39,7 +39,7 @@ from src.core.security import get_password_hash, blacklist_token, oauth2_scheme
 from src.core.config import settings
 from src.core.utils import cache
 
-router = fastapi.APIRouter(tags=["Administration - Users"])
+router = fastapi.APIRouter(tags=["Admin - Users"])
 
 
 @router.post("/system/users", response_model=UserRead, status_code=201)

@@ -13,6 +13,9 @@ from src.core.common.models import Base
 from src.core.config import settings
 from src.core.db import *
 
+# Define the custom Alembic version table name
+custom_alembic_version_table_name = "_alembic_version"
+
 # The Alembic Config object providing access to the .ini file values.
 config = context.config
 
@@ -73,11 +76,18 @@ def do_run_migrations(connection: Connection) -> None:
 
     This function is responsible for running migrations when the application is connected to a database.
     """
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table=custom_alembic_version_table_name,  # Change the alembic version table name
+    )
 
     with context.begin_transaction():
         context.configure(
-            connection=connection, target_metadata=target_metadata, include_object=filter_db_objects
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=filter_db_objects,
+            version_table=custom_alembic_version_table_name,  # Change the alembic version table name
         )
         context.run_migrations()
 
@@ -115,6 +125,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         include_object=filter_db_objects,
+        version_table=custom_alembic_version_table_name,  # Change the alembic version table name
     )
 
     with context.begin_transaction():

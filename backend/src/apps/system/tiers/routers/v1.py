@@ -9,7 +9,8 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.api.dependencies import get_current_superuser
+from src.core.api.dependencies import get_current_user, get_current_superuser
+from src.apps.admin.users.schemas import UserRead
 from src.apps.system.tiers.crud import crud_tiers
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
@@ -54,11 +55,11 @@ async def write_tier(
 
 @router.get(
     "/system/tiers",
-    dependencies=[Depends(get_current_superuser)],
     response_model=PaginatedListResponse[TierRead],
 )
 async def read_tiers(
     request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     page: int = 1,
     items_per_page: int = 10,
@@ -75,12 +76,12 @@ async def read_tiers(
 
 @router.get(
     "/system/tiers/{tier_id}",
-    dependencies=[Depends(get_current_superuser)],
     response_model=TierRead,
 )
 async def read_tier(
     request: Request,
     tier_id: UUID,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict:
     db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
