@@ -35,20 +35,35 @@ def test_get_task(client: TestClient) -> None:
     global test_task_id
     assert test_task_id is not None
 
-    response = client.get(url=f"/api/v1/system/tasks/{test_task_id}")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/tasks/{test_task_id}",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
     assert response.json()["args"][0] == test_task_message
 
 
 def test_read_processed_tasks(client: TestClient) -> None:
-    response = client.get("/api/v1/system/tasks/processed")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/tasks/processed",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
 
 
 def test_read_pending_tasks(client: TestClient) -> None:
-    response = client.get("/api/v1/system/tasks/pending")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/tasks/pending",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
 
@@ -56,8 +71,12 @@ def test_read_pending_tasks(client: TestClient) -> None:
 def test_get_health_check_from_inexistent_queue(client: TestClient) -> None:
     inexistent_queue_name = "inexistent_queue"
 
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
     response = client.get(
-        "/api/v1/system/tasks/queue-health/", params={"queue_name": f"{inexistent_queue_name}"}
+        url=f"/api/v1/system/tasks/queue-health/",
+        params={"queue_name": f"{inexistent_queue_name}"},
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 404

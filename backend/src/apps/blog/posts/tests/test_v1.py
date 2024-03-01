@@ -63,7 +63,13 @@ def test_get_created_post(client: TestClient) -> None:
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    response = client.get(url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
     post = response.json()
 
     assert response.status_code == 200
@@ -76,7 +82,12 @@ def test_get_multiple_user_posts(client: TestClient) -> None:
     global test_post_user_id
     assert test_post_user_id is not None
 
-    response = client.get(url=f"/api/v1/blog/posts/user/{test_post_user_id}")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/blog/posts/user/{test_post_user_id}",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
     assert len(response.json()["data"]) > 0

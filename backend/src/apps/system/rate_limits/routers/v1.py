@@ -66,6 +66,7 @@ async def write_rate_limit(
 
 @router.get(
     "/system/rate-limits/tier/{tier_id}",
+    dependencies=[Depends(get_current_superuser)],
     response_model=PaginatedListResponse[RateLimitRead],
 )
 async def read_rate_limits(
@@ -90,7 +91,11 @@ async def read_rate_limits(
     return paginated_response(crud_data=rate_limits_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/rate-limits/{rate_limit_id}/tier/{tier_id}", response_model=RateLimitRead)
+@router.get(
+    "/system/rate-limits/{rate_limit_id}/tier/{tier_id}",
+    dependencies=[Depends(get_current_superuser)],
+    response_model=RateLimitRead,
+)
 async def read_rate_limit(
     request: Request,
     tier_id: UUID,

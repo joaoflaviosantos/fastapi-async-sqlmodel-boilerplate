@@ -26,6 +26,8 @@ def test_post_user(client: TestClient) -> None:
     global user_id
     assert user_id is None
 
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
     response = client.post(
         "/api/v1/system/users",
         json={
@@ -34,6 +36,7 @@ def test_post_user(client: TestClient) -> None:
             "email": TEST_EMAIL,
             "password": TEST_PASSWORD,
         },
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     user_id = response.json()["id"]
@@ -62,14 +65,24 @@ def test_get_user(client: TestClient) -> None:
     global user_id
     assert user_id is not None
 
-    response = client.get(url=f"/api/v1/system/users/{user_id}")
+    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/users/{user_id}",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
     assert response.json()["username"] == TEST_USERNAME
 
 
 def test_get_multiple_users(client: TestClient) -> None:
-    response = client.get("/api/v1/system/users")
+    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/users",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
 
     assert response.status_code == 200
     assert len(response.json()["data"]) > 0
@@ -105,6 +118,21 @@ def test_update_user_as_admin(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.json() == {"message": "User updated"}
+
+
+def test_get_user_rate_limits(client: TestClient) -> None:
+    global user_id
+    assert user_id is not None
+
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/users/{user_id}/rate-limits",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
+    assert response.status_code == 200
+    assert "tier_rate_limits" in response.json()
 
 
 def test_get_user_tier(client: TestClient) -> None:

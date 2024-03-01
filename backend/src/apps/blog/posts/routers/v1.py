@@ -68,6 +68,7 @@ async def write_post(
 async def read_posts(
     request: Request,
     user_id: UUID,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     page: int = 1,
     items_per_page: int = 10,
@@ -94,6 +95,7 @@ async def read_post(
     request: Request,
     user_id: UUID,
     post_id: UUID,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict:
     db_user = await crud_users.get(db=db, schema_to_select=UserRead, id=user_id, is_deleted=False)

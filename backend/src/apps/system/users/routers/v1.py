@@ -45,6 +45,7 @@ router = fastapi.APIRouter(tags=["System - Users"])
 @router.post("/system/users", response_model=UserRead, status_code=201)
 async def write_user(
     request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     user: UserCreate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> UserRead:
@@ -77,6 +78,7 @@ async def write_user(
 @router.get("/system/users", response_model=PaginatedListResponse[UserRead])
 async def read_users(
     request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     page: int = 1,
     items_per_page: int = 10,
@@ -103,6 +105,7 @@ async def read_users_me(
 @router.get("/system/users/{user_id}", response_model=UserRead)
 async def read_user(
     request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     user_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict:
@@ -229,6 +232,7 @@ async def read_user_rate_limits(
 @router.get("/system/users/{user_id}/tier")
 async def read_user_tier(
     request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
     user_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict | None:

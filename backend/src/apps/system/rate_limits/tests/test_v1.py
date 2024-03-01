@@ -28,7 +28,13 @@ def test_get_related_tier_data(client: TestClient) -> None:
     global test_related_tier_id
     assert test_related_tier_id is None
 
-    response = client.get(url=f"/api/v1/system/tiers")
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.get(
+        url=f"/api/v1/system/tiers",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
     tiers_data = response.json()["data"]
 
     # Create a dictionary to map tier names to IDs

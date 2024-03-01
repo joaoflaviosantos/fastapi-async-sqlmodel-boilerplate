@@ -1,15 +1,19 @@
 # Built-in Dependencies
-from typing import Dict, Optional, List, Optional
+from typing import Dict, Optional, List, Optional, Annotated
 
 # Third-Party Dependencies
-from arq.jobs import Job as ArqJob
 from fastapi import APIRouter, Depends, Request
+from arq.jobs import Job as ArqJob
 
 # Local Dependencies
 from src.apps.system.tasks.schemas import Job, JobResult, JobDef, QueueHealth
+from src.core.api.dependencies import get_current_user
 from src.core.api.dependencies import rate_limiter
 from src.core.exceptions.http_exceptions import (
     NotFoundException,
+)
+from src.apps.system.users.schemas import (
+    UserRead,
 )
 from src.core.utils import queue
 
@@ -22,7 +26,9 @@ router = APIRouter(tags=["System - Tasks"])
     status_code=201,
     dependencies=[Depends(rate_limiter)],
 )
-async def create_task(request: Request, message: str) -> Dict[str, str]:
+async def create_task(
+    request: Request, current_user: Annotated[UserRead, Depends(get_current_user)], message: str
+) -> Dict[str, str]:
     """
     Create a new background task.
 
@@ -42,7 +48,9 @@ async def create_task(request: Request, message: str) -> Dict[str, str]:
 
 
 @router.get("/system/tasks/{task_id}")
-async def get_task(request: Request, task_id: str) -> Optional[JobDef]:
+async def get_task(
+    request: Request, current_user: Annotated[UserRead, Depends(get_current_user)], task_id: str
+) -> Optional[JobDef]:
     """
     Get information about a specific background task.
 
@@ -63,7 +71,9 @@ async def get_task(request: Request, task_id: str) -> Optional[JobDef]:
 
 
 @router.get("/system/tasks/processed/")
-async def read_processed_tasks(request: Request) -> List[JobResult]:
+async def read_processed_tasks(
+    request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]
+) -> List[JobResult]:
     """
     Get results for all background tasks that have been processed.
 
@@ -78,7 +88,9 @@ async def read_processed_tasks(request: Request) -> List[JobResult]:
 
 
 @router.get("/system/tasks/pending/")
-async def read_pending_tasks(request: Request) -> List[JobDef]:
+async def read_pending_tasks(
+    request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]
+) -> List[JobDef]:
     """
     Get results for all background tasks that have pending processing.
 
@@ -93,7 +105,11 @@ async def read_pending_tasks(request: Request) -> List[JobDef]:
 
 
 @router.get("/system/tasks/queue-health/")
-async def read_queue_health(request: Request, queue_name: Optional[str] = None) -> QueueHealth:
+async def read_queue_health(
+    request: Request,
+    current_user: Annotated[UserRead, Depends(get_current_user)],
+    queue_name: Optional[str] = None,
+) -> QueueHealth:
     """
     Get the current health status of the queue, including the number of pending and processed tasks.
 

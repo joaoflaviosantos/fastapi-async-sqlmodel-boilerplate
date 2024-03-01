@@ -28,6 +28,7 @@ from src.core.utils.paginated import (
     paginated_response,
     compute_offset,
 )
+from src.core.config import settings
 
 router = fastapi.APIRouter(tags=["System - Tiers"])
 
@@ -51,7 +52,11 @@ async def write_tier(
     return await crud_tiers.create(db=db, object=tier_internal)
 
 
-@router.get("/system/tiers", response_model=PaginatedListResponse[TierRead])
+@router.get(
+    "/system/tiers",
+    dependencies=[Depends(get_current_superuser)],
+    response_model=PaginatedListResponse[TierRead],
+)
 async def read_tiers(
     request: Request,
     db: Annotated[AsyncSession, Depends(async_get_db)],
@@ -68,7 +73,11 @@ async def read_tiers(
     return paginated_response(crud_data=tiers_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/tiers/{tier_id}", response_model=TierRead)
+@router.get(
+    "/system/tiers/{tier_id}",
+    dependencies=[Depends(get_current_superuser)],
+    response_model=TierRead,
+)
 async def read_tier(
     request: Request,
     tier_id: UUID,
@@ -92,6 +101,9 @@ async def patch_tier(
     if db_tier is None:
         raise NotFoundException(detail="Tier not found")
 
+    if db_tier["name"] == settings.TIER_NAME_DEFAULT:
+        raise ForbiddenException(detail="Default Tier cannot be updated")
+
     await crud_tiers.update(db=db, object=values, id=tier_id)
     return {"message": "Tier updated"}
 
@@ -106,7 +118,9 @@ async def erase_tier(
     if db_tier is None:
         raise NotFoundException(detail="Tier not found")
 
-    # Delete tier from the database
+    if db_tier["name"] == settings.TIER_NAME_DEFAULT:
+        raise ForbiddenException(detail="Default Tier cannot be deleted")
+
     try:
         await crud_tiers.delete(db=db, db_row=db_tier, id=tier_id)
     except IntegrityError:
