@@ -1,5 +1,5 @@
 # Third-Party Dependencies
-from sqlmodel import Field
+from sqlmodel import Field, text
 
 # Local Dependencies
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
@@ -36,6 +36,7 @@ class TierBase(Base):
     )
     default: bool = Field(
         default=False,
+        sa_column_kwargs={"server_default": text("false")},
         description="Indicates whether the tier is the default tier",
     )
 

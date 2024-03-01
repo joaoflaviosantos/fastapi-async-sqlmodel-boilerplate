@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sqlmodel.sql.sqltypes.GUID(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("default", sa.Boolean(), nullable=False),
+        sa.Column("default", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
