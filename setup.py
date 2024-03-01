@@ -323,7 +323,7 @@ if choice == "1":
                             description_lines.append(line)
                 else:  # Linux or macOS
                     editor = os.environ.get('EDITOR', 'nano')
-                    subprocess.Popen([editor, tmp_file.name])
+                    subprocess.call([editor, tmp_file.name])
 
                 # Read the content of the temporary file
                 if OPERATING_SYSTEM == 'Windows':
@@ -356,13 +356,6 @@ if choice == "1":
         else:
             subprocess.run(["git", "commit", "-m", message, "-m", description])
         subprocess.run(["git", "push", "origin", branch])
-
-        # Step 1.5.10: Deactivate the virtual environment
-        if OPERATING_SYSTEM != 'Windows':
-            subprocess.run(["deactivate"])
-
-        # Step 1.5.11: Navigate to the project directory (to correctly finish the setup.sh script)
-        os.chdir("backend/")
 
         # Step 1.5.12: Inform the user that changes have been committed and pushed
         print_color("RED", "\nChanges have been committed and pushed to the branch '{}'.\n".format(branch))
