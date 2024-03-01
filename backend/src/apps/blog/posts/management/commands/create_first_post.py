@@ -7,7 +7,7 @@ from sqlmodel import select
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
 from src.apps.blog.posts.models import Post
-from src.apps.system.users.models import User
+from src.apps.admin.users.models import User
 from src.core.config import settings
 
 

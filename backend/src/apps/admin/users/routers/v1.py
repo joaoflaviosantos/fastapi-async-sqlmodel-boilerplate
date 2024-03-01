@@ -11,7 +11,7 @@ import fastapi
 # Local Dependencies
 from src.core.api.dependencies import get_current_user, get_current_superuser
 from src.apps.system.rate_limits.crud import crud_rate_limits
-from src.apps.system.users.crud import crud_users
+from src.apps.admin.users.crud import crud_users
 from src.apps.system.tiers.crud import crud_tiers
 from src.apps.system.tiers.schemas import TierRead
 from src.apps.system.tiers.models import Tier
@@ -22,7 +22,7 @@ from src.core.exceptions.http_exceptions import (
     ForbiddenException,
     BadRequestException,
 )
-from src.apps.system.users.schemas import (
+from src.apps.admin.users.schemas import (
     User,
     UserCreate,
     UserCreateInternal,
@@ -39,7 +39,7 @@ from src.core.security import get_password_hash, blacklist_token, oauth2_scheme
 from src.core.config import settings
 from src.core.utils import cache
 
-router = fastapi.APIRouter(tags=["System - Users"])
+router = fastapi.APIRouter(tags=["Administration - Users"])
 
 
 @router.post("/system/users", response_model=UserRead, status_code=201)

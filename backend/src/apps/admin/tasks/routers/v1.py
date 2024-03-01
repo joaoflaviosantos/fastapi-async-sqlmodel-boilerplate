@@ -6,18 +6,18 @@ from fastapi import APIRouter, Depends, Request
 from arq.jobs import Job as ArqJob
 
 # Local Dependencies
-from src.apps.system.tasks.schemas import Job, JobResult, JobDef, QueueHealth
+from src.apps.admin.tasks.schemas import Job, JobResult, JobDef, QueueHealth
 from src.core.api.dependencies import get_current_user
 from src.core.api.dependencies import rate_limiter
 from src.core.exceptions.http_exceptions import (
     NotFoundException,
 )
-from src.apps.system.users.schemas import (
+from src.apps.admin.users.schemas import (
     UserRead,
 )
 from src.core.utils import queue
 
-router = APIRouter(tags=["System - Tasks"])
+router = APIRouter(tags=["Administration - Tasks"])
 
 
 @router.post(

@@ -9,8 +9,8 @@ import fastapi
 
 # Local Dependencies
 from src.core.api.dependencies import get_current_user, get_current_superuser
-from src.apps.system.users.schemas import UserRead
-from src.apps.system.users.crud import crud_users
+from src.apps.admin.users.schemas import UserRead
+from src.apps.admin.users.crud import crud_users
 from src.apps.blog.posts.crud import crud_posts
 from src.core.db.session import async_get_db
 from src.core.utils.cache import cache

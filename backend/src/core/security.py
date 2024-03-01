@@ -3,17 +3,17 @@ from datetime import datetime, timedelta, UTC
 from typing import Union, Literal, Dict, Any
 
 # Third-Party Dependencies
-from fastapi.security import OAuth2PasswordBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 import bcrypt
 
 # Local Dependencies
-from src.apps.system.auth.schemas import TokenData, TokenBlacklistCreate
-from src.apps.system.auth.crud import crud_token_blacklist
-from src.apps.system.users.crud import crud_users
-from src.core.utils import cache
+from src.apps.auth.schemas import TokenData, TokenBlacklistCreate
+from src.apps.auth.crud import crud_token_blacklist
+from src.apps.admin.users.crud import crud_users
 from src.core.config import settings
+from src.core.utils import cache
 
 # Constants for token-related settings
 SECRET_KEY = settings.SECRET_KEY

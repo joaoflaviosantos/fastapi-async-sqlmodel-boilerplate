@@ -1,7 +1,7 @@
 # Local Dependencies
 from src.core.common.crud import CRUDBase
-from src.apps.system.users.models import User
-from src.apps.system.users.schemas import (
+from src.apps.admin.users.models import User
+from src.apps.admin.users.schemas import (
     UserCreateInternal,
     UserUpdate,
     UserUpdateInternal,
