@@ -496,41 +496,6 @@ SQLAlchemy = ">=1.4.19"
 starlette = ">=0.13.6"
 
 [[package]]
-name = "fastapi-pagination"
-version = "0.12.14"
-description = "FastAPI pagination"
-optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "fastapi_pagination-0.12.14-py3-none-any.whl", hash = "sha256:59b6c5626b1d21c610da333c7a586d625f6c81d8fa26267a4b598aae736f6753"},
-    {file = "fastapi_pagination-0.12.14.tar.gz", hash = "sha256:4148694b1e170055eea0a5e691dbc640c4bf55eb0086cf11d14b164c35660559"},
-]
-
-[package.dependencies]
-fastapi = ">=0.93.0"
-pydantic = ">=1.9.1"
-sqlakeyset = {version = ">=2.0.1680321678,<3.0.0", optional = true, markers = "extra == \"sqlmodel\" or extra == \"sqlalchemy\" or extra == \"all\""}
-SQLAlchemy = {version = ">=1.3.20", optional = true, markers = "extra == \"sqlalchemy\" or extra == \"asyncpg\" or extra == \"all\""}
-typing-extensions = ">=4.8.0,<5.0.0"
-
-[package.extras]
-all = ["SQLAlchemy (>=1.3.20)", "asyncpg (>=0.24.0)", "beanie (>=1.11.9,<2.0.0)", "bunnet (>=1.1.0,<2.0.0)", "databases (>=0.6.0)", "django (<5.0.0)", "mongoengine (>=0.23.1,<0.28.0)", "motor (>=2.5.1,<4.0.0)", "orm (>=0.3.1)", "ormar (>=0.11.2)", "piccolo (>=0.89,<0.122)", "pony (>=0.7.16,<0.8.0)", "scylla-driver (>=3.25.6,<4.0.0)", "sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.8,<0.0.15)", "tortoise-orm (>=0.16.18,<0.21.0)"]
-asyncpg = ["SQLAlchemy (>=1.3.20)", "asyncpg (>=0.24.0)"]
-beanie = ["beanie (>=1.11.9,<2.0.0)"]
-bunnet = ["bunnet (>=1.1.0,<2.0.0)"]
-databases = ["databases (>=0.6.0)"]
-django = ["databases (>=0.6.0)", "django (<5.0.0)"]
-mongoengine = ["mongoengine (>=0.23.1,<0.28.0)"]
-motor = ["motor (>=2.5.1,<4.0.0)"]
-orm = ["databases (>=0.6.0)", "orm (>=0.3.1)"]
-ormar = ["ormar (>=0.11.2)"]
-piccolo = ["piccolo (>=0.89,<0.122)"]
-scylla-driver = ["scylla-driver (>=3.25.6,<4.0.0)"]
-sqlalchemy = ["SQLAlchemy (>=1.3.20)", "sqlakeyset (>=2.0.1680321678,<3.0.0)"]
-sqlmodel = ["sqlakeyset (>=2.0.1680321678,<3.0.0)", "sqlmodel (>=0.0.8,<0.0.15)"]
-tortoise = ["tortoise-orm (>=0.16.18,<0.21.0)"]
-
-[[package]]
 name = "filelock"
 version = "3.13.1"
 description = "A platform independent file lock."
@@ -1470,20 +1435,6 @@ pluggy = ">=0.12,<2.0"
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
-name = "python-dateutil"
-version = "2.8.2"
-description = "Extensions to the standard Python datetime module"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-files = [
-    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
-    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
-]
-
-[package.dependencies]
-six = ">=1.5"
-
-[[package]]
 name = "python-dotenv"
 version = "1.0.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -1661,23 +1612,6 @@ files = [
     {file = "sniffio-1.3.0-py3-none-any.whl", hash = "sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384"},
     {file = "sniffio-1.3.0.tar.gz", hash = "sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101"},
 ]
-
-[[package]]
-name = "sqlakeyset"
-version = "2.0.1706067133"
-description = "offset-free paging for sqlalchemy"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "sqlakeyset-2.0.1706067133-py3-none-any.whl", hash = "sha256:a2432d1e72daea1a8cf91ccccb25068cf4ec12ba12eced6f4e5954391823c9ef"},
-    {file = "sqlakeyset-2.0.1706067133.tar.gz", hash = "sha256:a74680a2d3dce89d3e9a3d50126a7bb66eb56ce0bfaf8a5ae025361a7d1741e0"},
-]
-
-[package.dependencies]
-packaging = ">=20.0"
-python-dateutil = "*"
-sqlalchemy = ">=1.3.11"
-typing_extensions = ">=4,<5"
 
 [[package]]
 name = "sqlalchemy"
@@ -2200,4 +2134,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "d6a61865c9a3277ca89a0af4b090228f771e201ec761821bc5b6410db8cbc07b"
+content-hash = "c04ca3cf7143cdfef2b62f7356eca26771322e83d2eda86eb3c440a2eb184c9b"

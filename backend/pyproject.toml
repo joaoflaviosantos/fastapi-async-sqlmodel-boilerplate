@@ -14,7 +14,6 @@ asyncpg = "^0.29.0"
 bcrypt = "^4.1.2"
 fastapi = {extras = ["all"], version = "^0.109.0"}
 fastapi-async-sqlalchemy = "^0.6.1"
-fastapi-pagination = {extras = ["sqlalchemy"], version = "^0.12.14"}
 gunicorn = "^21.2.0"
 pytest = "^7.4.4"
 pydantic-settings = "^2.1.0"
