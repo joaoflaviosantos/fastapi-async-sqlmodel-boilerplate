@@ -5,7 +5,7 @@ from sqlmodel import Field, text
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
 
 
-class TierBase(Base):
+class TierInfoBase(Base):
     name: str = Field(
         min_length=2,
         max_length=25,
@@ -14,6 +14,9 @@ class TierBase(Base):
         description="Tier name",
         schema_extra={"examples": ["Free"]},
     )
+
+
+class TierRulesBase(Base):
     default: bool = Field(
         default=False,
         sa_column_kwargs={"server_default": text("false")},
@@ -21,6 +24,6 @@ class TierBase(Base):
     )
 
 
-class Tier(UUIDMixin, TierBase, TimestampMixin, table=True):
+class Tier(UUIDMixin, TierInfoBase, TierRulesBase, TimestampMixin, table=True):
     __tablename__ = "system_tier"
     __table_args__ = {"comment": "Tier information"}

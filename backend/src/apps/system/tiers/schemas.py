@@ -6,21 +6,21 @@ from uuid import UUID
 from pydantic import ConfigDict
 
 # Local Dependencies
+from src.apps.system.tiers.models import Base, TierInfoBase, TierRulesBase
 from src.core.common.models import TimestampMixin
-from src.apps.system.tiers.models import Base, TierBase
 from src.core.utils.partial import optional
 
 
-class Tier(TimestampMixin, TierBase):
+class Tier(TimestampMixin, TierInfoBase, TierRulesBase):
     pass
 
 
-class TierRead(TierBase):
+class TierRead(TierInfoBase, TierRulesBase):
     id: UUID
     created_at: datetime
 
 
-class TierCreate(TierBase):
+class TierCreate(TierInfoBase):
     model_config = ConfigDict(extra="forbid")
 
 
@@ -29,7 +29,7 @@ class TierCreateInternal(TierCreate):
 
 
 @optional()
-class TierUpdate(TierBase):
+class TierUpdate(TierInfoBase):
     model_config = ConfigDict(extra="forbid")
 
 

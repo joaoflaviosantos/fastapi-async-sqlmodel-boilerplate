@@ -101,6 +101,22 @@ def test_update_tier(client: TestClient) -> None:
     assert response.json() == {"message": "Tier updated"}
 
 
+def test_update_tier_to_default(client: TestClient) -> None:
+    global test_tier_id
+    assert test_tier_id is not None
+
+    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+
+    response = client.patch(
+        url=f"/api/v1/system/tiers/{test_tier_id}",
+        json={"default": True},
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == "Extra inputs are not permitted"
+
+
 def test_update_default_tier(client: TestClient) -> None:
     global test_default_tier_id
     assert test_default_tier_id is not None
