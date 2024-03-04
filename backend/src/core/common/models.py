@@ -8,11 +8,8 @@ from sqlmodel import SQLModel, Field, DateTime
 from pydantic import field_serializer
 
 
-# Define a base class for declarative models with support for dataclasses
 class Base(SQLModel):
     """
-    SQLModel Base
-
     Description:
     ----------
     Main base class for generating Pydantic models and database tables with SQLModel.
@@ -23,20 +20,13 @@ class Base(SQLModel):
 
 class UUIDMixin(SQLModel):
     """
-    SQLModel Base
-
     Description:
     ----------
-    'UUIDMixin' pydantic class with a UUID column as the primary key.
+    'UUIDMixin' SQLModel base class.
 
     Fields:
     ----------
     - 'id': Unique identifier (UUID) for the record.
-
-    Examples:
-    ----------
-    Example of a valid data:
-    - 'id': UUID("123e4567-e89b-12d3-a456-426614174001")
     """
 
     # Data Columns
@@ -50,21 +40,14 @@ class UUIDMixin(SQLModel):
 
 class TimestampMixin(SQLModel):
     """
-    SQLModel Base
-
     Description:
     ----------
-    'TimestampMixin' pydantic class.
+    'TimestampMixin' SQLModel base class.
 
     Fields:
+    ----------
     - 'created_at': Timestamp for the creation of the record.
     - 'updated_at': Timestamp for the last update of the record.
-
-    Examples:
-    ---------
-    Examples of valid data for each field:
-    - 'created_at': "2024-01-20T12:00:00"
-    - 'updated_at': "2024-01-20T12:30:00"
 
     Extra Info:
     ----------
@@ -111,7 +94,6 @@ class TimestampMixin(SQLModel):
     )
     """
 
-    # Data Columns
     created_at: datetime = Field(
         sa_type=DateTime(timezone=True),
         default_factory=lambda: datetime.now(UTC),
@@ -141,21 +123,14 @@ class TimestampMixin(SQLModel):
 
 class SoftDeleteMixin(SQLModel):
     """
-    SQLModel Base
-
     Description:
     ----------
-    'SoftDeleteMixin' pydantic class.
+    'SoftDeleteMixin' SQLModel base class.
 
     Fields:
+    ----------
     - 'deleted_at': Timestamp for the deletion of the record (soft deletion).
     - 'is_deleted': Flag indicating whether the record is deleted (soft deletion).
-
-    Examples:
-    ---------
-    Examples of valid data for each field:
-    - 'deleted_at': "2024-01-20T13:00:00"
-    - 'is_deleted': True
 
     Extra Info:
     ----------
