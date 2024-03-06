@@ -42,7 +42,7 @@ from src.core.utils import cache
 router = fastapi.APIRouter(tags=["Admin - Users"])
 
 
-@router.post("/system/users", response_model=UserRead, status_code=201)
+@router.post("/admin/users", response_model=UserRead, status_code=201)
 async def write_user(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],
@@ -75,7 +75,7 @@ async def write_user(
     return await crud_users.create(db=db, object=user_internal)
 
 
-@router.get("/system/users", response_model=PaginatedListResponse[UserRead])
+@router.get("/admin/users", response_model=PaginatedListResponse[UserRead])
 async def read_users(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],
@@ -94,7 +94,7 @@ async def read_users(
     return paginated_response(crud_data=users_data, page=page, items_per_page=items_per_page)
 
 
-@router.get("/system/users/me/", response_model=UserRead)
+@router.get("/admin/users/me/", response_model=UserRead)
 async def read_users_me(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],
@@ -102,7 +102,7 @@ async def read_users_me(
     return current_user
 
 
-@router.get("/system/users/{user_id}", response_model=UserRead)
+@router.get("/admin/users/{user_id}", response_model=UserRead)
 async def read_user(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],
@@ -116,7 +116,7 @@ async def read_user(
     return db_user
 
 
-@router.patch("/system/users/{user_id}")
+@router.patch("/admin/users/{user_id}")
 async def patch_user(
     request: Request,
     values: UserUpdate,
@@ -146,7 +146,7 @@ async def patch_user(
     return {"message": "User updated"}
 
 
-@router.delete("/system/users/{user_id}")
+@router.delete("/admin/users/{user_id}")
 async def erase_user(
     request: Request,
     user_id: UUID,
@@ -176,7 +176,7 @@ async def erase_user(
     return {"message": "User deleted"}
 
 
-@router.delete("/system/users/{user_id}/db", dependencies=[Depends(get_current_superuser)])
+@router.delete("/admin/users/{user_id}/db", dependencies=[Depends(get_current_superuser)])
 async def erase_db_user(
     request: Request,
     user_id: UUID,
@@ -202,7 +202,7 @@ async def erase_db_user(
 
 
 @router.get(
-    "/system/users/{user_id}/rate-limits",
+    "/admin/users/{user_id}/rate-limits",
     dependencies=[Depends(get_current_superuser)],
 )
 async def read_user_rate_limits(
@@ -229,7 +229,7 @@ async def read_user_rate_limits(
     return db_user
 
 
-@router.get("/system/users/{user_id}/tier")
+@router.get("/admin/users/{user_id}/tier")
 async def read_user_tier(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],
@@ -259,7 +259,7 @@ async def read_user_tier(
 
 
 @router.patch(
-    "/system/users/{user_id}/tier",
+    "/admin/users/{user_id}/tier",
     dependencies=[Depends(get_current_superuser)],
 )
 async def patch_user_tier(

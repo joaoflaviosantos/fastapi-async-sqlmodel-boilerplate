@@ -321,6 +321,7 @@ if choice == "1":
                             if not line:
                                 break
                             description_lines.append(line)
+                        description = '\n'.join(description_lines)
                 else:  # Linux or macOS
                     editor = os.environ.get('EDITOR', 'nano')
                     subprocess.call([editor, tmp_file.name])
@@ -335,8 +336,8 @@ if choice == "1":
             # Remove double quotes from the 'description' variable
             description = description.replace('"', '')
 
-        # Step 1.5.8: Activate the virtual environment to use pre-commit installation
-        # Determine the virtual environment activation script path based on the operating system
+        # Step 1.5.8: Prepare virtual environment activation
+        print_color("RED", "\n-> Preparing virtual environment activation...\n")
         if OPERATING_SYSTEM == 'Windows':  # Windows
             venv_folder = 'Scripts'
         else:  # Linux or macOS
@@ -348,16 +349,19 @@ if choice == "1":
 
         # Activate the virtual environment
         activate_command = f"source {activate_script}" if OPERATING_SYSTEM != 'Windows' else activate_script
-        subprocess.run([command, sub_command, activate_command], check=True)
 
-        # Step 1.5.9: Commit and push changes
+        # Step 1.5.9: Install pre-commit hooks
+        print_color("RED", "\n-> Installing pre-commit hooks...\n")
+        subprocess.run([f"{command} {sub_command} \"{activate_command} && pre-commit install\""], shell=True, check=True)
+
+        # Step 1.5.10: Commit and push changes
+        print_color("RED", "\n-> Committing and pushing changes...\n")
         if not description:
-            subprocess.run(["git", "commit", "-m", message])
+            subprocess.run([f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" && git push origin {branch}"'], shell=True, check=True)
         else:
-            subprocess.run(["git", "commit", "-m", message, "-m", description])
-        subprocess.run(["git", "push", "origin", branch])
+            subprocess.run([f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" -m \\"{description}\\" && git push origin {branch}"'], shell=True, check=True)
 
-        # Step 1.5.12: Inform the user that changes have been committed and pushed
+        # Step 1.5.11: Inform the user that changes have been committed and pushed
         print_color("RED", "\nChanges have been committed and pushed to the branch '{}'.\n".format(branch))
     elif additional_action == "6":
         print("\nExiting...\n")

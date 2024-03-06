@@ -285,7 +285,7 @@ def cache(
 
     app = FastAPI()
 
-    @app.get("/system/users/{user_id}/items")
+    @app.get("/admin/users/{user_id}/items")
     @cache(key_prefix="user_items", resource_id_name="user_id", expiration=1200)
     async def read_user_items(request: Request, user_id: int):
         # Endpoint logic to fetch user's items

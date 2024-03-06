@@ -18,7 +18,7 @@ test_related_tier_id = None
 test_rate_limit_id = None
 test_rate_limit = {
     "name": "Test Rate Limit",
-    "path": "/api/v1/system/tasks",
+    "path": "/api/v1/admin/tasks",
     "limit": 100,
     "period": 3600,
 }

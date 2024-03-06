@@ -21,7 +21,7 @@ router = APIRouter(tags=["Admin - Tasks"])
 
 
 @router.post(
-    "/system/tasks",
+    "/admin/tasks",
     response_model=Job,
     status_code=201,
     dependencies=[Depends(rate_limiter)],
@@ -47,7 +47,7 @@ async def create_task(
     return {"id": job.job_id}
 
 
-@router.get("/system/tasks/{task_id}")
+@router.get("/admin/tasks/{task_id}")
 async def get_task(
     request: Request, current_user: Annotated[UserRead, Depends(get_current_user)], task_id: str
 ) -> Optional[JobDef]:
@@ -70,7 +70,7 @@ async def get_task(
     return job_info
 
 
-@router.get("/system/tasks/processed/")
+@router.get("/admin/tasks/processed/")
 async def read_processed_tasks(
     request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]
 ) -> List[JobResult]:
@@ -87,7 +87,7 @@ async def read_processed_tasks(
     return processed_jobs
 
 
-@router.get("/system/tasks/pending/")
+@router.get("/admin/tasks/pending/")
 async def read_pending_tasks(
     request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]
 ) -> List[JobDef]:
@@ -104,7 +104,7 @@ async def read_pending_tasks(
     return pending_jobs
 
 
-@router.get("/system/tasks/queue-health/")
+@router.get("/admin/tasks/queue-health/")
 async def read_queue_health(
     request: Request,
     current_user: Annotated[UserRead, Depends(get_current_user)],

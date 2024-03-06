@@ -26,7 +26,7 @@ def test_get_post_user_data(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/system/users/me/",
+        url=f"/api/v1/admin/users/me/",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
