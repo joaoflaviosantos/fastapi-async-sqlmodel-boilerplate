@@ -155,7 +155,9 @@ async def erase_user(
     token: str = Depends(oauth2_scheme),
 ) -> Dict[str, str]:
     db_user = await crud_users.get(db=db, schema_to_select=User, id=user_id)
-    if db_user is None or db_user["is_deleted"]:
+    if db_user is None:
+        raise NotFoundException(detail="User not found")
+    if db_user["is_deleted"]:
         if current_user["is_superuser"]:
             raise NotFoundException(detail="User already deleted (soft delete).")
         raise NotFoundException(detail="User not found")

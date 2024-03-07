@@ -3,6 +3,7 @@ from typing import Union, Dict, Any
 
 # Third-Party Dependencies
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.openapi.utils import get_openapi
 from arq.connections import RedisSettings
@@ -29,6 +30,7 @@ from src.core.config import (
     RedisCacheSettings,
     AppSettings,
     ClientSideCacheSettings,
+    CORSSettings,
     RedisQueueSettings,
     RedisRateLimiterSettings,
     EnvironmentOption,
@@ -143,6 +145,7 @@ def create_application(
         RedisCacheSettings,
         AppSettings,
         ClientSideCacheSettings,
+        CORSSettings,
         RedisQueueSettings,
         RedisRateLimiterSettings,
         EnvironmentSettings,
@@ -168,6 +171,7 @@ def create_application(
         - DatabaseSettings: Adds event handlers for initializing database tables during startup.
         - RedisCacheSettings: Sets up event handlers for creating and closing a Redis cache pool.
         - ClientSideCacheSettings: Integrates middleware for client-side caching.
+        - CORSSettings: Configures Cross-Origin Resource Sharing (CORS) middleware.
         - RedisQueueSettings: Sets up event handlers for creating and closing a Redis queue pool.
         - EnvironmentSettings: Conditionally sets documentation URLs and integrates custom routes for API documentation based on environment type.
 
@@ -223,8 +227,20 @@ def create_application(
 
     if isinstance(settings, ClientSideCacheSettings):
         # Add middleware for client-side caching with specified max age if environment is not local (development)
-        if settings.ENVIRONMENT.value != "local":
+        if settings.ENVIRONMENT.value != settings.ENVIRONMENT.LOCAL.value:
             application.add_middleware(ClientCacheMiddleware, max_age=settings.CLIENT_CACHE_MAX_AGE)
+
+    if isinstance(settings, CORSSettings):
+        # Add middleware for CORS (Cross-Origin Resource Sharing)
+        application.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.CORS_ALLOW_ORIGINS,
+            allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+            allow_methods=settings.CORS_ALLOW_METHODS,
+            allow_headers=settings.CORS_ALLOW_HEADERS,
+            expose_headers=settings.CORS_EXPOSE_HEADERS,
+            max_age=settings.CORS_MAX_AGE,
+        )
 
     if isinstance(settings, RedisQueueSettings):
         # Add event handlers for Redis queue pool setup and shutdown

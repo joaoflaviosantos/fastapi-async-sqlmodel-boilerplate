@@ -163,6 +163,15 @@ class ClientSideCacheSettings(BaseSettings):
     CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)
 
 
+class CORSSettings(BaseSettings):
+    CORS_ALLOW_ORIGINS: list[str] = os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
+    CORS_ALLOW_METHODS: list[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
+    CORS_ALLOW_HEADERS: list[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",")
+    CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
+    CORS_EXPOSE_HEADERS: list[str] = os.getenv("CORS_EXPOSE_HEADERS", "").split(",")
+    CORS_MAX_AGE: int = int(os.getenv("CORS_MAX_AGE", "600"))
+
+
 class EnvironmentOption(Enum):
     LOCAL = "local"
     STAGING = "staging"
@@ -182,6 +191,7 @@ class Settings(
     TestSettings,
     RedisCacheSettings,
     ClientSideCacheSettings,
+    CORSSettings,
     RedisQueueSettings,
     RedisRateLimiterSettings,
     RedisHashSettings,
