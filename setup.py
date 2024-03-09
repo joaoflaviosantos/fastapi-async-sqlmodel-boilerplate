@@ -328,7 +328,7 @@ if choice == "1":
 
                 # Read the content of the temporary file
                 if OPERATING_SYSTEM == 'Windows':
-                    description = '\n'.join(description_lines)
+                    description = description
                 else:
                     with open(tmp_file.name, "r") as f:
                         description = f.read().strip()

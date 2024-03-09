@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Any
+from typing import Any, List, Union
 from enum import Enum
 import os
 
@@ -164,12 +164,12 @@ class ClientSideCacheSettings(BaseSettings):
 
 
 class CORSSettings(BaseSettings):
-    CORS_ALLOW_ORIGINS: list[str] = os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
-    CORS_ALLOW_METHODS: list[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
-    CORS_ALLOW_HEADERS: list[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",")
-    CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "true"
-    CORS_EXPOSE_HEADERS: list[str] = os.getenv("CORS_EXPOSE_HEADERS", "").split(",")
-    CORS_MAX_AGE: int = int(os.getenv("CORS_MAX_AGE", "600"))
+    CORS_ALLOW_ORIGINS: List[str] | str = config("CORS_ALLOW_ORIGINS", default="*").split(",")
+    CORS_ALLOW_METHODS: List[str] | str = config("CORS_ALLOW_METHODS", default="*").upper().split(",")  # fmt: skip
+    CORS_ALLOW_HEADERS: List[str] | str = config("CORS_ALLOW_HEADERS", default="*").split(",")
+    CORS_ALLOW_CREDENTIALS: bool = config("CORS_ALLOW_CREDENTIALS", default="False").lower() == "true"  # fmt: skip
+    CORS_EXPOSE_HEADERS: List[str] | str = config("CORS_EXPOSE_HEADERS", default="").split(",")
+    CORS_MAX_AGE: int = int(config("CORS_MAX_AGE", default="600"))
 
 
 class EnvironmentOption(Enum):
