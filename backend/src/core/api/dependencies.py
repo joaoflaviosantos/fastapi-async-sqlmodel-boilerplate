@@ -44,10 +44,12 @@ async def get_current_user(
     # Check if the authentication token represents an email or username and retrieve the user information
     if "@" in token_data.username_or_email:
         user: dict | None = await crud_users.get(
-            db=db, email=token_data.username_or_email, is_deleted=False
+            db=db, email=token_data.username_or_email, is_active=True, is_deleted=False
         )
     else:
-        user = await crud_users.get(db=db, username=token_data.username_or_email, is_deleted=False)
+        user = await crud_users.get(
+            db=db, username=token_data.username_or_email, is_active=True, is_deleted=False
+        )
 
     if user:
         # Return the user information if available

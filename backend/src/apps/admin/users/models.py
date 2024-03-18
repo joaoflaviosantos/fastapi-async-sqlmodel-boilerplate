@@ -2,7 +2,7 @@
 from uuid import UUID
 
 # Third-Party Dependencies
-from sqlmodel import Field
+from sqlmodel import Field, text
 
 # Local Dependencies
 from src.core.common.models import (
@@ -51,8 +51,16 @@ class UserMediaBase(Base):
 
 
 class UserPermissionBase(Base):
+    is_active: bool = Field(
+        default=True,
+        sa_column_kwargs={"server_default": text("true")},
+        description="Indicates whether the user is active",
+        schema_extra={"examples": [True]},
+    )
     is_superuser: bool = Field(
-        default=False, description="Indicates whether the user has superuser privileges"
+        default=False,
+        sa_column_kwargs={"server_default": text("false")},
+        description="Indicates whether the user has superuser privileges",
     )
 
 
