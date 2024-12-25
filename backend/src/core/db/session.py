@@ -2,6 +2,7 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+from typing import AsyncGenerator
 
 # Local Dependencies
 from src.core.config import settings
@@ -18,7 +19,7 @@ local_session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_c
 
 
 # Define an async function to get the database session
-async def async_get_db() -> AsyncSession:
+async def async_get_db() -> AsyncGenerator[AsyncSession, None]:
     async_session = local_session
 
     async with async_session() as db:
