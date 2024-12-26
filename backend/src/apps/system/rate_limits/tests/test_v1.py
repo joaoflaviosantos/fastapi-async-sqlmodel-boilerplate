@@ -159,7 +159,7 @@ def test_update_rate_limit(client: TestClient) -> None:
     assert response.json() == {"message": "Rate Limit updated"}
 
 
-def test_erase_rate_limit(client: TestClient) -> None:
+def test_erase_db_rate_limit(client: TestClient) -> None:
     global test_related_tier_id
     global test_rate_limit_id
     assert test_related_tier_id is not None
@@ -168,9 +168,9 @@ def test_erase_rate_limit(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
+        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Rate Limit deleted"}
+    assert response.json() == {"message": "Rate Limit deleted from the database"}

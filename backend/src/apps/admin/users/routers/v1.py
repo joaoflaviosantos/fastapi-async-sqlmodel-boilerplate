@@ -18,6 +18,7 @@ from src.apps.system.tiers.models import Tier
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
     DuplicateValueException,
+    InternalErrorException,
     NotFoundException,
     ForbiddenException,
     BadRequestException,
@@ -193,6 +194,10 @@ async def erase_db_user(
         await crud_users.db_delete(db=db, id=user_id)
     except IntegrityError:
         raise ForbiddenException(detail="User cannot be deleted")
+    except Exception as e:
+        raise InternalErrorException(
+            detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
+        )
 
     # Remove user from Redis cache
     if cache.client:

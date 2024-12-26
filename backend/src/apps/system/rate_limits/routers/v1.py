@@ -4,6 +4,7 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from fastapi import Request, Depends
 import fastapi
 
@@ -16,7 +17,9 @@ from src.core.utils.rate_limit import is_valid_path
 from src.core.exceptions.http_exceptions import (
     UnprocessableEntityException,
     DuplicateValueException,
+    InternalErrorException,
     RateLimitException,
+    ForbiddenException,
     NotFoundException,
 )
 from src.apps.system.rate_limits.schemas import (
@@ -159,10 +162,10 @@ async def patch_rate_limit(
 
 
 @router.delete(
-    "/system/rate-limits/{rate_limit_id}/tier/{tier_id}",
+    "/system/rate-limits/{rate_limit_id}/tier/{tier_id}/db",
     dependencies=[Depends(get_current_superuser)],
 )
-async def erase_rate_limit(
+async def erase_db_rate_limit(
     request: Request,
     tier_id: UUID,
     rate_limit_id: UUID,
@@ -178,5 +181,13 @@ async def erase_rate_limit(
     if db_rate_limit is None:
         raise RateLimitException(detail="Rate Limit not found")
 
-    await crud_rate_limits.delete(db=db, db_row=db_rate_limit, id=rate_limit_id)
-    return {"message": "Rate Limit deleted"}
+    try:
+        await crud_rate_limits.db_delete(db=db, id=rate_limit_id)
+    except IntegrityError:
+        raise ForbiddenException(detail="Rate Limit cannot be deleted")
+    except Exception as e:
+        raise InternalErrorException(
+            detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
+        )
+
+    return {"message": "Rate Limit deleted from the database"}

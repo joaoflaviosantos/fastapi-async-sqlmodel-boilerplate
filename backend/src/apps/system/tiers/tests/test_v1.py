@@ -135,7 +135,7 @@ def test_update_default_tier(client: TestClient) -> None:
     assert response.json() == {"detail": "Default Tier cannot be updated"}
 
 
-def test_delete_tier(client: TestClient) -> None:
+def test_delete_db_tier(client: TestClient) -> None:
     global test_tier_id
     assert test_tier_id is not None
 
@@ -143,12 +143,12 @@ def test_delete_tier(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        url=f"/api/v1/system/tiers/{test_tier_id}",
+        url=f"/api/v1/system/tiers/{test_tier_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Tier deleted"}
+    assert response.json() == {"message": "Tier deleted from the database"}
 
 
 def test_delete_default_tier(client: TestClient) -> None:
@@ -158,7 +158,7 @@ def test_delete_default_tier(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.delete(
-        url=f"/api/v1/system/tiers/{test_default_tier_id}",
+        url=f"/api/v1/system/tiers/{test_default_tier_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 

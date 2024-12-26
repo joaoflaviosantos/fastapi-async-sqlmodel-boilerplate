@@ -15,6 +15,7 @@ from src.apps.system.tiers.crud import crud_tiers
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (
     DuplicateValueException,
+    InternalErrorException,
     ForbiddenException,
     NotFoundException,
 )
@@ -109,8 +110,8 @@ async def patch_tier(
     return {"message": "Tier updated"}
 
 
-@router.delete("/system/tiers/{tier_id}", dependencies=[Depends(get_current_superuser)])
-async def erase_tier(
+@router.delete("/system/tiers/{tier_id}/db", dependencies=[Depends(get_current_superuser)])
+async def erase_db_tier(
     request: Request,
     tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
@@ -123,8 +124,12 @@ async def erase_tier(
         raise ForbiddenException(detail="Default Tier cannot be deleted")
 
     try:
-        await crud_tiers.delete(db=db, db_row=db_tier, id=tier_id)
+        await crud_tiers.db_delete(db=db, id=tier_id)
     except IntegrityError:
         raise ForbiddenException(detail="Tier cannot be deleted")
+    except Exception as e:
+        raise InternalErrorException(
+            detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
+        )
 
-    return {"message": "Tier deleted"}
+    return {"message": "Tier deleted from the database"}

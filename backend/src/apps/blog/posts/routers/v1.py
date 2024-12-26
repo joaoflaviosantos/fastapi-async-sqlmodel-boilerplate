@@ -4,6 +4,7 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from fastapi import Request, Depends
 import fastapi
 
@@ -17,6 +18,7 @@ from src.core.utils.cache import cache
 from src.core.exceptions.http_exceptions import (
     NotFoundException,
     ForbiddenException,
+    InternalErrorException,
 )
 from src.apps.blog.posts.schemas import (
     Post,
@@ -31,7 +33,7 @@ from src.core.utils.paginated import (
     compute_offset,
 )
 
-# TODO: Improvment the cache strategy on composite routes. Eg: '/blog/posts/{post_id}/user/{user_id}' is not good.
+# TODO: Improve the cache strategy on composite routes. Eg: '/blog/posts/{post_id}/user/{user_id}' is not good.
 
 router = fastapi.APIRouter(tags=["Blog - Posts"])
 
@@ -198,5 +200,13 @@ async def erase_db_post(
     if db_post is None:
         raise NotFoundException(detail="Post not found")
 
-    await crud_posts.db_delete(db=db, id=post_id)
+    try:
+        await crud_posts.db_delete(db=db, id=post_id)
+    except IntegrityError:
+        raise ForbiddenException(detail="Post cannot be deleted")
+    except Exception as e:
+        raise InternalErrorException(
+            detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
+        )
+
     return {"message": "Post deleted from the database"}

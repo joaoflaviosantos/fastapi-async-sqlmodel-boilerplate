@@ -28,6 +28,20 @@ class CustomException(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
 
 
+class InternalErrorException(CustomException):
+    """
+    Exception for internal server errors (HTTP 500 Bad Request).
+
+    Parameters
+    ----------
+    detail : str, optional
+        A detailed message providing information about the exception.
+    """
+
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
+
+
 class BadRequestException(CustomException):
     """
     Exception for bad client requests (HTTP 400 Bad Request).
