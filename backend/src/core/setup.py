@@ -23,7 +23,7 @@ from src.core.utils.log import log_system_info
 from src.core.utils import cache, rate_limit
 from src.core.common.models import Base
 from src.core.config import settings
-from src.core.logger import logging
+from src.core.logger import logger_api
 from src.core.utils import queue
 from src.core.config import (
     DatabaseSettings,
@@ -37,9 +37,6 @@ from src.core.config import (
     EnvironmentSettings,
 )
 
-# Logger instance for the current module
-logger = logging.getLogger(__name__)
-
 
 # --------------------------------------
 # -------------- LOGGING ---------------
@@ -47,12 +44,12 @@ logger = logging.getLogger(__name__)
 # Function to configure logging during startup
 async def startup_logging() -> None:
     # Log system information
-    log_system_info(logger=logger)
+    log_system_info(logger=logger_api)
 
 
 # Function to configure logging during shutdown
 async def shutdown_logging() -> None:
-    logger.info("API shutdown")
+    logger_api.info("API shutdown")
 
 
 # --------------------------------------

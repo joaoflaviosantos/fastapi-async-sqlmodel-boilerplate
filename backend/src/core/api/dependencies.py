@@ -22,10 +22,7 @@ from src.apps.admin.users.models import User
 from src.core.security import oauth2_scheme
 from src.core.security import verify_token
 from src.core.config import settings
-from src.core.logger import logging
-
-# Logger instance
-logger = logging.getLogger(__name__)
+from src.core.logger import logger_api
 
 # Default rate limit settings from configuration
 DEFAULT_LIMIT = settings.DEFAULT_RATE_LIMIT_LIMIT
@@ -85,12 +82,12 @@ async def get_optional_user(
     except HTTPException as http_exc:
         if http_exc.status_code != 401:
             # Log unexpected HTTPException with non-401 status code.
-            logger.error(f"Unexpected HTTPException in get_optional_user: {http_exc.detail}")
+            logger_api.error(f"Unexpected HTTPException in get_optional_user: {http_exc.detail}")
         return None
 
     except Exception as exc:
         # Log unexpected errors during execution.
-        logger.error(f"Unexpected error in get_optional_user: {exc}")
+        logger_api.error(f"Unexpected error in get_optional_user: {exc}")
         return None
 
 
@@ -120,12 +117,12 @@ async def rate_limiter(
                 # If rate limit settings are found, use them; otherwise, apply default settings
                 limit, period = rate_limit["limit"], rate_limit["period"]
             else:
-                logger.warning(
+                logger_api.warning(
                     f"User {user_id} with tier '{tier['name']}' has no specific rate limit for path '{path}'. Applying default rate limit."
                 )
                 limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
         else:
-            logger.warning(f"User {user_id} has no assigned tier. Applying default rate limit.")
+            logger_api.warning(f"User {user_id} has no assigned tier. Applying default rate limit.")
             limit, period = DEFAULT_LIMIT, DEFAULT_PERIOD
     else:
         # If no user is present, apply default rate limit settings based on the client host

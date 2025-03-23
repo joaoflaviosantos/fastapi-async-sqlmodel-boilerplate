@@ -3,77 +3,69 @@ from logging.handlers import RotatingFileHandler
 import logging
 import os
 
-# Local Dependencies
-from src.core.config import settings
 
-# Constants
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
-
-# Default log file name
-LOG_FILE_NAME = "api"
-
-# Constructing log file path
-LOG_FILE_PATH = os.path.join(LOG_DIR, f"{LOG_FILE_NAME}.log")
-
-# Logging level and format constants
-LOGGING_LEVEL = logging.INFO
-LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-# Configuring the basic logging settings
-logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
-
-# Configuring a rotating file handler for logging
-file_handler = RotatingFileHandler(filename=LOG_FILE_PATH, maxBytes=10485760, backupCount=5)
-file_handler.setLevel(level=LOGGING_LEVEL)
-file_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
-
-# Configuring a console handler for logging
-console_handler = logging.StreamHandler()
-console_handler.setLevel(level=logging.INFO)
-console_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
-
-# Adding both handlers to the root logger
-root_logger = logging.getLogger(name="")
-root_logger.handlers.clear()
-root_logger.addHandler(hdlr=file_handler)
-root_logger.addHandler(hdlr=console_handler)
-
-
-# Function to configure logging with a custom log file name
-def configure_logging(log_file: str = LOG_FILE_NAME) -> None:
+class LoggerConfig:
     """
-    Configure logging with a custom log file name.
-
-    Args:
-        log_file (str): The custom log file name (without extension). Defaults to 'app'.
+    Centralized logger configuration class to manage logging settings
+    and ensure consistency across the application.
     """
-    # Clear all handlers from the root logger
-    root_logger.handlers.clear()
 
-    # Constructing log file path based on the provided log_file parameter
-    log_file_path = os.path.join(LOG_DIR, f"{log_file}.log")
+    LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+    os.makedirs(LOG_DIR, exist_ok=True)  # Ensure the log directory exists
 
-    # Configuring a rotating file handler for logging
-    custom_file_handler = RotatingFileHandler(
-        filename=log_file_path, maxBytes=10485760, backupCount=5
-    )
-    custom_file_handler.setLevel(level=LOGGING_LEVEL)
-    custom_file_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
+    LOGGING_LEVEL = logging.INFO
+    LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    MAX_BYTES = 10_485_760  # 10MB
+    BACKUP_COUNT = 5
 
-    # Configuring a console handler for logging
-    custom_console_handler = logging.StreamHandler()
-    custom_console_handler.setLevel(level=logging.INFO)
-    custom_console_handler.setFormatter(fmt=logging.Formatter(fmt=LOGGING_FORMAT))
+    @classmethod
+    def get_logger(cls, filename: str) -> logging.Logger:
+        """Create and return a configured logger instance."""
+        logger = logging.getLogger(filename)
+        logger.setLevel(cls.LOGGING_LEVEL)
+        logger.propagate = False  # Prevent logs from propagating to the root logger
 
-    # Adding both handlers to the root logger
-    root_logger.addHandler(hdlr=custom_file_handler)
-    root_logger.addHandler(hdlr=custom_console_handler)
+        # Avoid duplicate handlers
+        if not logger.hasHandlers():
+            log_file_path = os.path.join(cls.LOG_DIR, f"{filename}.log")
+
+            # File handler with log rotation
+            file_handler = RotatingFileHandler(
+                log_file_path, maxBytes=cls.MAX_BYTES, backupCount=cls.BACKUP_COUNT
+            )
+            file_handler.setLevel(cls.LOGGING_LEVEL)
+            file_handler.setFormatter(logging.Formatter(cls.LOGGING_FORMAT))
+            logger.addHandler(file_handler)
+
+            # Console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(cls.LOGGING_LEVEL)
+            console_handler.setFormatter(logging.Formatter(cls.LOGGING_FORMAT))
+            logger.addHandler(console_handler)
+
+        return logger
 
 
-# Example usage of configure_logging with a custom log file name
-# configure_logging(log_file='worker')
-# logger = logging.getLogger(__name__)
+# Exporting default loggers
+logger_db = LoggerConfig.get_logger(filename="postgres")
+# logger_db_test = LoggerConfig.get_logger("db_test")
 
-# Don't use the 'configure_logging' function when generating 'api' logs, as 'api.log' is already the default log file.
+logger_redis = LoggerConfig.get_logger(filename="redis")
+# logger_redis_test = LoggerConfig.get_logger("redis_test")
+
+logger_api = LoggerConfig.get_logger(filename="api")
+logger_api_test = LoggerConfig.get_logger("api_test")
+
+logger_worker = LoggerConfig.get_logger(filename="worker")
+# logger_worker_test = LoggerConfig.get_logger("worker_test")
+
+
+# Other examples
+# logger_sse = LoggerConfig.get_logger(filename="sse")
+# logger_sse_test = LoggerConfig.get_logger("sse_test")
+
+# logger_rabbitmq = LoggerConfig.get_logger(filename="rabbitmq")
+# logger_rabbitmq_test = LoggerConfig.get_logger("rabbitmq_test")
+
+# logger_mqtt = LoggerConfig.get_logger(filename="mqtt")
+# logger_mqtt_test = LoggerConfig.get_logger("mqtt_test")

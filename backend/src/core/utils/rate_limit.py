@@ -7,10 +7,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import FastAPI, APIRouter
 
 # Local Dependencies
-from src.core.logger import logging
-
-# Logger instance for the current module
-logger = logging.getLogger(__name__)
+from src.core.exceptions.cache_exceptions import MissingClientError
+from src.core.logger import logger_redis, logger_api
 
 # Redis connection pool and client instances
 pool: ConnectionPool | None = None
@@ -90,7 +88,7 @@ async def is_rate_limited(
         bool: True if the user is rate limited, False otherwise.
     """
     if client is None:
-        logger.error("Redis client is not initialized.")
+        logger_redis.error("Redis client is not initialized.")
         raise Exception("Redis client is not initialized.")
 
     # Calculate the start of the current time window
@@ -99,7 +97,7 @@ async def is_rate_limited(
 
     # Checks if the path is a valid route
     if not is_valid_path(path=path, app=app):
-        logger.warning(f"Invalid route: {path}")
+        logger_api.warning(f"Rate limit check for user_id '{user_id}' on invalid route '{path}'")
         return False
 
     # Sanitize the path for use in the key
@@ -117,7 +115,7 @@ async def is_rate_limited(
             return True
 
     except Exception as e:
-        logger.exception(f"Error checking rate limit for user {user_id} on path {path}: {e}")
+        logger_redis.exception(f"Error checking rate limit for user {user_id} on path {path}: {e}")
         raise e
 
     return False

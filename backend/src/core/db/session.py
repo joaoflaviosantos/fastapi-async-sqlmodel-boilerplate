@@ -7,10 +7,7 @@ from typing import AsyncGenerator
 
 # Local Dependencies
 from src.core.config import settings
-from src.core.logger import logging
-
-# Logger instance for the current module
-logger = logging.getLogger(__name__)
+from src.core.logger import logger_db
 
 # Define the database URI and URL based on the application settings
 DATABASE_URI = f"{settings.POSTGRES_ASYNC_URI}"
@@ -54,5 +51,5 @@ async def async_get_db() -> AsyncGenerator[AsyncSession, None]:
             yield db
         except SQLAlchemyError as e:
             await db.rollback()
-            logger.error(f"Database error: {e}")
+            logger_db.error(f"Database error: {e}")
             raise

@@ -23,6 +23,6 @@ class MissingClientError(Exception):
     Exception raised when the client is None.
     """
 
-    def __init__(self, message: str = "Client is None.") -> None:
+    def __init__(self, message: str = "Cache Client is None.") -> None:
         self.message = message
         super().__init__(self.message)

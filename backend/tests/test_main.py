@@ -1,11 +1,8 @@
 # Local Dependencies
-from src.core.logger import logging, configure_logging
-
-# Configure logging for the tests suite
-configure_logging(log_file="tests")
+from src.core.logger import logger_api_test
 
 # Logger instance for the current module
-logger = logging.getLogger(__name__)
+logger = logger_api_test
 
 # Unit tests imports (V1 routes)
 from src.apps.auth.tests.test_v1 import *
