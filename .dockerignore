@@ -1,0 +1,4 @@
+.github
+.vscode/
+.cursor/
+backend/.venv

@@ -42,6 +42,7 @@ class PostgresSettings(DatabaseSettings):
     POSTGRES_PORT: int = config("POSTGRES_PORT", default=5432)
     POSTGRES_DB: str = config("POSTGRES_DB", default="postgres")
     POSTGRES_ASYNC_URI: PostgresDsn | str = ""
+    POSTGRES_CELERY_URI: str = ""
 
     @field_validator("POSTGRES_ASYNC_URI", mode="after")
     def assemble_db_connection(cls, v: str | None, info: ValidationInfo) -> Any:
@@ -54,6 +55,17 @@ class PostgresSettings(DatabaseSettings):
                     host=info.data["POSTGRES_SERVER"],
                     port=info.data["POSTGRES_PORT"],
                     path=info.data["POSTGRES_DB"],
+                )
+        return v
+
+    @field_validator("POSTGRES_CELERY_URI", mode="after")
+    def assemble_celery_db_connection(cls, v: str | None, info: ValidationInfo) -> Any:
+        if isinstance(v, str):
+            if v == "":
+                return (
+                    f"db+postgresql://{info.data['POSTGRES_USER']}:{info.data['POSTGRES_PASSWORD']}"
+                    f"@{info.data['POSTGRES_SERVER']}:{info.data['POSTGRES_PORT']}"
+                    f"/{info.data['POSTGRES_DB']}"
                 )
         return v
 
@@ -101,32 +113,35 @@ class RedisCacheSettings(BaseSettings):
         return v
 
 
-class RedisQueueSettings(BaseSettings):
-    REDIS_QUEUE_HOST: str = config("REDIS_QUEUE_HOST", default="")
-    REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
-    REDIS_QUEUE_USERNAME: str = config("REDIS_QUEUE_USERNAME", default="")
-    REDIS_QUEUE_PASSWORD: str = config("REDIS_QUEUE_PASSWORD", default="")
-    REDIS_QUEUE_USE_SSL: bool = config("REDIS_QUEUE_USE_SSL", default=False)
-    REDIS_QUEUE_URL: str = (
-        f"redis://{REDIS_QUEUE_USERNAME}:{REDIS_QUEUE_PASSWORD}@{REDIS_QUEUE_HOST}:{REDIS_QUEUE_PORT}"
+class RedisBrokerSettings(BaseSettings):
+    REDIS_BROKER_HOST: str = config("REDIS_BROKER_HOST", default="")
+    REDIS_BROKER_PORT: int = config("REDIS_BROKER_PORT", default=6379)
+    REDIS_BROKER_USERNAME: str = config("REDIS_BROKER_USERNAME", default="")
+    REDIS_BROKER_PASSWORD: str = config("REDIS_BROKER_PASSWORD", default="")
+    REDIS_BROKER_USE_SSL: bool = config("REDIS_BROKER_USE_SSL", default=False)
+    REDIS_BROKER_URL: str = (
+        f"redis://{REDIS_BROKER_USERNAME}:{REDIS_BROKER_PASSWORD}@{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}"
     )
 
-    @field_validator("REDIS_QUEUE_URL", mode="after")
-    def assemble_redis_queue_connection(cls, v: str | None, info: ValidationInfo) -> Any:
+    @field_validator("REDIS_BROKER_URL", mode="after")
+    def assemble_redis_broker_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
             # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
-            if info.data["REDIS_QUEUE_USE_SSL"]:
+            if info.data["REDIS_BROKER_USE_SSL"]:
                 v = v.replace("redis://", "rediss://")
-            # If host is not set, use 'REDIS_CACHE_URL' as Redis Queue URL connection string
-            if info.data["REDIS_QUEUE_HOST"] == "":
+            # If host is not set, use 'REDIS_CACHE_URL' as Redis Broker URL connection string
+            if info.data["REDIS_BROKER_HOST"] == "":
                 redis_cache_settings = RedisCacheSettings()
                 return redis_cache_settings.REDIS_CACHE_URL
             # If username and password are not set, use Redis URL connection string without security credentials
-            if info.data["REDIS_QUEUE_USERNAME"] == "" and info.data["REDIS_QUEUE_PASSWORD"] == "":
-                return f"redis://{info.data['REDIS_QUEUE_HOST']}:{info.data['REDIS_QUEUE_PORT']}"
+            if (
+                info.data["REDIS_BROKER_USERNAME"] == ""
+                and info.data["REDIS_BROKER_PASSWORD"] == ""
+            ):
+                return f"redis://{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}"
             # If username and password are set, but without security, use Redis URL connection string without password
-            if info.data["REDIS_QUEUE_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_QUEUE_USERNAME']}@{info.data['REDIS_QUEUE_HOST']}:{info.data['REDIS_QUEUE_PORT']}"
+            if info.data["REDIS_BROKER_PASSWORD"] == "nosecurity":
+                return f"redis://{info.data['REDIS_BROKER_USERNAME']}@{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}"
         return v
 
 
@@ -204,7 +219,7 @@ class Settings(
     RedisCacheSettings,
     ClientSideCacheSettings,
     CORSSettings,
-    RedisQueueSettings,
+    RedisBrokerSettings,
     RedisRateLimiterSettings,
     RedisHashSettings,
     DefaultRateLimitSettings,

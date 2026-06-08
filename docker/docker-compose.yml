@@ -1,0 +1,46 @@
+# docker compose --env-file backend/.env -f docker/docker-compose.yml --project-name fastapi-async-sqlmodel-boilerplate up -d
+
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    command: >
+      -c "max_connections=300"
+      -c "shared_buffers=3GB"
+      -c "work_mem=8MB"
+      -c "maintenance_work_mem=256MB"
+      -c "effective_cache_size=9GB"
+      -c "max_wal_size=1GB"
+      -c "min_wal_size=80MB"
+      -c "checkpoint_timeout=10min"
+    container_name: fastapi-async-sqlmodel-boilerplate-postgres
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: fastapi_async_sqlmodel_boilerplate
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+
+  redis:
+    image: redis:alpine
+    container_name: fastapi-async-sqlmodel-boilerplate-redis
+    command: redis-server --requirepass password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  fastapi_async_sqlmodel_boilerplate_network:
+    name: fastapi-async-sqlmodel-boilerplate-network

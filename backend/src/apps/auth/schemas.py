@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict
 
 # Local Dependencies
 from src.apps.auth.models import TokenBlacklistBase
-from src.core.utils.partial import optional
+from backend.src._overrides.pydantic.optional import optional
 
 
 class Token(BaseModel):

@@ -13,7 +13,7 @@ class LoggerConfig:
     LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
     os.makedirs(LOG_DIR, exist_ok=True)  # Ensure the log directory exists
 
-    LOGGING_LEVEL = logging.INFO
+    LOGGING_LEVEL = logging.DEBUG
     LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     MAX_BYTES = 10_485_760  # 10MB
     BACKUP_COUNT = 5
@@ -47,8 +47,9 @@ class LoggerConfig:
 
 
 # Exporting default loggers
-logger_db = LoggerConfig.get_logger(filename="postgres")
-# logger_db_test = LoggerConfig.get_logger("db_test")
+logger_postgres = LoggerConfig.get_logger(filename="postgres")
+logger_db = LoggerConfig.get_logger(filename="db")
+# logger_postgres_test = LoggerConfig.get_logger("postgres_test")
 
 logger_redis = LoggerConfig.get_logger(filename="redis")
 # logger_redis_test = LoggerConfig.get_logger("redis_test")

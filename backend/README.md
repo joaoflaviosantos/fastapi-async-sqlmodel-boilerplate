@@ -23,7 +23,6 @@ After completing the requirements outlined in the **📋 Prerequisites** section
    ```
 
 4. Define environment variables in ".env":
-
    - Copy the ".env.example" file as ".env":
 
      ```bash
@@ -66,13 +65,25 @@ poetry run uvicorn src.main:app --reload
 
 For more details on running the backend with Uvicorn, consult the [Uvicorn Guide](../docs/uvicorn-guide.md) in the project's documentation.
 
-Start the ARQ worker:
+Start the Celery worker:
 
 ```bash
-poetry run arq src.worker.WorkerSettings
+poetry run celery -A src.worker:app worker --loglevel=info
 ```
 
-For more details on running the ARQ worker, refer to the [ARQ Guide](../docs/arq-guide.md) in the project's documentation.
+Start the Celery Beat scheduler (for periodic tasks):
+
+```bash
+poetry run celery -A src.worker:app beat --loglevel=info
+```
+
+Or run both worker and beat together (development only):
+
+```bash
+poetry run celery -A src.worker:app worker --beat --loglevel=info
+```
+
+For more details on running the Celery worker, refer to the [Celery Guide](../docs/celery-guide.md) in the project's documentation.
 
 ## 🧪 Running Tests
 

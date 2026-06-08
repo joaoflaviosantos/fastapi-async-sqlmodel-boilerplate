@@ -8,6 +8,23 @@ import re
 # Global variable to store the operating system type
 OPERATING_SYSTEM = platform.system()
 
+# Function to get the value of an environment variable
+def get_environment_value(environment_name: str) -> str | None:
+    with open(".env", "r") as f:
+        environment_value = None
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip()
+            if not line or "=" not in line:
+                continue  # Ignores empty lines or without the character '='
+
+            key, value = line.split("=", 1)  # Use split with 1 limit to avoid error
+            if key == environment_name:
+                environment_value = str(value).replace('"', '').replace("'", "")
+                break
+
+    return environment_value
+
 # Function to print colored text
 def print_color(color, text):
     colors = {"RED": "\033[1;31m", "GREEN": "\033[0;32m", "YELLOW": "\033[1;33m", "BLUE": "\033[1;34m", "RESET": "\033[0m"}
@@ -229,44 +246,72 @@ if choice == "1":
 
     # Step 1.10: Ask the user if they want to perform additional actions
     print_color("BLUE", "Do you want to perform any additional actions?\n")
-    print("1 - Start the FastAPI server")
-    print("2 - Start the ARQ worker")
-    print("3 - Run unit tests")
-    print("4 - Run linting and formatting checks")
-    print("5 - Commit and Push Changes")
-    print("6 - Exit")
+    print("1 - Start FastAPI server")
+    print("2 - Start Celery worker")
+    print("3 - Start Celery beat")
+    print("4 - Start Flower")
+    print("5 - Run unit tests")
+    print("6 - Run linting and formatting checks")
+    print("7 - Commit and Push Changes")
+    print("8 - Exit")
 
     # Step 1.11: Ask the user for additional action choice
     additional_action = read_color("\033[1;37m", "\nEnter the number corresponding to your choice: ")
 
     # Process user's additional action choice
     if additional_action == "1":
-        print_color("RED", "\n-> Starting the FastAPI server...\n")
+        from datetime import datetime
+        print_color("RED", f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting the FastAPI server...\n")
         # Step 1.1.1: Start the FastAPI server
-        subprocess.run(["poetry", "run", "uvicorn", "src.main:app", "--reload"])
+        web_concurrency = get_environment_value("WEB_CONCURRENCY")
+        if (web_concurrency is None) or (not web_concurrency.isdigit()) or (int(web_concurrency) == 1):
+            # Use --reload-delay to give time for file writes to complete
+            # Use --reload-include to only watch Python files (faster)
+            # Use --timeout-keep-alive to prevent hanging connections
+            subprocess.run([
+                "poetry", "run", "uvicorn", "src.main:app", 
+                "--reload", 
+                "--reload-delay", "0.25",
+                "--reload-include", "*.py",
+                "--host", "0.0.0.0", 
+                "--port", "8000",
+                "--timeout-keep-alive", "5"
+            ])
+        else:
+            subprocess.run(["poetry", "run", "uvicorn", "src.main:app", "--workers", f"{str(web_concurrency)}", "--host", "0.0.0.0", "--port", "8000"])
         print_color("RED", "\n-> Stopping the FastAPI server...\n")
     elif additional_action == "2":
-        print_color("RED", "\n-> Running the ARQ worker...\n")
-        # Step 1.2.1: Start the ARQ worker
-        subprocess.run(["poetry", "run", "arq", "src.worker.WorkerSettings"])
-        print_color("RED", "\n-> Finished running the ARQ worker...\n")
+        print_color("RED", "\n-> Running the Celery worker...\n")
+        # Step 1.2.1: Start the Celery worker
+        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "worker", "--loglevel=info"])
+        print_color("RED", "\n-> Finished running the Celery worker...\n")
     elif additional_action == "3":
+        print_color("RED", "\n-> Running the Celery beat...\n")
+        # Step 1.3.1: Start the Celery beat
+        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "beat", "--loglevel=info"])
+        print_color("RED", "\n-> Finished running the Celery beat...\n")
+    elif additional_action == "4":
+        print_color("RED", "\n-> Running the Celery Flower...\n")
+        # Step 1.4.1: Start the Celery Flower
+        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "flower", "--loglevel=info"])
+        print_color("RED", "\n-> Finished running the Celery Flower...\n")
+    elif additional_action == "5":
         print_color("RED", "\n-> Running unit tests...\n")
-        # Step 1.3.1: Run unit tests
+        # Step 1.5.1: Run unit tests
         subprocess.run(["poetry", "run", "python", "-m", "pytest", "-vv", "./tests"])
         print_color("RED", "\n-> Finished running unit tests...\n")
-    elif additional_action == "4":
+    elif additional_action == "6":
         print_color("RED", "\n-> Running linting and formatting checks...\n")
-        # Step 1.4.1: Run linting and formatting checks
+        # Step 1.6.1: Run linting and formatting checks
         subprocess.run(["poetry", "run", "python", "-m", "black", "."])
         print_color("RED", "\n-> Finished running linting and formatting checks...\n")
-    elif additional_action == "5":
+    elif additional_action == "7":
         print_color("RED", "\n-> Committing and pushing changes...\n")
 
-        # Step 1.5.1: Return to the root directory
+        # Step 1.7.1: Return to the root directory
         os.chdir("..")
 
-        # Step 1.5.2: Ask the user which files they want to include in the commit
+        # Step 1.7.2: Ask the user which files they want to include in the commit
         include_all_files = read_color("\033[1;37m", "Do you want to include all files in this commit? (y/n): ").lower()
 
         if include_all_files in {"y", "yes"}:
@@ -278,20 +323,20 @@ if choice == "1":
             # Include the specified files
             subprocess.run(["git", "add"] + files_to_commit.split())
 
-        # Step 1.5.3: Clean the variables at the beginning
+        # Step 1.7.3: Clean the variables at the beginning
         branch = ""
         message = ""
         description = ""
 
-        # Step 1.5.4: Get the current branch name
+        # Step 1.7.4: Get the current branch name
         branch = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True).stdout.strip()
 
-        # Step 1.5.5: Check if BRANCH is not empty
+        # Step 1.7.5: Check if BRANCH is not empty
         if not branch:
             print_color("RED", "\n-> Error: Unable to determine the current branch name. Please try again.\n")
             exit(1)
 
-        # Step 1.5.6: Loop until MESSAGE is not empty
+        # Step 1.7.6: Loop until MESSAGE is not empty
         while not message:
             # Get the commit message from the user
             message = read_color("\033[1;37m", "Please enter the commit message: ")
@@ -303,7 +348,7 @@ if choice == "1":
             if not message:
                 print_color("RED", "\n-> Error: Commit message cannot be empty. Please try again.\n")
 
-        # Step 1.5.7: Ask the user if they want to include an additional commit description (optional)
+        # Step 1.7.7: Ask the user if they want to include an additional commit description (optional)
         include_description = read_color("\033[1;37m", "Do you want to include an additional commit description? (y/n): ").lower()
 
         # Check if the user wants to include an additional description
@@ -336,7 +381,7 @@ if choice == "1":
             # Remove double quotes from the 'description' variable
             description = description.replace('"', '')
 
-        # Step 1.5.8: Prepare virtual environment activation
+        # Step 1.7.8: Prepare virtual environment activation
         print_color("RED", "\n-> Preparing virtual environment activation...\n")
         if OPERATING_SYSTEM == 'Windows':  # Windows
             venv_folder = 'Scripts'
@@ -350,18 +395,18 @@ if choice == "1":
         # Activate the virtual environment
         activate_command = f"source {activate_script}" if OPERATING_SYSTEM != 'Windows' else activate_script
 
-        # Step 1.5.9: Install pre-commit hooks
+        # Step 1.7.9: Install pre-commit hooks
         print_color("RED", "\n-> Installing pre-commit hooks...\n")
         subprocess.run([f"{command} {sub_command} \"{activate_command} && pre-commit install\""], shell=True, check=True)
 
-        # Step 1.5.10: Commit and push changes
+        # Step 1.7.10: Commit and push changes
         print_color("RED", "\n-> Committing and pushing changes...\n")
         if not description:
             subprocess.run([f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" && git push origin {branch}"'], shell=True, check=True)
         else:
             subprocess.run([f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" -m \\"{description}\\" && git push origin {branch}"'], shell=True, check=True)
 
-        # Step 1.5.11: Inform the user that changes have been committed and pushed
+        # Step 1.7.11: Inform the user that changes have been committed and pushed
         print_color("RED", "\nChanges have been committed and pushed to the branch '{}'.\n".format(branch))
     elif additional_action == "6":
         print("\nExiting...\n")

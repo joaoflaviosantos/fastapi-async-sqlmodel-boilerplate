@@ -7,7 +7,7 @@ from pydantic import ConfigDict, field_validator
 # Local Dependencies
 from src.core.common.models import Base, UUIDMixin, TimestampMixin
 from src.core.utils.rate_limit import sanitize_path
-from src.core.utils.partial import optional
+from backend.src._overrides.pydantic.optional import optional
 from src.apps.system.rate_limits.models import (
     RateLimitConfigBase,
     RateLimitNameBase,

@@ -6,8 +6,6 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.openapi.utils import get_openapi
-from arq.connections import RedisSettings
-from arq import create_pool
 import redis.asyncio as redis
 import fastapi
 import anyio
@@ -24,14 +22,13 @@ from src.core.utils import cache, rate_limit
 from src.core.common.models import Base
 from src.core.config import settings
 from src.core.logger import logger_api
-from src.core.utils import queue
 from src.core.config import (
     DatabaseSettings,
     RedisCacheSettings,
     AppSettings,
     ClientSideCacheSettings,
     CORSSettings,
-    RedisQueueSettings,
+    RedisBrokerSettings,
     RedisRateLimiterSettings,
     EnvironmentOption,
     EnvironmentSettings,
@@ -87,23 +84,6 @@ async def close_redis_cache_pool() -> None:
 
 
 # --------------------------------------
-# --------------- QUEUE ----------------
-# --------------------------------------
-# Function to create Redis queue pool during startup
-async def create_redis_queue_pool() -> None:
-    queue.pool = await create_pool(
-        RedisSettings.from_dsn(
-            dsn=settings.REDIS_QUEUE_URL,
-        )
-    )
-
-
-# Function to close Redis queue pool during shutdown
-async def close_redis_queue_pool() -> None:
-    await queue.pool.aclose()  # type: ignore
-
-
-# --------------------------------------
 # ------------- RATE LIMIT -------------
 # --------------------------------------
 # Function to create Redis rate limit pool during startup
@@ -143,7 +123,7 @@ def create_application(
         AppSettings,
         ClientSideCacheSettings,
         CORSSettings,
-        RedisQueueSettings,
+        RedisBrokerSettings,
         RedisRateLimiterSettings,
         EnvironmentSettings,
     ],
@@ -169,7 +149,7 @@ def create_application(
         - RedisCacheSettings: Sets up event handlers for creating and closing a Redis cache pool.
         - ClientSideCacheSettings: Integrates middleware for client-side caching.
         - CORSSettings: Configures Cross-Origin Resource Sharing (CORS) middleware.
-        - RedisQueueSettings: Sets up event handlers for creating and closing a Redis queue pool.
+        - RedisBrokerSettings: Configures the Redis broker connection for Celery task queue.
         - EnvironmentSettings: Conditionally sets documentation URLs and integrates custom routes for API documentation based on environment type.
 
     **kwargs
@@ -238,11 +218,6 @@ def create_application(
             expose_headers=settings.CORS_EXPOSE_HEADERS,
             max_age=settings.CORS_MAX_AGE,
         )
-
-    if isinstance(settings, RedisQueueSettings):
-        # Add event handlers for Redis queue pool setup and shutdown
-        application.add_event_handler("startup", create_redis_queue_pool)
-        application.add_event_handler("shutdown", close_redis_queue_pool)
 
     if isinstance(settings, RedisRateLimiterSettings):
         # Add event handlers for Redis rate limiter pool setup and shutdown

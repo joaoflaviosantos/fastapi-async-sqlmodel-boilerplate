@@ -42,7 +42,7 @@
 
 ## 🔍 Project Overview
 
-This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **ARQ**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/tiers`, `admin/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**.
+This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/tiers`, `admin/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**.
 
 It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and structural principles.
 
@@ -57,7 +57,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - 🍪 **Cookie-based Refresh Token:** Implement a refresh token mechanism using cookies.
 - 🏬 **Easy Redis Caching:** Utilize Redis for simple and effective caching.
 - 👜 **Client-side Caching:** Facilitate easy client-side caching for improved performance.
-- 🚦 **ARQ Integration:** Seamlessly integrate ARQ for efficient task queue management.
+- 🚦 **Celery Integration:** Seamlessly integrate Celery for distributed task queue management with async task support, scheduled jobs via Celery Beat, and PostgreSQL result backend.
 - ⚙️ **Efficient Querying:** Optimize database queries by fetching only what's needed, with support for joins.
 - ⎘ **Pagination Support:** Out-of-the-box pagination support for enhanced data presentation.
 - 🛑 **Rate Limiter Dependency:** Implement a rate limiter for controlled API access.
@@ -72,7 +72,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Leverage the power of FastAPI for building high-performance APIs.
 - [x] Implement asynchronous programming wherever applicable for optimal performance.
 - [x] Integrate Redis for caching, rate limiting, and improving data access speed.
-- [x] Utilize ARQ for handling background tasks asynchronously.
+- [x] Utilize Celery for handling background tasks asynchronously with full async/await support.
 - [x] Implement a robust logging system to track and manage application events efficiently.
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
@@ -89,18 +89,16 @@ Before you begin, ensure you have the following prerequisites installed and conf
 - [Python](https://www.python.org): Make sure to have Python 3.11 or a newer version installed on your system.
 - [Poetry](https://python-poetry.org): Install Poetry for managing dependencies.
 
-**Note:** Soon, there will be an additional option for development using Docker containers.
-
 ### Installing Poetry
 
-Poetry is a dependency manager for Python. Follow the steps below to install Poetry:
+Poetry is a dependency manager for Python. Follow the steps below to install Poetry **version 1.7.1** (required):
 
 1. Open a terminal.
 
 2. Run the following command to install Poetry using pip:
 
    ```bash
-   pip install poetry
+   pip install poetry==1.7.1
    ```
 
 3. Verify the installation by running:
@@ -109,9 +107,46 @@ Poetry is a dependency manager for Python. Follow the steps below to install Poe
    poetry --version
    ```
 
-   This should display the installed Poetry version.
+   This should display `Poetry (version 1.7.1)`. If you have a different version installed, please uninstall and reinstall the correct version:
 
-Now that the requirements are met, you can begin working on your project.
+   ```bash
+   pip uninstall poetry
+   pip install poetry==1.7.1
+   ```
+
+### Using Docker Compose (Alternative Setup)
+
+If you prefer to use Docker containers for development, you can easily set up PostgreSQL and Redis using Docker Compose:
+
+1. Ensure you have [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/) installed on your system.
+
+2. From the **root directory** of the project, run the following command to start PostgreSQL and Redis containers:
+
+   ```bash
+   docker compose --env-file backend/.env -f docker/docker-compose.yml --project-name fastapi-async-sqlmodel-boilerplate up -d
+   ```
+
+   This command will:
+   - Load environment variables from `backend/.env`
+   - Use the Docker Compose configuration from `docker/docker-compose.yml`
+   - Start PostgreSQL and Redis containers in detached mode
+   - Create necessary volumes for data persistence
+
+3. Verify the services are running:
+
+   ```bash
+   docker compose --project-name fastapi-async-sqlmodel-boilerplate ps
+   ```
+
+4. To stop the services:
+
+   ```bash
+   docker compose --project-name fastapi-async-sqlmodel-boilerplate down
+   ```
+
+**Note:** The command uses environment variables from `backend/.env`, so ensure that file is properly configured before running the containers.
+
+Now that the prerequisites are met, you can begin working on your project. Choose either the manual setup or Docker Compose based on your preference.
 
 ## 🤖 Running the Project CLI
 
@@ -143,6 +178,5 @@ For more details for a manual setup, please refer to the [Backend README](backen
 
 - [FastAPI Boilerplate by Igor Magalhães](https://github.com/igorbenav/FastAPI-boilerplate)
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
-- [The Ultimate FastAPI Async Setup by Evgeniy Tretyakov](https://github.com/ETretyakov/hero-app)
 
 Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
