@@ -8,29 +8,29 @@ readme = "README.md"
 packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
-alembic = "^1.13.1"
-asgiref = "^3.7.0"
-asyncpg = "^0.29.0"
-bcrypt = "^4.1.2"
-celery = "^5.4.0"
-fastapi = {extras = ["all"], version = "^0.109.0"}
-gunicorn = "^21.2.0"
-pydantic-settings = "^2.1.0"
+alembic = "^1.18.4"
+asgiref = "^3.11.1"
+asyncpg = "^0.31.0"
+bcrypt = "^5.0.0"
+celery = "^5.6.3"
+fastapi = {extras = ["all"], version = "^0.136.3"}
+gunicorn = "^26.0.0"
+pydantic-settings = "^2.14.1"
 python = "^3.11"
-python-jose = "^3.3.0"
-redis = "^5.0.1"
-SQLAlchemy = "^2.0.23"
-sqlmodel = "^0.0.14"
-uvicorn = "^0.27.0"
-uvloop = { version = "^0.19.0", markers = "sys_platform == 'linux'" }
-psutil = "^5.9.8"
+python-jose = "^3.5.0"
+redis = "^8.0.0"
+SQLAlchemy = "^2.0.50"
+sqlmodel = "^0.0.38"
+uvicorn = "^0.49.0"
+uvloop = { version = "^0.22.1", markers = "sys_platform == 'linux'" }
+psutil = "^7.2.2"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.1.0"
-mypy = "^1.8.0"
-pre-commit = "^3.6.0"
-pytest = "^7.4.4"
-types-redis = "^4.6.0.11"
+black = "^26.5.1"
+mypy = "^2.1.0"
+pre-commit = "^4.6.0"
+pytest = "^9.0.3"
+types-redis = "^4.6.0.20241004"
 
 [tool.black]
 line-length = 100
