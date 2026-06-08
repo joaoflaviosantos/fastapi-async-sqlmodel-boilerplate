@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from celery import states
 
 # Local Dependencies
-from src.apps.admin.tasks.models import Task
+from src.apps.system.tasks.models import Task
 from backend.src._overrides.pydantic.optional import optional
 
 

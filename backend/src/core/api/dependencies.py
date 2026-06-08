@@ -10,15 +10,14 @@ from src.apps.system.rate_limits.crud import crud_rate_limits
 from src.apps.system.rate_limits.schemas import sanitize_path
 from src.core.utils.rate_limit import is_rate_limited
 from src.apps.system.tiers.crud import crud_tiers
-from src.apps.admin.users.crud import crud_users
+from src.apps.system.users.crud import crud_users
 from src.core.exceptions.http_exceptions import (
     UnauthorizedException,
     ForbiddenException,
     RateLimitException,
 )
-
+from src.apps.system.users.models import User
 from src.core.db.session import async_get_db
-from src.apps.admin.users.models import User
 from src.core.security import oauth2_scheme
 from src.core.security import verify_token
 from src.core.config import settings

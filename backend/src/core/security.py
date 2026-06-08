@@ -11,7 +11,7 @@ import bcrypt
 # Local Dependencies
 from src.apps.auth.schemas import TokenData, TokenBlacklistCreate
 from src.apps.auth.crud import crud_token_blacklist
-from src.apps.admin.users.crud import crud_users
+from src.apps.system.users.crud import crud_users
 from src.core.config import settings
 from src.core.utils import cache
 

@@ -27,8 +27,8 @@ app = Celery(
     broker=str(settings.REDIS_BROKER_URL),
     backend=str(settings.POSTGRES_CELERY_URI),
     include=[
-        "src.apps.admin.tasks",
-        "src.apps.admin.users.tasks",
+        "src.apps.system.tasks",
+        "src.apps.system.users.tasks",
         "src.core.common.tasks",
     ],
 )

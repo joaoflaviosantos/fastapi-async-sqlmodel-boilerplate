@@ -6,7 +6,7 @@ from sqlmodel import select
 
 # Local Dependencies
 from src._overrides.celery.async_task import async_task
-from src.apps.admin.users.models import User
+from src.apps.system.users.models import User
 from src.core.db.session import async_get_db
 from src.core.logger import logger_worker
 from src.worker import app

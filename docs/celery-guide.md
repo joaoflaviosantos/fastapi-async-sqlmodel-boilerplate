@@ -108,7 +108,7 @@ The `async_task` decorator (in `src/_overrides/celery/async_task.py`) uses `asgi
 
 | Task Name | Module | Type | Description |
 |-----------|--------|------|-------------|
-| `send_welcome_email` | `src.apps.admin.users.tasks` | On-demand | Sends welcome email when a new user is created (log simulation) |
+| `send_welcome_email` | `src.apps.system.users.tasks` | On-demand | Sends welcome email when a new user is created (log simulation) |
 | `check_database_and_redis_health` | `src.core.common.tasks` | Beat (30s) | Periodic health check for PostgreSQL and Redis connectivity |
 
 ## Calling Tasks
@@ -116,7 +116,7 @@ The `async_task` decorator (in `src/_overrides/celery/async_task.py`) uses `asgi
 ### From FastAPI endpoints or services:
 
 ```python
-from src.apps.admin.users.tasks import send_welcome_email
+from src.apps.system.users.tasks import send_welcome_email
 
 # Async dispatch (non-blocking)
 send_welcome_email.delay("user@example.com", "username")

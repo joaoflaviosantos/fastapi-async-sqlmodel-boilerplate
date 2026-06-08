@@ -10,7 +10,7 @@ import fastapi
 
 # Local Dependencies
 from src.core.api.dependencies import get_current_user, get_current_superuser
-from src.apps.admin.users.schemas import UserRead
+from src.apps.system.users.schemas import UserRead
 from src.apps.system.tiers.crud import crud_tiers
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import (

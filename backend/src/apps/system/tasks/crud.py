@@ -6,8 +6,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
 from src.core.common.crud import CRUDBase
-from src.apps.admin.tasks.models import Task
-from src.apps.admin.tasks.schemas import (
+from src.apps.system.tasks.models import Task
+from src.apps.system.tasks.schemas import (
     TaskCreateInternal,
     TaskUpdate,
     TaskUpdateInternal,

@@ -26,7 +26,7 @@ def test_create_task(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.post(
-        url=f"/api/v1/admin/tasks/sample?message={test_task_message}",
+        url=f"/api/v1/system/tasks/sample?message={test_task_message}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -45,7 +45,7 @@ def test_get_pending_task(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/admin/tasks/{test_task_id}",
+        url=f"/api/v1/system/tasks/{test_task_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -66,7 +66,7 @@ def test_get_started_task(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/admin/tasks/{test_task_id}",
+        url=f"/api/v1/system/tasks/{test_task_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -82,7 +82,7 @@ def test_read_processed_tasks(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/admin/tasks/processed",
+        url=f"/api/v1/system/tasks/processed",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -94,7 +94,7 @@ def test_read_pending_tasks(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/admin/tasks/pending",
+        url=f"/api/v1/system/tasks/pending",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -108,7 +108,7 @@ def test_get_health_check_from_inexistent_queue(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/admin/tasks/queue-health/",
+        url=f"/api/v1/system/tasks/queue-health/",
         params={"queue_name": f"{inexistent_queue_name}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )

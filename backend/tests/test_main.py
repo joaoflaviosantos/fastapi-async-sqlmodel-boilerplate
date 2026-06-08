@@ -8,6 +8,6 @@ logger = logger_api_test
 from src.apps.auth.tests.test_v1 import *
 from src.apps.system.tiers.tests.test_v1 import *
 from src.apps.system.rate_limits.tests.test_v1 import *
-from src.apps.admin.users.tests.test_v1 import *
-from src.apps.admin.tasks.tests.test_v1 import *
+from src.apps.system.users.tests.test_v1 import *
+from src.apps.system.tasks.tests.test_v1 import *
 from src.apps.blog.posts.tests.test_v1 import *

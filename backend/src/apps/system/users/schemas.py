@@ -8,7 +8,7 @@ from pydantic import Field, ConfigDict
 # Local Dependencies
 from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
 from backend.src._overrides.pydantic.optional import optional
-from src.apps.admin.users.models import (
+from src.apps.system.users.models import (
     UserPersonalInfoBase,
     UserMediaBase,
     UserTierBase,
