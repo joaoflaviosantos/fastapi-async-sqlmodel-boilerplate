@@ -73,7 +73,7 @@ class UserSecurityBase(Base):
 class UserTierBase(Base):
     tier_id: UUID | None = Field(
         default=None,
-        foreign_key="system_tier.id",
+        foreign_key="sys_tier.id",
         index=True,
         description="ID of the tier to which the user belongs",
     )
@@ -90,5 +90,5 @@ class User(
     SoftDeleteMixin,
     table=True,
 ):
-    __tablename__ = "admin_user"
+    __tablename__ = "sys_user"
     __table_args__ = ({"comment": "User account information"},)

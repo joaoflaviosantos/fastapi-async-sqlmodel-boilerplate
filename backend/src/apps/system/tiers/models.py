@@ -25,5 +25,5 @@ class TierRulesBase(Base):
 
 
 class Tier(UUIDMixin, TierInfoBase, TierRulesBase, TimestampMixin, table=True):
-    __tablename__ = "system_tier"
+    __tablename__ = "sys_tier"
     __table_args__ = {"comment": "Tier information"}

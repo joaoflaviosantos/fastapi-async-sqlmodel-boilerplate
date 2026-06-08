@@ -66,8 +66,8 @@ app.conf.database_table_schemas = {
     "group": "public",
 }
 app.conf.database_table_names = {
-    "task": "worker_task_meta",
-    "group": "worker_group_meta",
+    "task": "sys_task_meta",
+    "group": "sys_taskset_meta",
 }
 # Task tracking and result settings
 app.conf.task_track_started = True

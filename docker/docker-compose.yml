@@ -18,7 +18,7 @@ services:
     environment:
       POSTGRES_USER: docker
       POSTGRES_PASSWORD: docker
-      POSTGRES_DB: fastapi_async_sqlmodel_boilerplate
+      POSTGRES_DB: postgres
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:

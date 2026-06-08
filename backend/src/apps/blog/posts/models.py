@@ -39,7 +39,7 @@ class PostMediaBase(Base):
 class PostUserBase(Base):
     user_id: UUID = Field(
         description="User ID associated with the post",
-        foreign_key="admin_user.id",
+        foreign_key="sys_user.id",
         index=True,
     )
 

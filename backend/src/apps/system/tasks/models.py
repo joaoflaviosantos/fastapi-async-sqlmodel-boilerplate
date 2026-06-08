@@ -19,7 +19,7 @@ taskset_id_sequence = Sequence("taskset_id_sequence", start=1)
 class Task(Base, table=True):
     """Shared Task result/status with extended attributes."""
 
-    __tablename__ = "worker_task_meta"
+    __tablename__ = "sys_task_meta"
     __table_args__ = {
         "comment": "Celery Task result/status",
     }
@@ -80,7 +80,7 @@ class Task(Base, table=True):
 class TaskSet(Base, table=True):
     """Shared TaskSet result."""
 
-    __tablename__ = "worker_group_meta"
+    __tablename__ = "sys_taskset_meta"
     __table_args__ = {"comment": "Celery TaskSet result"}
 
     id: Optional[int] = Field(
