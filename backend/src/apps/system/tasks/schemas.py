@@ -8,7 +8,7 @@ from celery import states
 
 # Local Dependencies
 from src.apps.system.tasks.models import Task
-from backend.src._overrides.pydantic.optional import optional
+from src._overrides.pydantic.optional import optional
 
 
 class TaskBase(BaseModel):

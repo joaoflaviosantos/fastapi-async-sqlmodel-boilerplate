@@ -8,7 +8,7 @@ from pydantic import ConfigDict
 # Local Dependencies
 from src.apps.system.tiers.models import Base, TierInfoBase, TierRulesBase
 from src.core.common.models import TimestampMixin
-from backend.src._overrides.pydantic.optional import optional
+from src._overrides.pydantic.optional import optional
 
 
 class Tier(TimestampMixin, TierInfoBase, TierRulesBase):

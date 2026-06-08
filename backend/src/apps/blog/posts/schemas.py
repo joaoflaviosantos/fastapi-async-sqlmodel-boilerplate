@@ -7,7 +7,7 @@ from pydantic import ConfigDict
 # Local Dependencies
 from src.apps.blog.posts.models import PostContentBase, PostMediaBase, PostUserBase
 from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
-from backend.src._overrides.pydantic.optional import optional
+from src._overrides.pydantic.optional import optional
 
 
 class PostBase(PostContentBase):
