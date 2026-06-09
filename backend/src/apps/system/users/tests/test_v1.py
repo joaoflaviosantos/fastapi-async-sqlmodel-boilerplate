@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 # Local Dependencies
 from src.core.config import settings
-from tests.helper import _get_token
+from tests.helper import _get_token, _ensure_test_user_exists
 
 # Test data: 'common user'
 TEST_NAME = settings.TEST_NAME
@@ -24,24 +24,10 @@ user_id = None
 
 def test_post_user(client: TestClient) -> None:
     global user_id
-    assert user_id is None
-
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    response = client.post(
-        "/api/v1/system/users",
-        json={
-            "name": TEST_NAME,
-            "username": TEST_USERNAME,
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD,
-        },
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
-
-    user_id = response.json()["id"]
-
-    assert response.status_code == 201
+    
+    # Ensure test user exists (will restore if soft-deleted or create if doesn't exist)
+    user_id = _ensure_test_user_exists(client)
+    
     assert user_id is not None
 
 

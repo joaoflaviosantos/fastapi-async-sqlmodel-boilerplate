@@ -81,7 +81,7 @@ async def write_user(
     # Send background welcome email to the user (with Celery)
     send_welcome_email.delay(email=created_user.email, username=created_user.username)
 
-    return user
+    return created_user
 
 
 @router.get("/system/users", response_model=PaginatedListResponse[UserRead])
