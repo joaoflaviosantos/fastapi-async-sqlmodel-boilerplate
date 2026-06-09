@@ -84,15 +84,21 @@ class PostsTasks(TaskSet):
     def get_post(self) -> None:
         """GET a specific post by ID."""
         if not self.user_id or not self.post_id:
+            # No post available, create one first
+            self.create_post()
             return
 
-        response = self.client.get(
+        with self.client.get(
             f"{API_V1_PREFIX}/blog/posts/{self.post_id}/user/{self.user_id}",
             headers=auth_headers(self.access_token),
             name="/blog/posts/{post_id}/user/{user_id} [get]",
-        )
-        if response.status_code >= 400:
-            log_error(response, context="Posts Get")
+            catch_response=True,
+        ) as response:
+            if response.status_code == 404:
+                response.success()  # Expected: post was deleted during test
+                self.post_id = ""
+            elif response.status_code >= 400:
+                response.failure(f"{response.status_code}: {response.text}")
 
     @task(1)
     def update_post(self) -> None:
@@ -102,14 +108,18 @@ class PostsTasks(TaskSet):
 
         payload = {"title": f"Updated Load Test Post {uuid.uuid4().hex[:8]}"}
 
-        response = self.client.patch(
+        with self.client.patch(
             f"{API_V1_PREFIX}/blog/posts/{self.post_id}/user/{self.user_id}",
             json=payload,
             headers=auth_headers(self.access_token),
             name="/blog/posts/{post_id}/user/{user_id} [update]",
-        )
-        if response.status_code >= 400:
-            log_error(response, context="Posts Update")
+            catch_response=True,
+        ) as response:
+            if response.status_code == 404:
+                response.success()  # Expected: post was deleted during test
+                self.post_id = ""
+            elif response.status_code >= 400:
+                response.failure(f"{response.status_code}: {response.text}")
 
     @task(1)
     def delete_post(self) -> None:
@@ -117,13 +127,17 @@ class PostsTasks(TaskSet):
         if not self.user_id or not self.post_id:
             return
 
-        response = self.client.delete(
-            f"{API_V1_PREFIX}/blog/posts/{self.post_id}/user/{self.user_id}",
+        # Save and clear post_id before request to avoid race conditions
+        post_to_delete = self.post_id
+        self.post_id = ""
+
+        with self.client.delete(
+            f"{API_V1_PREFIX}/blog/posts/{post_to_delete}/user/{self.user_id}",
             headers=auth_headers(self.access_token),
             name="/blog/posts/{post_id}/user/{user_id} [delete]",
-        )
-        if response.status_code >= 400:
-            log_error(response, context="Posts Delete")
-        else:
-            # Reset post_id after deletion so next create generates a new one
-            self.post_id = ""
+            catch_response=True,
+        ) as response:
+            if response.status_code == 404:
+                response.success()  # Expected: already deleted
+            elif response.status_code >= 400:
+                response.failure(f"{response.status_code}: {response.text}")
