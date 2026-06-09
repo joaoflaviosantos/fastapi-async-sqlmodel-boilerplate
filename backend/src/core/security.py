@@ -1,6 +1,7 @@
 # Built-in Dependencies
 from datetime import datetime, timedelta, UTC
 from typing import Union, Literal, Dict, Any
+from uuid import uuid4
 
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -62,7 +63,7 @@ async def create_access_token(data: dict[str, Any], expires_delta: timedelta | N
         expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
     else:
         expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "jti": str(uuid4())})
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -74,7 +75,7 @@ async def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | 
         expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
     else:
         expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "jti": str(uuid4())})
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

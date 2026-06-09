@@ -62,11 +62,15 @@ class PostgresSettings(DatabaseSettings):
     def assemble_celery_db_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
             if v == "":
-                return (
-                    f"db+postgresql://{info.data['POSTGRES_USER']}:{info.data['POSTGRES_PASSWORD']}"
-                    f"@{info.data['POSTGRES_SERVER']}:{info.data['POSTGRES_PORT']}"
-                    f"/{info.data['POSTGRES_DB']}"
+                postgres_celery_uri = PostgresDsn.build(
+                    scheme="postgresql",
+                    username=info.data["POSTGRES_USER"],
+                    password=info.data["POSTGRES_PASSWORD"],
+                    host=info.data["POSTGRES_SERVER"],
+                    port=info.data["POSTGRES_PORT"],
+                    path=info.data["POSTGRES_DB"],
                 )
+                return f"db+{str(postgres_celery_uri)}"
         return v
 
 

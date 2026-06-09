@@ -144,7 +144,13 @@ async def get_task(
     job_result = AsyncResult(id=task_id)
 
     # If task is still pending, return minimal info
-    if job_result.state == states.PENDING:
+    try:
+        task_state = job_result.state
+    except AttributeError:
+        # Backend may be disabled or unavailable, try database lookup
+        task_state = None
+
+    if task_state == states.PENDING:
         return TaskRead(
             id=None,
             task_id=task_id,
@@ -166,14 +172,26 @@ async def get_task(
         pass
 
     # Fallback: return info from Celery result backend
-    job_info = TaskRead(
-        id=None,
-        task_id=task_id,
-        status=job_result.status,
-        name=job_result.name,
-        worker=None,
-        queue=None,
-        retries=None,
-    )
+    try:
+        job_info = TaskRead(
+            id=None,
+            task_id=task_id,
+            status=job_result.status,
+            name=job_result.name,
+            worker=None,
+            queue=None,
+            retries=None,
+        )
+    except AttributeError:
+        # Backend may be disabled or unavailable
+        job_info = TaskRead(
+            id=None,
+            task_id=task_id,
+            status=states.PENDING,
+            name=None,
+            worker=None,
+            queue=None,
+            retries=None,
+        )
 
     return job_info

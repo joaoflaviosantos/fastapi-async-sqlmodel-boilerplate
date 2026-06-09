@@ -52,16 +52,34 @@ def is_valid_path(path: str, app: FastAPI) -> bool:
     """
     Checks if a given path is a valid route in the FastAPI application.
 
+    The path parameter can be either:
+    - A non-sanitized path: "/api/v1/system/tasks"
+    - A sanitized path: "api_v1_system_tasks"
+
     Parameters:
-        path (str): The path to be checked.
+        path (str): The path to be checked (sanitized or not).
         app (FastAPI): The FastAPI application instance.
 
     Returns:
         bool: True if the path is a valid route, False otherwise.
     """
-    # Obtains all application routes
-    all_routes = [sanitize_path(route.path) for route in app.routes]
-    return path in all_routes
+    # Obtains all application routes and sanitize them for comparison
+    all_routes_sanitized = [sanitize_path(route.path) for route in app.routes]
+
+    # If the path looks like a sanitized path (no leading slash), use it directly
+    # Otherwise, sanitize it first
+    if path.startswith("/"):
+        path_to_check = sanitize_path(path)
+    else:
+        path_to_check = path
+
+    # Check if the sanitized path matches any route exactly or is a prefix of a route
+    for sanitized_route in all_routes_sanitized:
+        # Check exact match or if the input path is a prefix (for grouping endpoints)
+        if path_to_check == sanitized_route or sanitized_route.startswith(path_to_check + "_"):
+            return True
+
+    return False
 
 
 # Checks if a rate limit has been exceeded

@@ -16,6 +16,7 @@ celery = "^5.6.3"
 fastapi = {extras = ["all"], version = "^0.136.3"}
 gunicorn = "^26.0.0"
 pydantic-settings = "^2.14.1"
+psycopg2-binary = "^2.9.9"
 python = "^3.11"
 python-jose = "^3.5.0"
 redis = "^8.0.0"
