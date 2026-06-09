@@ -17,7 +17,6 @@ from src.apps.system.tasks.schemas import Job, TaskRead
 from src.apps.system.users.schemas import UserRead
 from src.worker import app as celery_app
 
-
 router = APIRouter(tags=["System - Tasks"])
 
 

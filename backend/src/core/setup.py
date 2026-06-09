@@ -1,5 +1,6 @@
 # Built-in Dependencies
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, AsyncGenerator
+from contextlib import asynccontextmanager
 
 # Third-Party Dependencies
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
@@ -114,6 +115,51 @@ async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
 # --------------------------------------
 # --------------- SETUP ----------------
 # --------------------------------------
+# Function to create lifespan context manager for FastAPI application
+@asynccontextmanager
+async def lifespan_context(
+    application: FastAPI,
+    settings_obj: Union[
+        DatabaseSettings,
+        RedisCacheSettings,
+        AppSettings,
+        ClientSideCacheSettings,
+        CORSSettings,
+        RedisBrokerSettings,
+        RedisRateLimiterSettings,
+        EnvironmentSettings,
+    ],
+) -> AsyncGenerator:
+    """
+    Manages the lifespan of the FastAPI application (startup and shutdown events).
+    """
+    # -------- STARTUP --------
+    await startup_logging()
+    await set_threadpool_tokens()
+
+    if isinstance(settings_obj, DatabaseSettings):
+        await create_tables()
+        await run_seed_scripts()
+
+    if isinstance(settings_obj, RedisCacheSettings):
+        await create_redis_cache_pool()
+
+    if isinstance(settings_obj, RedisRateLimiterSettings):
+        await create_redis_rate_limit_pool()
+
+    # Yield control back to the application
+    yield
+
+    # -------- SHUTDOWN --------
+    await shutdown_logging()
+
+    if isinstance(settings_obj, RedisCacheSettings):
+        await close_redis_cache_pool()
+
+    if isinstance(settings_obj, RedisRateLimiterSettings):
+        await close_redis_rate_limit_pool()
+
+
 # Function to create and configure a FastAPI application
 def create_application(
     router: APIRouter,
@@ -181,26 +227,18 @@ def create_application(
         # Configure documentation URLs to be None in non-production environments
         kwargs.update({"docs_url": None, "redoc_url": None, "openapi_url": None})
 
-    # Create and configure FastAPI application
-    application = FastAPI(**kwargs)
+    # Create lifespan context manager
+    async def lifespan(app: FastAPI) -> AsyncGenerator:
+        async with lifespan_context(app, settings):
+            yield
+
+    # Create and configure FastAPI application with lifespan
+    application = FastAPI(lifespan=lifespan, **kwargs)
 
     # --------------------------------------
     # -------- APPLICATION CREATED ---------
     # --------------------------------------
     application.include_router(router)
-    application.add_event_handler("startup", startup_logging)
-    application.add_event_handler("shutdown", shutdown_logging)
-    application.add_event_handler("startup", set_threadpool_tokens)
-
-    if isinstance(settings, DatabaseSettings):
-        # Add event handlers for database setup during startup
-        application.add_event_handler("startup", create_tables)
-        application.add_event_handler("startup", run_seed_scripts)
-
-    if isinstance(settings, RedisCacheSettings):
-        # Add event handlers for Redis cache pool setup and shutdown
-        application.add_event_handler("startup", create_redis_cache_pool)
-        application.add_event_handler("shutdown", close_redis_cache_pool)
 
     if isinstance(settings, ClientSideCacheSettings):
         # Add middleware for client-side caching with specified max age if environment is not local (development)
@@ -218,11 +256,6 @@ def create_application(
             expose_headers=settings.CORS_EXPOSE_HEADERS,
             max_age=settings.CORS_MAX_AGE,
         )
-
-    if isinstance(settings, RedisRateLimiterSettings):
-        # Add event handlers for Redis rate limiter pool setup and shutdown
-        application.add_event_handler("startup", create_redis_rate_limit_pool)
-        application.add_event_handler("shutdown", close_redis_rate_limit_pool)
 
     if isinstance(settings, EnvironmentSettings):
         if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
