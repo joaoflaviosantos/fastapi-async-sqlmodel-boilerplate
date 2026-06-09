@@ -39,7 +39,8 @@ def display_help():
     print_color("BLUE", "Select an option:\n")
     print("1 - Local Development Mode")
     print("2 - Production Deployment Setup")
-    print("3 - Exit")
+    print("3 - Load Testing (Locust)")
+    print("4 - Exit")
 
 # Check if Python and Poetry are installed
 def check_dependencies():
@@ -418,8 +419,51 @@ elif choice == "2":
     print("\nYou chose Production Deployment Setup.\n")
     # Add additional actions for Production Deployment Setup if needed
 elif choice == "3":
+    print_color("RED", "\n-> You chose Load Testing (Locust)...\n")
+
+    # Step 3.1: Navigate to the locust directory
+    os.chdir("locust/")
+
+    # Step 3.2: Force Poetry to use Python 3.11
+    subprocess.run(["poetry", "env", "use", python_path])
+
+    # Step 3.3: Install dependencies
+    print_color("GREEN", "Installing Locust dependencies...\n")
+    subprocess.run(["poetry", "install"])
+
+    # Step 3.4: Display a success message
+    print_color("RED", "\n-> Setup complete for Load Testing (Locust)...\n")
+    print_color("BLUE", "Make sure the backend API is running before starting Locust.\n")
+    print_color("BLUE", "Locust will read credentials from 'backend/.env'.\n")
+
+    # Step 3.5: Ask the user if they want to start Locust
+    print_color("BLUE", "Do you want to start Locust now?\n")
+    print("1 - Start Locust (Web UI at http://localhost:8089)")
+    print("2 - Start Locust (Headless mode - 50 users, 10/s spawn rate, 60s)")
+    print("3 - Exit")
+
+    locust_action = read_color("\033[1;37m", "\nEnter the number corresponding to your choice: ")
+
+    if locust_action == "1":
+        from datetime import datetime
+        print_color("RED", f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (Web UI)...\n")
+        print_color("GREEN", "Open http://localhost:8089 in your browser.\n")
+        subprocess.run(["poetry", "run", "locust"])
+        print_color("RED", "\n-> Stopping Locust...\n")
+    elif locust_action == "2":
+        from datetime import datetime
+        print_color("RED", f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (Headless mode)...\n")
+        subprocess.run(["poetry", "run", "locust", "--headless", "-u", "50", "-r", "10", "--run-time", "60s"])
+        print_color("RED", "\n-> Locust load test finished.\n")
+    elif locust_action == "3":
+        print("\nExiting...\n")
+        exit(0)
+    else:
+        print("\nInvalid choice. Exiting...\n")
+        exit(1)
+elif choice == "4":
     print("\nExiting...\n")
-    exit(1)
+    exit(0)
     # Add additional actions for production mode if needed
 else:
     print("\nInvalid choice. Exiting...\n")

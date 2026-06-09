@@ -42,7 +42,7 @@
 
 ## 🔍 Project Overview
 
-This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/tiers`, `system/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**.
+This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **Locust**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/tiers`, `system/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**. The project also includes an independent **Locust** load testing suite (`locust/`) with its own virtual environment for performance and stress testing.
 
 It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and structural principles.
 
@@ -66,6 +66,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - 🤸‍♂️ **Flexible:** Adapt the boilerplate to suit your specific needs.
 - 🚚 **Docker Compose:** Easily run the project with Docker Compose.
 - ⚖️ **NGINX Reverse Proxy and Load Balancing:** Enhance scalability with NGINX reverse proxy and load balancing.
+- 🦗 **Load Testing with Locust:** Independent load testing suite with its own virtual environment, pre-configured task sets covering auth, users, posts, tiers, and background tasks.
 
 ## 🎯 Project Goals
 
@@ -173,6 +174,8 @@ python3 setup.py
 This command automates various **setup tasks**, making it easier to **get started** with the project.
 
 For more details for a manual setup, please refer to the [Backend README](backend/README.md) section.
+
+For more details about load testing setup and usage, please refer to the [Locust Guide](docs/locust-guide.md).
 
 ## 🌐 Reference Projects
 
