@@ -9,6 +9,9 @@ from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings
 from starlette.config import Config
 
+# Local Dependencies
+from src.core.common.enums import EmailSenderType
+
 # Environment Variables Config Getters
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.abspath(os.path.join(current_file_dir, "..", "..", ".env"))
@@ -31,11 +34,63 @@ class CryptSettings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = config("REFRESH_TOKEN_EXPIRE_DAYS", default=7)
 
 
-class DatabaseSettings(BaseSettings):
-    pass
+class EmailSettings(BaseSettings):
+    SMTP_HOST: str | None = config("SMTP_HOST", default=None)
+    SMTP_PORT: int | None = config("SMTP_PORT", default=587)
+    SMTP_USER: str | None = config("SMTP_USER", default=None)
+    SMTP_PASSWORD: str | None = config("SMTP_PASSWORD", default=None)
+    EMAILS_FROM_EMAIL: str | None = config("EMAILS_FROM_EMAIL", default=None)
+    EMAILS_FROM_NAME: str | None = config("EMAILS_FROM_NAME", default=None)
+    EMAIL_SENDER: EmailSenderType | str = config("EMAIL_SENDER", default=None)
+
+    @field_validator(
+        "SMTP_HOST",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+        "EMAILS_FROM_EMAIL",
+        "EMAILS_FROM_NAME",
+        mode="before",
+    )
+    @classmethod
+    def empty_str_to_none(cls, v: str | None) -> str | None:
+        """Convert empty strings to None for optional fields."""
+        if v == "":
+            return None
+        return v
+
+    @field_validator("SMTP_PORT", mode="before")
+    @classmethod
+    def empty_str_to_default_port(cls, v: str | int | None) -> int:
+        """Convert empty strings to default port 587."""
+        if v == "" or v is None:
+            return 587
+        return int(v)
+
+    @field_validator("EMAIL_SENDER", mode="after")
+    def assemble_email_sender(cls, v: str | None, info: ValidationInfo) -> Any:
+        # Se o usuário explicitamente definiu "logger", usar logger
+        if v == EmailSenderType.logger or v == "logger":
+            return EmailSenderType.logger
+
+        # Se o usuário quer smtp, verificar se as credenciais estão configuradas
+        if isinstance(v, str) and v != "smtp":
+            # Valor vazio ou não reconhecido, verificar credenciais
+            if (
+                info.data["SMTP_HOST"] == None
+                or info.data["SMTP_USER"] == None
+                or info.data["SMTP_PASSWORD"] == None
+                or info.data["EMAILS_FROM_EMAIL"] == None
+                or info.data["EMAILS_FROM_NAME"] == None
+            ):
+                print(
+                    "WARNING: Using logger email sender, because SMTP_HOST, SMTP_USER, SMTP_PASSWORD, EMAILS_FROM_EMAIL, EMAILS_FROM_NAME are not set"
+                )
+                return EmailSenderType.logger
+
+        return EmailSenderType.smtp
 
 
-class PostgresSettings(DatabaseSettings):
+class PostgresSettings(BaseSettings):
     POSTGRES_USER: str = config("POSTGRES_USER", default="postgres")
     POSTGRES_PASSWORD: str = config("POSTGRES_PASSWORD", default="postgres")
     POSTGRES_SERVER: str = config("POSTGRES_SERVER", default="localhost")
@@ -215,6 +270,7 @@ class EnvironmentSettings(BaseSettings):
 
 class Settings(
     AppSettings,
+    EmailSettings,
     PostgresSettings,
     CryptSettings,
     FirstUserSettings,

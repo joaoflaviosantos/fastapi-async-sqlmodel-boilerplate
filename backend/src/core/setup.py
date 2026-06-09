@@ -24,7 +24,7 @@ from src.core.common.models import Base
 from src.core.config import settings
 from src.core.logger import logger_api
 from src.core.config import (
-    DatabaseSettings,
+    PostgresSettings,
     RedisCacheSettings,
     AppSettings,
     ClientSideCacheSettings,
@@ -120,7 +120,7 @@ async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
 async def lifespan_context(
     application: FastAPI,
     settings_obj: Union[
-        DatabaseSettings,
+        PostgresSettings,
         RedisCacheSettings,
         AppSettings,
         ClientSideCacheSettings,
@@ -137,7 +137,7 @@ async def lifespan_context(
     await startup_logging()
     await set_threadpool_tokens()
 
-    if isinstance(settings_obj, DatabaseSettings):
+    if isinstance(settings_obj, PostgresSettings):
         await create_tables()
         await run_seed_scripts()
 
@@ -164,7 +164,7 @@ async def lifespan_context(
 def create_application(
     router: APIRouter,
     settings: Union[
-        DatabaseSettings,
+        PostgresSettings,
         RedisCacheSettings,
         AppSettings,
         ClientSideCacheSettings,
@@ -191,7 +191,7 @@ def create_application(
         An instance representing the settings for configuring the FastAPI application. It determines the configuration applied:
 
         - AppSettings: Configures basic app metadata like name, description, contact, and license info.
-        - DatabaseSettings: Adds event handlers for initializing database tables during startup.
+        - PostgresSettings: Adds event handlers for initializing database tables during startup.
         - RedisCacheSettings: Sets up event handlers for creating and closing a Redis cache pool.
         - ClientSideCacheSettings: Integrates middleware for client-side caching.
         - CORSSettings: Configures Cross-Origin Resource Sharing (CORS) middleware.

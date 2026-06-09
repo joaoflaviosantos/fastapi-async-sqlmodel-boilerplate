@@ -11,6 +11,7 @@ import fastapi
 # Local Dependencies
 from src.core.api.dependencies import get_current_user, get_current_superuser
 from src.apps.system.rate_limits.crud import crud_rate_limits
+from src.apps.system.users.tasks import send_welcome_email
 from src.apps.system.users.crud import crud_users
 from src.apps.system.tiers.crud import crud_tiers
 from src.apps.system.tiers.schemas import TierRead
@@ -73,7 +74,14 @@ async def write_user(
     user_internal_dict["tier_id"] = default_tier["id"]
 
     user_internal = UserCreateInternal(**user_internal_dict)
-    return await crud_users.create(db=db, object=user_internal)
+
+    # Create user on the database
+    created_user = await crud_users.create(db=db, object=user_internal)
+
+    # Send background welcome email to the user (with Celery)
+    send_welcome_email.delay(email=created_user.email, username=created_user.username)
+
+    return user
 
 
 @router.get("/system/users", response_model=PaginatedListResponse[UserRead])

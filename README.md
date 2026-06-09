@@ -60,6 +60,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - 🚦 **Celery Integration:** Seamlessly integrate Celery for distributed task queue management with async task support, scheduled jobs via Celery Beat, and PostgreSQL result backend.
 - ⚙️ **Efficient Querying:** Optimize database queries by fetching only what's needed, with support for joins.
 - ⎘ **Pagination Support:** Out-of-the-box pagination support for enhanced data presentation.
+- 💌 **FastAPI-Mail Integration:** Send emails asynchronously with built-in support for templates and async task processing.
 - 🛑 **Rate Limiter Dependency:** Implement a rate limiter for controlled API access.
 - 👮 **Secure FastAPI Docs:** Restrict FastAPI docs behind authentication and hide based on the environment.
 - 🦾 **Easily Extendable:** Extend and customize the project effortlessly.
