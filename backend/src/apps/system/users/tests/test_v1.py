@@ -24,10 +24,10 @@ user_id = None
 
 def test_post_user(client: TestClient) -> None:
     global user_id
-    
+
     # Ensure test user exists (will restore if soft-deleted or create if doesn't exist)
     user_id = _ensure_test_user_exists(client)
-    
+
     assert user_id is not None
 
 
@@ -71,7 +71,14 @@ def test_get_multiple_users(client: TestClient) -> None:
     )
 
     assert response.status_code == 200
-    assert len(response.json()["data"]) > 0
+    result = response.json()
+    assert "data" in result
+    assert isinstance(result["data"], list)
+    assert len(result["data"]) > 0
+    assert "total_count" in result
+    assert "has_more" in result
+    assert "page" in result
+    assert "items_per_page" in result
 
 
 def test_update_your_own_user(client: TestClient) -> None:

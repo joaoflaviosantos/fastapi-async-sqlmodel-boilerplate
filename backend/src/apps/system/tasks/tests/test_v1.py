@@ -87,6 +87,13 @@ def test_read_processed_tasks(client: TestClient) -> None:
     )
 
     assert response.status_code == 200
+    result = response.json()
+    assert "data" in result
+    assert isinstance(result["data"], list)
+    assert "total_count" in result
+    assert "has_more" in result
+    assert "page" in result
+    assert "items_per_page" in result
 
 
 def test_read_pending_tasks(client: TestClient) -> None:

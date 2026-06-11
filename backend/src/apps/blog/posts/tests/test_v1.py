@@ -90,7 +90,14 @@ def test_get_multiple_user_posts(client: TestClient) -> None:
     )
 
     assert response.status_code == 200
-    assert len(response.json()["data"]) > 0
+    result = response.json()
+    assert "data" in result
+    assert isinstance(result["data"], list)
+    assert len(result["data"]) > 0
+    assert "total_count" in result
+    assert "has_more" in result
+    assert "page" in result
+    assert "items_per_page" in result
 
 
 def test_update_post(client: TestClient) -> None:

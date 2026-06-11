@@ -10,7 +10,7 @@ from sqlalchemy.sql import Join
 from sqlmodel import SQLModel
 
 # Local Dependencies
-from src.core.utils.crud import (
+from src.core.utils.repository import (
     _extract_matching_columns_from_schema,
     _extract_matching_columns_from_kwargs,
     _auto_detect_join_condition,
@@ -25,7 +25,7 @@ UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=SQLModel)
 DeleteSchemaType = TypeVar("DeleteSchemaType", bound=SQLModel)
 
 
-class CRUDBase(
+class RepositoryBase(
     Generic[
         ModelType,
         CreateSchemaType,
@@ -35,7 +35,7 @@ class CRUDBase(
     ]
 ):
     """
-    Base class for CRUD operations on a model.
+    Base class for repository operations on a model.
 
     Parameters
     ----------
@@ -239,20 +239,21 @@ class CRUDBase(
 
         Examples
         ----------
-        Simple example: Joining User and Tier models without explicitly providing join_on
-        ```python
-        result = await crud_user.get_joined(
-            db=session,
-            join_model=Tier,
-            schema_to_select=UserSchema,
-            join_schema_to_select=TierSchema
+        Simple example: Joining User and Tier models
+        >>> # e.g. user_repo = RepositoryBase(User)
+        >>> # Assume Tier is another SQLModel model
+        >>> result = await user_repo.get_joined(
+        ...     db=session,
+        ...     join_model=Tier,
+        ...     schema_to_select=UserRead,
+        ...     join_schema_to_select=TierRead
         )
         ```
 
         Complex example: Joining with a custom join condition, additional filter parameters, and a prefix
         ```python
         from sqlalchemy import and_
-        result = await crud_user.get_joined(
+        >>> result = await user_repo.get_joined(
             db=session,
             join_model=Tier,
             join_prefix="tier_",
@@ -376,7 +377,7 @@ class CRUDBase(
         Examples
         ----------
         # Fetching multiple User records joined with Tier records, using left join
-        users = await crud_user.get_multi_joined(
+        >>> users = await user_repo.get_multi_joined(
             db=session,
             join_model=Tier,
             join_prefix="tier_",

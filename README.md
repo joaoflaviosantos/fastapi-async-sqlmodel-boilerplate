@@ -42,14 +42,15 @@
 
 ## 🔍 Project Overview
 
-This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **Locust**, **NGINX**, and **Docker**. It follows a Django-inspired folder structure for a clear, modular codebase. Key areas like `system/tiers`, `system/users` and `blog/posts` showcase the optimal balance between **modularity and clarity**. The project also includes an independent **Locust** load testing suite (`locust/`) with its own virtual environment for performance and stress testing.
+This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **Locust**, **NGINX**, and **Docker**. It follows a **Clean Architecture** utilizing the **Repository and Service Patterns** on top of a Django-inspired modular folder structure. Key areas like `system/tiers`, `system/users` and `blog/posts` showcase an optimal balance between **modularity, clarity, and separation of concerns**. The project also includes an independent **Locust** load testing suite (`locust/`) with its own virtual environment for performance and stress testing.
 
-It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and structural principles.
+It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates but demand the decoupling of modern architectural patterns, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and architectural best practices.
 
 ## 🌟 Key Features
 
 This project seeks to provide a **strong foundation for API development**, incorporating a blend of cutting-edge technologies and structural principles:
 
+- 🏛️ **Clean Architecture:** Strict separation of concerns using the **Repository** and **Service** patterns. Routers handle HTTP, Services encapsulate business logic, and Repositories manage data access.
 - ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
 - 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
 - 🧰 **SQLModel:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
@@ -79,8 +80,11 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Manage database migrations seamlessly using Alembic.
 - [x] Develop comprehensive unit tests for API endpoints using pytest.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
-- [ ] Provide a CLI tool for easy project execution and management.
-- [ ] Provide diverse deployment options to ensure flexibility and accessibility.
+- [x] Adopt Repository and Service patterns for clean separation of concerns and enhanced testability.
+- [x] Write isolated unit tests for services (with mocked repositories) and integration tests for repositories.
+- [x] Provide a fully containerized development environment with Docker Compose (PostgreSQL, Redis).
+- [ ] Provide a CLI tool for easy project execution and management (e.g., `setup.py` extension).
+- [ ] Provide diverse deployment options (e.g., Kubernetes, cloud-specific services) to ensure flexibility and accessibility.
 
 ## 📋 Prerequisites
 
@@ -182,5 +186,6 @@ For more details about load testing setup and usage, please refer to the [Locust
 
 - [FastAPI Boilerplate by Igor Magalhães](https://github.com/igorbenav/FastAPI-boilerplate)
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
+- [FastAPI do zero by Dunossauro](https://github.com/dunossauro/fastapi-do-zero)
 
 Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟

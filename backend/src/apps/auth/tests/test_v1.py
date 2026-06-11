@@ -1,7 +1,5 @@
 # Third-Party Dependencies
-from sqlalchemy.ext.asyncio import AsyncEngine
 from fastapi.testclient import TestClient
-from sqlalchemy.future import select
 
 # Local Dependencies
 from src.core.config import settings
