@@ -9,28 +9,13 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.api.dependencies import get_current_user, get_current_superuser
-from src.apps.system.users.schemas import UserRead
-from src.apps.system.tiers.crud import crud_tiers
+from src.core.api.dependencies import get_current_superuser, get_tier_service
+from src.apps.system.tiers.services import TierService
 from src.core.db.session import async_get_db
-from src.core.exceptions.http_exceptions import (
-    DuplicateValueException,
-    InternalErrorException,
-    ForbiddenException,
-    NotFoundException,
-)
-from src.apps.system.tiers.schemas import (
-    TierRead,
-    TierCreate,
-    TierCreateInternal,
-    TierUpdate,
-)
-from src.core.utils.paginated import (
-    PaginatedListResponse,
-    paginated_response,
-    compute_offset,
-)
+from src.core.exceptions.http_exceptions import InternalErrorException, ForbiddenException
+from src.apps.system.tiers.schemas import TierRead, TierCreate, TierUpdate
 from src.core.config import settings
+from src.core.common.schemas import PaginatedListResponse
 
 router = fastapi.APIRouter(tags=["System - Tiers"])
 
@@ -44,14 +29,9 @@ async def write_tier(
     request: Request,
     tier: TierCreate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
+    tier_service: TierService = Depends(get_tier_service),
 ) -> TierRead:
-    tier_internal_dict = tier.model_dump()
-    db_tier = await crud_tiers.exists(db=db, name=tier_internal_dict["name"])
-    if db_tier:
-        raise DuplicateValueException(detail="Tier Name not available")
-
-    tier_internal = TierCreateInternal(**tier_internal_dict)
-    return await crud_tiers.create(db=db, object=tier_internal)
+    return await tier_service.create_tier(db=db, tier=tier)
 
 
 @router.get(
@@ -60,19 +40,12 @@ async def write_tier(
 )
 async def read_tiers(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
+    tier_service: TierService = Depends(get_tier_service),
     page: int = 1,
     items_per_page: int = 10,
 ) -> dict:
-    tiers_data = await crud_tiers.get_multi(
-        db=db,
-        offset=compute_offset(page, items_per_page),
-        limit=items_per_page,
-        schema_to_select=TierRead,
-    )
-
-    return paginated_response(crud_data=tiers_data, page=page, items_per_page=items_per_page)
+    return await tier_service.get_tiers(db=db, page=page, items_per_page=items_per_page)
 
 
 @router.get(
@@ -82,32 +55,21 @@ async def read_tiers(
 async def read_tier(
     request: Request,
     tier_id: UUID,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
+    tier_service: TierService = Depends(get_tier_service),
 ) -> dict:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
-    if db_tier is None:
-        raise NotFoundException(detail="Tier not found")
-
-    return db_tier
+    return await tier_service.get_tier(db=db, tier_id=tier_id)
 
 
 @router.patch("/system/tiers/{tier_id}", dependencies=[Depends(get_current_superuser)])
 async def patch_tier(
     request: Request,
-    values: TierUpdate,
     tier_id: UUID,
+    values: TierUpdate,
     db: Annotated[AsyncSession, Depends(async_get_db)],
+    tier_service: TierService = Depends(get_tier_service),
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
-    if db_tier is None:
-        raise NotFoundException(detail="Tier not found")
-
-    if db_tier["name"] == settings.TIER_NAME_DEFAULT:
-        raise ForbiddenException(detail="Default Tier cannot be updated")
-
-    await crud_tiers.update(db=db, object=values, id=tier_id)
-    return {"message": "Tier updated"}
+    return await tier_service.update_tier(db=db, tier_id=tier_id, values=values)
 
 
 @router.delete("/system/tiers/{tier_id}/db", dependencies=[Depends(get_current_superuser)])
@@ -115,21 +77,6 @@ async def erase_db_tier(
     request: Request,
     tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
+    tier_service: TierService = Depends(get_tier_service),
 ) -> Dict[str, str]:
-    db_tier = await crud_tiers.get(db=db, schema_to_select=TierRead, id=tier_id)
-    if db_tier is None:
-        raise NotFoundException(detail="Tier not found")
-
-    if db_tier["name"] == settings.TIER_NAME_DEFAULT:
-        raise ForbiddenException(detail="Default Tier cannot be deleted")
-
-    try:
-        await crud_tiers.db_delete(db=db, id=tier_id)
-    except IntegrityError:
-        raise ForbiddenException(detail="Tier cannot be deleted")
-    except Exception as e:
-        raise InternalErrorException(
-            detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
-        )
-
-    return {"message": "Tier deleted from the database"}
+    return await tier_service.db_delete_tier(db=db, tier_id=tier_id)

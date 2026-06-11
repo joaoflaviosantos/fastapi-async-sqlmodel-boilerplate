@@ -5,7 +5,7 @@ from typing import Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.core.common.crud import CRUDBase
+from src.core.common.repository import RepositoryBase
 from src.apps.system.tasks.models import Task
 from src.apps.system.tasks.schemas import (
     TaskCreateInternal,
@@ -15,11 +15,11 @@ from src.apps.system.tasks.schemas import (
 )
 
 
-class CRUDTaskOperations(
-    CRUDBase[Task, TaskCreateInternal, TaskUpdate, TaskUpdateInternal, TaskDelete]
+class TaskRepository(
+    RepositoryBase[Task, TaskCreateInternal, TaskUpdate, TaskUpdateInternal, TaskDelete]
 ):
     """
-    Extended CRUD operations for Task model with Celery-specific methods.
+    Extended Repository operations for Task model with Celery-specific methods.
     """
 
     async def read_by_task_id(self, session: AsyncSession, task_id: str) -> Optional[Task]:
@@ -47,5 +47,5 @@ class CRUDTaskOperations(
             return None
 
 
-# Create an instance of CRUDTaskOperations for the 'Task' model
-crud_tasks = CRUDTaskOperations(Task)
+# Create an instance of TaskRepository for the 'Task' model
+task_repository = TaskRepository(Task)

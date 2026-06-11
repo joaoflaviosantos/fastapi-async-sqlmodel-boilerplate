@@ -46,7 +46,7 @@ def display_help():
 def check_dependencies():
     if OPERATING_SYSTEM == 'Windows':
         python_check = subprocess.run(["py", "--list-paths"], capture_output=True, text=True)
-        python_paths = re.findall(r'\s-V:3\.11\s+\*\s+(\S+)', python_check.stdout)
+        python_paths = re.findall(r'\s-V:3\.11\s+[^*]*?\s+(\S+)', python_check.stdout)
         python_installed = bool(python_paths)
         python_path = python_paths[0] if python_installed else None
     else:

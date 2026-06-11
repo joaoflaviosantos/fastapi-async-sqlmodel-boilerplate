@@ -1,21 +1,14 @@
 # Built-in Dependencies
-from typing import Optional, Annotated, List
+from typing import Optional, List
 
 # Third-Party Dependencies
-from fastapi import APIRouter, Depends, Request, HTTPException, status, Query
-from celery.result import AsyncResult
-from celery import states
+from fastapi import APIRouter, Depends, Request, Body
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select, not_
 
 # Local Dependencies
-from src.apps.system.tasks.tasks import sample_background_task
-from src.apps.system.tasks.crud import crud_tasks
-from src.apps.system.tasks.models import Task
-from src.core.api.dependencies import get_current_user, async_get_db
+from src.core.api.dependencies import get_task_service, async_get_db
 from src.apps.system.tasks.schemas import Job, TaskRead
-from src.apps.system.users.schemas import UserRead
-from src.worker import app as celery_app
+from src.apps.system.tasks.services import TaskService
 
 router = APIRouter(tags=["System - Tasks"])
 
@@ -25,38 +18,34 @@ router = APIRouter(tags=["System - Tasks"])
     response_model=Job,
     status_code=201,
 )
-async def create_sample_shared_task(
+async def create_sample_task(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
-    message: str,
+    message: str = Body(..., embed=True),
+    task_service: TaskService = Depends(get_task_service),
 ) -> Job:
     """
     Create a new background task.
 
     When a task is created, it's dispatched to Celery and the task ID is returned.
     """
-    job = sample_background_task.apply_async(args=[message])
-    return Job(id=job.id)
+    return await task_service.create_sample_shared_task(message=message)
 
 
 @router.get(
     "/system/tasks/processed",
     response_model=List[TaskRead],
 )
-async def read_processed_tasks(
+async def list_processed_tasks(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(async_get_db)],
+    session: AsyncSession = Depends(async_get_db),
+    task_service: TaskService = Depends(get_task_service),
 ) -> List[TaskRead]:
     """
     Get all processed (non-pending) tasks from the database.
 
     Returns tasks that have been started, completed, or failed.
     """
-    stmt = select(Task).where(not_(Task.status == states.PENDING))
-    result = await session.exec(stmt)
-    tasks = result.all()
-    return [TaskRead.model_validate(task) for task in tasks]
+    return await task_service.get_processed_tasks(session=session)
 
 
 @router.get(
@@ -65,18 +54,15 @@ async def read_processed_tasks(
 )
 async def read_pending_tasks(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(async_get_db)],
+    session: AsyncSession = Depends(async_get_db),
+    task_service: TaskService = Depends(get_task_service),
 ) -> List[TaskRead]:
     """
     Get all pending tasks from the database.
 
     Returns tasks that are still in PENDING state.
     """
-    stmt = select(Task).where(Task.status == states.PENDING)
-    result = await session.exec(stmt)
-    tasks = result.all()
-    return [TaskRead.model_validate(task) for task in tasks]
+    return await task_service.get_pending_tasks(session=session)
 
 
 @router.get(
@@ -85,8 +71,8 @@ async def read_pending_tasks(
 )
 async def get_queue_health(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
-    queue_name: str = Query(default="default"),
+    queue_name: str = "default",
+    task_service: TaskService = Depends(get_task_service),
 ) -> dict:
     """
     Check the health of a Celery queue.
@@ -106,32 +92,18 @@ async def get_queue_health(
     HTTPException 404
         If the queue is not found on the broker.
     """
-    try:
-        with celery_app.connection_or_acquire() as conn:
-            channel = conn.default_channel
-            # Try to get queue info - will raise if queue doesn't exist
-            queue = channel.queue_declare(queue=queue_name, passive=True)
-            return {
-                "queue_name": queue_name,
-                "message_count": queue.message_count,
-                "consumer_count": queue.consumer_count,
-            }
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Queue with name '{queue_name}' not found on broker.",
-        )
+    return task_service.get_queue_health(queue_name=queue_name)
 
 
 @router.get(
     "/system/tasks/{task_id}",
     response_model=Optional[TaskRead],
 )
-async def get_task(
+async def read_task(
     request: Request,
-    current_user: Annotated[UserRead, Depends(get_current_user)],
     task_id: str,
-    session: Annotated[AsyncSession, Depends(async_get_db)],
+    session: AsyncSession = Depends(async_get_db),
+    task_service: TaskService = Depends(get_task_service),
 ) -> Optional[TaskRead]:
     """
     Get task status and information.
@@ -140,58 +112,4 @@ async def get_task(
     - If task has been started: returns data from database (if available)
     - If task is completed/failed: returns full information from database
     """
-    # First, check Celery's result backend for the task state
-    job_result = AsyncResult(id=task_id)
-
-    # If task is still pending, return minimal info
-    try:
-        task_state = job_result.state
-    except AttributeError:
-        # Backend may be disabled or unavailable, try database lookup
-        task_state = None
-
-    if task_state == states.PENDING:
-        return TaskRead(
-            id=None,
-            task_id=task_id,
-            status=states.PENDING,
-            name=None,
-            worker=None,
-            queue=None,
-            retries=None,
-        )
-
-    # If task has been started or is in any other state, try to fetch from database
-    try:
-        task_db = await crud_tasks.read_by_task_id(session=session, task_id=task_id)
-
-        if task_db:
-            return TaskRead.model_validate(task_db)
-    except Exception:
-        # If database lookup fails, fall back to Celery info
-        pass
-
-    # Fallback: return info from Celery result backend
-    try:
-        job_info = TaskRead(
-            id=None,
-            task_id=task_id,
-            status=job_result.status,
-            name=job_result.name,
-            worker=None,
-            queue=None,
-            retries=None,
-        )
-    except AttributeError:
-        # Backend may be disabled or unavailable
-        job_info = TaskRead(
-            id=None,
-            task_id=task_id,
-            status=states.PENDING,
-            name=None,
-            worker=None,
-            queue=None,
-            retries=None,
-        )
-
-    return job_info
+    return await task_service.get_task(session=session, task_id=task_id)

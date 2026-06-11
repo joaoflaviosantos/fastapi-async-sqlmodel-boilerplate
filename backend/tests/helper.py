@@ -61,31 +61,26 @@ def _ensure_test_user_exists(client: TestClient) -> str:
     """
     # Get admin token
     admin_token = _get_token(
-        username=settings.ADMIN_USERNAME,
-        password=settings.ADMIN_PASSWORD,
-        client=client
+        username=settings.ADMIN_USERNAME, password=settings.ADMIN_PASSWORD, client=client
     )
-    
+
     if admin_token.status_code != 200:
         raise Exception("Failed to get admin token")
-    
+
     admin_access_token = admin_token.json()["access_token"]
-    
+
     # Try to find the test user
     response = client.get(
         "/api/v1/system/users",
         headers={"Authorization": f"Bearer {admin_access_token}"},
     )
-    
+
     if response.status_code == 200:
         users = response.json().get("data", [])
-        existing_user = next(
-            (u for u in users if u["email"] == settings.TEST_EMAIL),
-            None
-        )
+        existing_user = next((u for u in users if u["email"] == settings.TEST_EMAIL), None)
         if existing_user:
             return existing_user["id"]
-    
+
     # User doesn't exist, try to create it
     response = client.post(
         "/api/v1/system/users",
@@ -97,7 +92,7 @@ def _ensure_test_user_exists(client: TestClient) -> str:
         },
         headers={"Authorization": f"Bearer {admin_access_token}"},
     )
-    
+
     if response.status_code == 201:
         return response.json()["id"]
     elif response.status_code == 422 and "already registered" in str(response.json()):

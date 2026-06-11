@@ -1,5 +1,5 @@
 # Local Dependencies
-from src.core.common.crud import CRUDBase
+from src.core.common.repository import RepositoryBase
 from src.apps.system.rate_limits.models import RateLimit
 from src.apps.system.rate_limits.schemas import (
     RateLimitCreateInternal,
@@ -8,8 +8,8 @@ from src.apps.system.rate_limits.schemas import (
     RateLimitDelete,
 )
 
-# CRUD operations for RateLimit model
-CRUDRateLimit = CRUDBase[
+# Repository operations for RateLimit model
+RateLimitRepository = RepositoryBase[
     RateLimit,
     RateLimitCreateInternal,
     RateLimitUpdate,
@@ -17,5 +17,5 @@ CRUDRateLimit = CRUDBase[
     RateLimitDelete,
 ]
 
-# Create an instance of CRUDRateLimit for the 'RateLimit' model
-crud_rate_limits = CRUDRateLimit(RateLimit)
+# Create an instance of RateLimitRepository for the 'RateLimit' model
+rate_limit_repository = RateLimitRepository(RateLimit)

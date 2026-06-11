@@ -21,19 +21,19 @@ def _hard_delete_test_user_from_db() -> None:
         host = settings.POSTGRES_SERVER
         port = settings.POSTGRES_PORT
         db = settings.POSTGRES_DB
-        
+
         # Build the DELETE query
         query = f"DELETE FROM sys_user WHERE email = '{settings.TEST_EMAIL}';"
-        
+
         # Execute the query using psql
         env = os.environ.copy()
-        env['PGPASSWORD'] = password
-        
+        env["PGPASSWORD"] = password
+
         subprocess.run(
-            ['psql', '-h', host, '-p', str(port), '-U', user, '-d', db, '-c', query],
+            ["psql", "-h", host, "-p", str(port), "-U", user, "-d", db, "-c", query],
             env=env,
             capture_output=True,
-            timeout=5
+            timeout=5,
         )
     except Exception:
         # Silently fail if we can't delete from DB

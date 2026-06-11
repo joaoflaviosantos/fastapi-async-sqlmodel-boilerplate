@@ -11,8 +11,8 @@ import bcrypt
 
 # Local Dependencies
 from src.apps.auth.schemas import TokenData, TokenBlacklistCreate
-from src.apps.auth.crud import crud_token_blacklist
-from src.apps.system.users.crud import crud_users
+from src.apps.auth.repositories import token_blacklist_repository
+from src.apps.system.users.repositories import user_repository
 from src.core.config import settings
 from src.core.utils import cache
 
@@ -43,9 +43,9 @@ async def authenticate_user(
     username_or_email: str, password: str, db: AsyncSession
 ) -> Union[Dict[str, Any], Literal[False]]:
     if "@" in username_or_email:
-        db_user = await crud_users.get(db=db, email=username_or_email, is_deleted=False)
+        db_user = await user_repository.get(db=db, email=username_or_email, is_deleted=False)
     else:
-        db_user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+        db_user = await user_repository.get(db=db, username=username_or_email, is_deleted=False)
 
     if not db_user:
         return False
@@ -98,7 +98,7 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         An instance of TokenData representing the user if the token is valid.
         None is returned if the token is invalid or the user is not active.
     """
-    is_blacklisted = await crud_token_blacklist.exists(db, token=token)
+    is_blacklisted = await token_blacklist_repository.exists(db, token=token)
     if is_blacklisted:
         return None
 
@@ -121,7 +121,7 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
                 return TokenData(username_or_email=username_or_email)
 
         # If not active in Redis or Redis is not available, check PostgreSQL
-        user = await crud_users.get(db=db, username=username_or_email, is_deleted=False)
+        user = await user_repository.get(db=db, username=username_or_email, is_deleted=False)
 
         if user:
             # Update Redis with user active status if Redis is available
@@ -147,7 +147,7 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
 async def blacklist_token(token: str, db: AsyncSession) -> None:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     expires_at = datetime.fromtimestamp(payload.get("exp"))
-    await crud_token_blacklist.create(
+    await token_blacklist_repository.create(
         db,
         object=TokenBlacklistCreate(**{"token": token, "expires_at": expires_at}),
     )

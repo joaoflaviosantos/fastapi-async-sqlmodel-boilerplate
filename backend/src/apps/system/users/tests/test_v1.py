@@ -24,10 +24,10 @@ user_id = None
 
 def test_post_user(client: TestClient) -> None:
     global user_id
-    
+
     # Ensure test user exists (will restore if soft-deleted or create if doesn't exist)
     user_id = _ensure_test_user_exists(client)
-    
+
     assert user_id is not None
 
 

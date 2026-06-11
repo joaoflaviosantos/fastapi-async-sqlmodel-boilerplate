@@ -6,11 +6,20 @@ from fastapi import Depends, HTTPException, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.apps.system.rate_limits.crud import crud_rate_limits
+from src.apps.auth.repositories import TokenBlacklistRepository, token_blacklist_repository
+from src.apps.auth.services import AuthService
+from src.apps.system.users.services import UserService
+from src.apps.system.tiers.services import TierService
+from src.apps.system.rate_limits.services import RateLimitService
+from src.apps.system.tasks.repositories import TaskRepository, task_repository
+from src.apps.system.tasks.services import TaskService
+from src.apps.blog.posts.repositories import PostRepository, post_repository
+from src.apps.blog.posts.services import PostService
+from src.apps.system.rate_limits.repositories import RateLimitRepository, rate_limit_repository
 from src.apps.system.rate_limits.schemas import sanitize_path
 from src.core.utils.rate_limit import is_rate_limited
-from src.apps.system.tiers.crud import crud_tiers
-from src.apps.system.users.crud import crud_users
+from src.apps.system.tiers.repositories import TierRepository, tier_repository
+from src.apps.system.users.repositories import UserRepository, user_repository
 from src.core.exceptions.http_exceptions import (
     UnauthorizedException,
     ForbiddenException,
@@ -39,11 +48,11 @@ async def get_current_user(
 
     # Check if the authentication token represents an email or username and retrieve the user information
     if "@" in token_data.username_or_email:
-        user: dict | None = await crud_users.get(
+        user: dict | None = await user_repository.get(
             db=db, email=token_data.username_or_email, is_active=True, is_deleted=False
         )
     else:
-        user = await crud_users.get(
+        user = await user_repository.get(
             db=db, username=token_data.username_or_email, is_active=True, is_deleted=False
         )
 
@@ -109,9 +118,9 @@ async def rate_limiter(
     if user:
         # If a user is present, retrieve user-specific rate limit settings
         user_id = user["id"]
-        tier = await crud_tiers.get(db, id=user["tier_id"])
+        tier = await tier_repository.get(db, id=user["tier_id"])
         if tier:
-            rate_limit = await crud_rate_limits.get(db=db, tier_id=tier["id"], path=path)
+            rate_limit = await rate_limit_repository.get(db=db, tier_id=tier["id"], path=path)
             if rate_limit:
                 # If rate limit settings are found, use them; otherwise, apply default settings
                 limit, period = rate_limit["limit"], rate_limit["period"]
@@ -150,3 +159,68 @@ async def rate_limiter(
     if is_limited:
         # Raise an exception if the user exceeds the rate limit
         raise RateLimitException(detail="Rate limit exceeded.")
+
+
+async def get_user_repository() -> UserRepository:
+    return user_repository
+
+
+async def get_tier_repository() -> TierRepository:
+    return tier_repository
+
+
+async def get_rate_limit_repository() -> RateLimitRepository:
+    return rate_limit_repository
+
+
+async def get_token_blacklist_repository() -> TokenBlacklistRepository:
+    return token_blacklist_repository
+
+
+async def get_task_repository() -> TaskRepository:
+    return task_repository
+
+
+async def get_post_repository() -> PostRepository:
+    return post_repository
+
+
+async def get_auth_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    token_blacklist_repo: TokenBlacklistRepository = Depends(get_token_blacklist_repository),
+) -> AuthService:
+    return AuthService(user_repo, token_blacklist_repo)
+
+
+async def get_user_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    tier_repo: TierRepository = Depends(get_tier_repository),
+    rate_limit_repo: RateLimitRepository = Depends(get_rate_limit_repository),
+) -> UserService:
+    return UserService(user_repo, tier_repo, rate_limit_repo)
+
+
+async def get_tier_service(
+    tier_repo: TierRepository = Depends(get_tier_repository),
+) -> TierService:
+    return TierService(tier_repo)
+
+
+async def get_rate_limit_service(
+    rate_limit_repo: RateLimitRepository = Depends(get_rate_limit_repository),
+    tier_repo: TierRepository = Depends(get_tier_repository),
+) -> RateLimitService:
+    return RateLimitService(rate_limit_repo, tier_repo)
+
+
+async def get_task_service(
+    task_repo: TaskRepository = Depends(get_task_repository),
+) -> TaskService:
+    return TaskService(task_repo)
+
+
+async def get_post_service(
+    post_repo: PostRepository = Depends(get_post_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> PostService:
+    return PostService(post_repo, user_repo)

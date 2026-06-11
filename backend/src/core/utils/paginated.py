@@ -1,18 +1,14 @@
 # Built-in Dependencies
-from typing import Dict, Any
-
-# Local Dependencies
-from src.core.common.schemas import PaginatedListResponse
+import math
 
 
-# Function to create a paginated response
-def paginated_response(crud_data: dict, page: int, items_per_page: int) -> Dict[str, Any]:
+def paginated_response(data: dict, page: int, items_per_page: int) -> dict:
     """
     Create a paginated response based on the provided data and pagination parameters.
 
     Parameters
     ----------
-    crud_data : ListResponse[SchemaType]
+    data : dict
         Data to be paginated, including the list of items and total count.
     page : int
         Current page number.
@@ -21,17 +17,13 @@ def paginated_response(crud_data: dict, page: int, items_per_page: int) -> Dict[
 
     Returns
     ----------
-    Dict[str, Any]
+    dict
         A structured paginated response dict containing the list of items, total count, pagination flags, and numbers.
-
-    Note
-    ----
-    The function does not actually paginate the data but formats the response to indicate pagination metadata.
     """
     return {
-        "data": crud_data["data"],
-        "total_count": crud_data["total_count"],
-        "has_more": (page * items_per_page) < crud_data["total_count"],
+        "data": data["data"],
+        "total_count": data["total_count"],
+        "has_more": (page * items_per_page) < data["total_count"],
         "page": page,
         "items_per_page": items_per_page,
     }
