@@ -6,7 +6,8 @@ from fastapi import HTTPException, status
 from celery.result import AsyncResult
 from celery import states
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select, not_
+from sqlmodel import select, func, col
+from sqlalchemy import not_ as sa_not
 
 # Local Dependencies
 from src.apps.system.tasks.tasks import sample_background_task
@@ -14,6 +15,7 @@ from src.apps.system.tasks.repositories import TaskRepository
 from src.apps.system.tasks.models import Task
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.worker import app as celery_app
+from src.core.utils.paginated import compute_offset, paginated_response
 
 
 class TaskService:
@@ -24,11 +26,30 @@ class TaskService:
         job = sample_background_task.apply_async(args=[message])
         return Job(id=job.id)
 
-    async def get_processed_tasks(self, session: AsyncSession) -> List[TaskRead]:
-        stmt = select(Task).where(not_(Task.status == states.PENDING))
+    async def get_processed_tasks(
+        self, session: AsyncSession, page: int = 1, items_per_page: int = 10
+    ) -> dict:
+        stmt_count = (
+            select(func.count()).select_from(Task).where(sa_not(col(Task.status) == states.PENDING))
+        )
+        count_result = await session.exec(stmt_count)
+        total_count = count_result.one()
+
+        stmt = (
+            select(Task)
+            .where(sa_not(col(Task.status) == states.PENDING))
+            .offset(compute_offset(page, items_per_page))
+            .limit(items_per_page)
+        )
         result = await session.exec(stmt)
         tasks = result.all()
-        return [TaskRead.model_validate(task) for task in tasks]
+        data = [TaskRead.model_validate(task) for task in tasks]
+
+        return paginated_response(
+            data={"data": data, "total_count": total_count},
+            page=page,
+            items_per_page=items_per_page,
+        )
 
     async def get_pending_tasks(self, session: AsyncSession) -> List[TaskRead]:
         stmt = select(Task).where(Task.status == states.PENDING)

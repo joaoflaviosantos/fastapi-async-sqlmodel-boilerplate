@@ -9,6 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.api.dependencies import get_task_service, async_get_db
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.apps.system.tasks.services import TaskService
+from src.core.common.schemas import PaginatedListResponse
 
 router = APIRouter(tags=["System - Tasks"])
 
@@ -33,19 +34,23 @@ async def create_sample_task(
 
 @router.get(
     "/system/tasks/processed",
-    response_model=List[TaskRead],
+    response_model=PaginatedListResponse[TaskRead],
 )
 async def list_processed_tasks(
     request: Request,
     session: AsyncSession = Depends(async_get_db),
     task_service: TaskService = Depends(get_task_service),
-) -> List[TaskRead]:
+    page: int = 1,
+    items_per_page: int = 10,
+) -> dict:
     """
-    Get all processed (non-pending) tasks from the database.
+    Get all processed (non-pending) tasks from the database (paginated).
 
     Returns tasks that have been started, completed, or failed.
     """
-    return await task_service.get_processed_tasks(session=session)
+    return await task_service.get_processed_tasks(
+        session=session, page=page, items_per_page=items_per_page
+    )
 
 
 @router.get(
