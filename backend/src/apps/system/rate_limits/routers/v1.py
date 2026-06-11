@@ -35,7 +35,7 @@ async def write_rate_limit(
 
 
 @router.get(
-    "/system/tiers/{tier_id}/rate-limits",
+    "/system/rate-limits/tier/{tier_id}",
     dependencies=[Depends(get_current_superuser)],
     response_model=PaginatedListResponse[RateLimitRead],
 )

@@ -2,7 +2,7 @@
 from typing import Optional, List
 
 # Third-Party Dependencies
-from fastapi import APIRouter, Depends, Request, Body
+from fastapi import APIRouter, Depends, Request, Body, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
@@ -20,7 +20,7 @@ router = APIRouter(tags=["System - Tasks"])
 )
 async def create_sample_task(
     request: Request,
-    message: str = Body(..., embed=True),
+    message: str = Query(...),
     task_service: TaskService = Depends(get_task_service),
 ) -> Job:
     """
