@@ -40,7 +40,13 @@ app.autodiscover_tasks()
 app.conf.timezone = "UTC"
 
 # Concurrency Configuration
-app.conf.worker_concurrency = 4
+# NOTE: On Windows, use 'solo' pool to avoid billiard multiprocessing issues
+# See: https://github.com/celery/billiard/issues/53
+if platform.system() == "Windows":
+    app.conf.worker_pool = "solo"
+    app.conf.worker_concurrency = 1
+else:
+    app.conf.worker_concurrency = 4
 
 # Queue Configuration
 app.conf.task_default_queue = "default"

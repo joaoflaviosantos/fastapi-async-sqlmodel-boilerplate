@@ -162,3 +162,6 @@ cython_debug/
 .vscode
 
 celerybeat-schedule.db
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir

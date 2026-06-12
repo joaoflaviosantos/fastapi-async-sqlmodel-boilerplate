@@ -13,9 +13,9 @@ import anyio
 
 # Local Dependencies
 from src.core.middlewares.client_cache_middleware import ClientCacheMiddleware
-from src.apps.system.users.management.commands import create_first_superuser
-from src.apps.system.tiers.management.commands import create_first_tier
-from src.apps.blog.posts.management.commands import create_first_post
+from src.apps.system.users._management.commands import create_first_superuser
+from src.apps.system.tiers._management.commands import create_first_tier
+from src.apps.blog.posts._management.commands import create_first_post
 from src.core.api.dependencies import get_current_superuser
 from src.core.db.session import async_engine as engine
 from src.core.utils.log import log_system_info
