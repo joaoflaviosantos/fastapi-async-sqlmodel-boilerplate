@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from celery.result import AsyncResult
 from celery import states
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select, func, col
+from sqlmodel import select, func, col, or_
 from sqlalchemy import not_ as sa_not
 
 # Local Dependencies
@@ -52,7 +52,14 @@ class TaskService:
         )
 
     async def get_pending_tasks(self, session: AsyncSession) -> List[TaskRead]:
-        stmt = select(Task).where(Task.status == states.PENDING)
+        stmt = select(Task).where(
+            or_(
+                Task.status == states.STARTED,
+                Task.status == states.RETRY,
+                Task.status == states.PENDING,
+                Task.status == states.RECEIVED,
+            )
+        )
         result = await session.exec(stmt)
         tasks = result.all()
         return [TaskRead.model_validate(task) for task in tasks]

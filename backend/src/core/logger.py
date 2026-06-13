@@ -59,9 +59,6 @@ logger_api_test = LoggerConfig.get_logger("api_test")
 logger_worker = LoggerConfig.get_logger(filename="worker")
 # logger_worker_test = LoggerConfig.get_logger("worker_test")
 
-logger_celery = LoggerConfig.get_logger(filename="celery")
-# logger_celery_test = LoggerConfig.get_logger("celery_test")
-
 logger_httpx = LoggerConfig.get_logger(filename="httpx")
 # logger_httpx_test = LoggerConfig.get_logger("httpx_test")
 

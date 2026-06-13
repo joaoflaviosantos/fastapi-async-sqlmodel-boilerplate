@@ -2,8 +2,9 @@
 from datetime import datetime, timezone
 
 # Third-Party Dependencies
-from sqlalchemy import text
 import redis.asyncio as aioredis
+from sqlmodel import text
+import httpx
 
 # Local Dependencies
 from src.core.utils.requests import make_get_request
@@ -35,7 +36,7 @@ async def check_application_health(self) -> dict:
     # Check PostgreSQL connectivity
     try:
         async with local_session() as session:
-            result = await session.exec(text("SELECT 1"))
+            result = await session.exec(text("SELECT 1"))  # type: ignore
             if result.scalar() == 1:
                 health_status["database"] = "healthy"
                 logger_worker.info("[health_check] PostgreSQL is healthy.")
@@ -48,7 +49,7 @@ async def check_application_health(self) -> dict:
     # Check Redis connectivity
     try:
         redis_client = aioredis.from_url(
-            str(settings.REDIS_CACHE_URL),
+            settings.REDIS_CACHE_URL,
             encoding="utf-8",
             decode_responses=True,
         )
@@ -59,7 +60,7 @@ async def check_application_health(self) -> dict:
             else:
                 health_status["redis"] = "unhealthy"
         finally:
-            await redis_client.aclose()
+            await redis_client.aclose()  # type: ignore
     except Exception as exc:
         health_status["redis"] = "unhealthy"
         logger_worker.error(f"[health_check] Redis failed: {exc}")
@@ -70,7 +71,7 @@ async def check_application_health(self) -> dict:
         response = await make_get_request(
             url=api_url,
             params={"queue_name": "default"},
-            timeout=10,
+            timeout=httpx.Timeout(10.0),
         )
         # Any response from API means it's healthy
         health_status["api"] = "healthy"
