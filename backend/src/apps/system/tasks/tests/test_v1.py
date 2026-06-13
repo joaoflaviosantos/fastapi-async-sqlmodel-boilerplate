@@ -115,7 +115,7 @@ def test_get_health_check_from_inexistent_queue(client: TestClient) -> None:
     token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = client.get(
-        url=f"/api/v1/system/tasks/queue-health/",
+        url=f"/api/v1/system/tasks/queue-health",
         params={"queue_name": f"{inexistent_queue_name}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )

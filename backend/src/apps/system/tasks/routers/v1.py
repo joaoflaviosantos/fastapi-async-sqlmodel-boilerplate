@@ -71,7 +71,7 @@ async def read_pending_tasks(
 
 
 @router.get(
-    "/system/tasks/queue-health/",
+    "/system/tasks/queue-health",
     response_model=dict,
 )
 async def get_queue_health(
@@ -91,11 +91,6 @@ async def get_queue_health(
     -------
     dict
         Queue health information including message count.
-
-    Raises
-    ------
-    HTTPException 404
-        If the queue is not found on the broker.
     """
     return task_service.get_queue_health(queue_name=queue_name)
 

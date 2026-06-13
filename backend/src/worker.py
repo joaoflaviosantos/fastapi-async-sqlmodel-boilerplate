@@ -3,20 +3,30 @@ import platform
 import asyncio
 
 # Third-Party Dependencies
-from celery.signals import celeryd_init, celeryd_after_setup
 from sqlalchemy.pool import NullPool
+from celery.signals import (
+    celeryd_init,
+    celeryd_after_setup,
+    worker_ready,
+    worker_shutting_down,
+)
 from celery import Celery
 
 # Local Dependencies
-from src.core.logger import logger_worker
 from src.core.utils.log import log_system_info
+from src.core.logger import logger_worker
 from src.core.config import settings
 
-# Conditional Dependencies (if using Linux)
+# Event loop policy configuration per OS
 if platform.system() == "Linux":
     import uvloop
 
+    # On Linux, use uvloop for better performance
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+elif platform.system() == "Windows":
+    # On Windows with gevent (-P gevent), only set the policy — do NOT pre-create
+    # a persistent event loop. asgiref.AsyncToSync manages its own loop per call.
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 # ----------------------------------------
@@ -40,13 +50,24 @@ app.autodiscover_tasks()
 app.conf.timezone = "UTC"
 
 # Concurrency Configuration
-# NOTE: On Windows, use 'solo' pool to avoid billiard multiprocessing issues
-# See: https://github.com/celery/billiard/issues/53
+# NOTE: On Windows, run with: celery -A src.worker worker --loglevel=info -P threads
+# NOTE: On Linux, run with: celery -A src.worker worker --loglevel=info
 if platform.system() == "Windows":
-    app.conf.worker_pool = "solo"
-    app.conf.worker_concurrency = 1
+    app.conf.worker_concurrency = 4
 else:
     app.conf.worker_concurrency = 4
+
+# Task Processing Settings
+app.conf.task_acks_late = True  # Acknowledge task only after successful processing
+app.conf.task_reject_on_worker_lost = True
+app.conf.worker_send_task_events = True
+app.conf.task_ignore_result = False  # Don't ignore results
+app.conf.worker_max_tasks_per_child = 1000  # Restart worker after 1000 tasks
+
+# Serialization Configuration
+app.conf.accept_content = ["json"]
+app.conf.task_serializer = "json"
+app.conf.result_serializer = "json"
 
 # Queue Configuration
 app.conf.task_default_queue = "default"
@@ -86,8 +107,8 @@ app.conf.result_expires = 24 * 3600 * 7  # 7 days
 # ------------ CELERY BEAT ---------------
 # ----------------------------------------
 app.conf.beat_schedule = {
-    "check-database-and-redis-health-every-30-seconds": {
-        "task": "check_database_and_redis_health",
+    "check-application-health-every-30-seconds": {
+        "task": "check_application_health",
         "schedule": 30.0,
         "options": {"queue": "default"},
     },
@@ -104,5 +125,18 @@ def configure_worker(sender=None, instance=None, conf=None, options=None, **kwar
 
 
 @celeryd_after_setup.connect
-def setup_direct_queue(sender, instance, conf, **kwargs):
+def setup_direct_queue(sender=None, instance=None, conf=None, **kwargs):
     logger_worker.info(f"Worker setup complete: {sender}")
+
+
+@worker_ready.connect
+def on_worker_ready(sender=None, **kwargs):
+    # NOTE: On Windows, Celery's 'celery@hostname ready.' banner text may not appear
+    # in the terminal output due to stdout interleaving from the subprocess shell.
+    # This signal is the reliable indicator that the worker is ready to accept tasks.
+    logger_worker.info(f"Worker is READY and accepting tasks: {sender}")
+
+
+@worker_shutting_down.connect
+def on_worker_shutting_down(sender=None, sig=None, how=None, exitcode=None, **kwargs):
+    logger_worker.info(f"Worker shutting down — sig={sig}, how={how}")

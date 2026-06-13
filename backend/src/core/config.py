@@ -27,6 +27,11 @@ class AppSettings(BaseSettings):
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
 
 
+class WebServerSettings(BaseSettings):
+    API_BASE_URL: str = config("API_BASE_URL", default="http://localhost:8000")
+    WEB_CONCURRENCY: int = config("WEB_CONCURRENCY", default=1)  # Number of worker processes for handling requests # fmt: skip
+
+
 class CryptSettings(BaseSettings):
     SECRET_KEY: str = config("SECRET_KEY")
     ALGORITHM: str = config("ALGORITHM", default="HS256")
@@ -91,6 +96,10 @@ class EmailSettings(BaseSettings):
 
 
 class PostgresSettings(BaseSettings):
+    # Variables related to the server instance configuration
+    POSTGRES_POOL_SIZE: int = config("POSTGRES_POOL_SIZE", default=100)
+
+    # Variables related to database connection details
     POSTGRES_USER: str = config("POSTGRES_USER", default="postgres")
     POSTGRES_PASSWORD: str = config("POSTGRES_PASSWORD", default="postgres")
     POSTGRES_SERVER: str = config("POSTGRES_SERVER", default="localhost")
@@ -259,6 +268,8 @@ class CORSSettings(BaseSettings):
 
 
 class EnvironmentOption(Enum):
+    MIGRATION = "migration"
+    TEST = "test"
     LOCAL = "local"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -270,9 +281,10 @@ class EnvironmentSettings(BaseSettings):
 
 class Settings(
     AppSettings,
+    WebServerSettings,
+    CryptSettings,
     EmailSettings,
     PostgresSettings,
-    CryptSettings,
     FirstUserSettings,
     FirstTierSettings,
     TestSettings,

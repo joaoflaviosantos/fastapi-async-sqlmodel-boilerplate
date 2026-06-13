@@ -37,7 +37,7 @@ async def create_first_tier(session: AsyncSession) -> None:
 
 async def main():
     async with local_session() as session:
-        await create_first_tier(session)
+        await create_first_tier(session=session)
 
 
 if __name__ == "__main__":

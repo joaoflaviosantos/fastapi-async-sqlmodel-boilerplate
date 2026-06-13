@@ -55,7 +55,7 @@ async def create_first_user(session: AsyncSession) -> None:
 
 async def main():
     async with local_session() as session:
-        await create_first_user(session)
+        await create_first_user(session=session)
 
 
 if __name__ == "__main__":

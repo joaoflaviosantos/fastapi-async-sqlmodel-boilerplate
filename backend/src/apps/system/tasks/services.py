@@ -58,15 +58,38 @@ class TaskService:
         return [TaskRead.model_validate(task) for task in tasks]
 
     def get_queue_health(self, queue_name: str) -> dict:
+        is_known_queue = queue_name in celery_app.amqp.queues
         try:
             with celery_app.connection_or_acquire() as conn:
                 channel = conn.default_channel
-                # Try to get queue info - will raise if queue doesn't exist
-                queue = channel.queue_declare(queue=queue_name, passive=True)
+                # In Redis (virtual transport), passive=True raises an error if the list is empty.
+                # If it's a known Celery queue, we use passive=False to safely get the 0 count.
+                # If it's unknown, we use passive=True to return 404 if it truly doesn't exist.
+                queue = channel.queue_declare(queue=queue_name, passive=not is_known_queue)
+
+                message_count = queue.message_count
+                consumer_count = queue.consumer_count
+
+                # Fallback to calculate real consumer count if the broker reports 0 (e.g. Redis)
+                if consumer_count == 0:
+                    try:
+                        i = celery_app.control.inspect()
+                        active_queues = i.active_queues()
+                        if active_queues:
+                            stats = i.stats() or {}
+                            for worker_name, queues in active_queues.items():
+                                if any(q.get("name") == queue_name for q in queues):
+                                    worker_stats = stats.get(worker_name, {})
+                                    pool_stats = worker_stats.get("pool", {})
+                                    concurrency = pool_stats.get("max-concurrency", 1)
+                                    consumer_count += concurrency
+                    except Exception:
+                        pass  # Ignore inspect errors so it doesn't break health check
+
                 return {
                     "queue_name": queue_name,
-                    "message_count": queue.message_count,
-                    "consumer_count": queue.consumer_count,
+                    "message_count": message_count,
+                    "consumer_count": consumer_count,
                 }
         except Exception:
             raise HTTPException(

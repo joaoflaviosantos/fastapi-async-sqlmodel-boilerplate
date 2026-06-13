@@ -8,7 +8,7 @@ from sqlmodel import select
 from src._overrides.celery.async_task import async_task
 from src.core.utils.email import get_email_sender
 from src.apps.system.users.models import User
-from src.core.db.session import async_get_db
+from src.core.db.session import local_session
 from src.core.logger import logger_worker
 from src.worker import app
 
@@ -42,9 +42,9 @@ async def send_welcome_email(self, email: str, username: str) -> dict:
 
     try:
         # Demonstrate async DB access within a Celery task
-        async for db in async_get_db():
-            result = await db.execute(select(User).where(User.email == email))
-            user = result.scalars().first()
+        async with local_session() as session:
+            result = await session.exec(select(User).where(User.email == email))
+            user = result.first()
 
             if user:
                 # Send the email asynchronously using FastApiMailSender
@@ -66,10 +66,10 @@ async def send_welcome_email(self, email: str, username: str) -> dict:
 
         # Simulate email sending (log only)
         logger_worker.info(
-            f"[send_welcome_email] 📧 Sending welcome email to {email} for user {username}"
+            f"[send_welcome_email] Sending welcome email to {email} for user {username}"
         )
         logger_worker.info(
-            f"[send_welcome_email] ✅ Welcome email successfully sent to {email} "
+            f"[send_welcome_email] Welcome email successfully sent to {email} "
             f"at {datetime.now(timezone.utc).isoformat()}"
         )
 
@@ -81,7 +81,5 @@ async def send_welcome_email(self, email: str, username: str) -> dict:
         }
 
     except Exception as exc:
-        logger_worker.error(
-            f"[send_welcome_email] ❌ Failed to send welcome email to {email}: {exc}"
-        )
+        logger_worker.error(f"[send_welcome_email] Failed to send welcome email to {email}: {exc}")
         raise self.retry(exc=exc, countdown=60)

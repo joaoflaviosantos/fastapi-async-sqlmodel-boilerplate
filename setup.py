@@ -284,7 +284,11 @@ if choice == "1":
     elif additional_action == "2":
         print_color("RED", "\n-> Running the Celery worker...\n")
         # Step 1.2.1: Start the Celery worker
-        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "worker", "--loglevel=info"])
+        if OPERATING_SYSTEM == 'Windows':
+            subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "worker", "--loglevel=info", "-P", "threads"])
+        else:
+            # On Linux/macOS, use default prefork pool
+            subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "worker", "--loglevel=info"])
         print_color("RED", "\n-> Finished running the Celery worker...\n")
     elif additional_action == "3":
         print_color("RED", "\n-> Running the Celery beat...\n")
