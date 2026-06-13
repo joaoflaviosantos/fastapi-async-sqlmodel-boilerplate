@@ -83,6 +83,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Adopt Repository and Service patterns for clean separation of concerns and enhanced testability.
 - [x] Write isolated unit tests for services (with mocked repositories) and integration tests for repositories.
 - [x] Provide a fully containerized development environment with Docker Compose (PostgreSQL, Redis).
+- [x] Ensure cross-platform compatibility for local development on both **Linux** and **Windows** (including Celery worker concurrency and async event loop handling).
 - [ ] Provide a CLI tool for easy project execution and management (e.g., `setup.py` extension).
 - [ ] Provide diverse deployment options (e.g., Kubernetes, cloud-specific services) to ensure flexibility and accessibility.
 
