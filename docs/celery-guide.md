@@ -57,9 +57,18 @@ The `POSTGRES_CELERY_URI` is automatically derived from the existing PostgreSQL 
 
 To start the Celery worker:
 
+**Linux / macOS:**
 ```bash
 poetry run celery -A src.worker:app worker --loglevel=info
 ```
+
+**Windows** (requires thread pool to prevent asyncio event loop deadlocks):
+```bash
+poetry run celery -A src.worker:app worker --loglevel=info -P threads
+```
+
+> [!NOTE]
+> On Windows, the default `prefork` pool is not compatible with asyncio-based tasks. The `-P threads` flag switches to the thread pool, allowing each worker thread to manage its own event loop safely.
 
 ## Running Celery Beat (Scheduler)
 
@@ -73,8 +82,14 @@ poetry run celery -A src.worker:app beat --loglevel=info
 
 For development convenience, you can run both in a single process:
 
+**Linux / macOS:**
 ```bash
 poetry run celery -A src.worker:app worker --beat --loglevel=info
+```
+
+**Windows:**
+```bash
+poetry run celery -A src.worker:app worker --beat --loglevel=info -P threads
 ```
 
 ## Creating Async Tasks

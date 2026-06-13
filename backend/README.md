@@ -67,8 +67,14 @@ For more details on running the backend with Uvicorn, consult the [Uvicorn Guide
 
 Start the Celery worker:
 
+**Linux / macOS:**
 ```bash
 poetry run celery -A src.worker:app worker --loglevel=info
+```
+
+**Windows** (requires thread pool to prevent asyncio event loop deadlocks):
+```bash
+poetry run celery -A src.worker:app worker --loglevel=info -P threads
 ```
 
 Start the Celery Beat scheduler (for periodic tasks):
@@ -79,8 +85,14 @@ poetry run celery -A src.worker:app beat --loglevel=info
 
 Or run both worker and beat together (development only):
 
+**Linux / macOS:**
 ```bash
 poetry run celery -A src.worker:app worker --beat --loglevel=info
+```
+
+**Windows:**
+```bash
+poetry run celery -A src.worker:app worker --beat --loglevel=info -P threads
 ```
 
 For more details on running the Celery worker, refer to the [Celery Guide](../docs/celery-guide.md) in the project's documentation.
