@@ -1,8 +1,9 @@
 # Built-in Dependencies
-import time
+import asyncio
 
 # Third-Party Dependencies
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 from celery import states
 
 # Local Dependencies
@@ -18,14 +19,15 @@ test_task_id = None
 test_task_message = "Test Message"
 
 
-def test_create_task(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_create_task(client: AsyncClient) -> None:
     """Test creating a new background task."""
     global test_task_id
     assert test_task_id is None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.post(
+    response = await client.post(
         url=f"/api/v1/system/tasks/sample?message={test_task_message}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -37,14 +39,15 @@ def test_create_task(client: TestClient) -> None:
     assert test_task_id is not None
 
 
-def test_get_pending_task(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_pending_task(client: AsyncClient) -> None:
     """Test retrieving a pending task that hasn't been started yet."""
     global test_task_id
     assert test_task_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/system/tasks/{test_task_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -55,17 +58,18 @@ def test_get_pending_task(client: TestClient) -> None:
     assert result["status"] == states.PENDING
 
 
-def test_get_started_task(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_started_task(client: AsyncClient) -> None:
     """Test retrieving a task that has been started (checks database)."""
     global test_task_id
     assert test_task_id is not None
 
     # Give the task some time to start
-    time.sleep(1)
+    await asyncio.sleep(1)
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/system/tasks/{test_task_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -77,12 +81,13 @@ def test_get_started_task(client: TestClient) -> None:
     assert result["status"] in [states.STARTED, states.SUCCESS, states.PENDING]
 
 
-def test_read_processed_tasks(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_read_processed_tasks(client: AsyncClient) -> None:
     """Test retrieving processed tasks."""
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/tasks/processed",
+    response = await client.get(
+        url="/api/v1/system/tasks/processed",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -96,26 +101,28 @@ def test_read_processed_tasks(client: TestClient) -> None:
     assert "items_per_page" in result
 
 
-def test_read_pending_tasks(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_read_pending_tasks(client: AsyncClient) -> None:
     """Test retrieving pending tasks."""
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/tasks/pending",
+    response = await client.get(
+        url="/api/v1/system/tasks/pending",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
     assert response.status_code == 200
 
 
-def test_get_health_check_from_inexistent_queue(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_health_check_from_inexistent_queue(client: AsyncClient) -> None:
     """Test health check for non-existent queue."""
     inexistent_queue_name = "inexistent_queue"
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/tasks/queue-health",
+    response = await client.get(
+        url="/api/v1/system/tasks/queue-health",
         params={"queue_name": f"{inexistent_queue_name}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )

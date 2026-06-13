@@ -1,78 +1,127 @@
-# Third-Party Dependencies
-import pytest
-from fastapi.testclient import TestClient
-import subprocess
+# Built-in Dependencies
 import os
 
-# Local Dependencies
-from src.main import app
-from src.core.config import settings
+# Third-Party Dependencies
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+from testcontainers.postgres import PostgresContainer
+
+# ===========================================================================
+# 1. TEST ENVIRONMENT INITIALIZATION
+# ===========================================================================
+# Start the PostgreSQL container eagerly at module import time.
+# We do this here so that the database environment variables are patched
+# *before* `src.core.config.settings` and the SQLAlchemy engine are imported.
+# This prevents the application from initializing the engine with the wrong URL.
+
+# Disable the Ryuk (Reaper) container — it tries to bind port 8080 and fails
+# on Windows/Docker Desktop. Cleanup is instead handled in `pytest_sessionfinish`.
+os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
+
+_postgres = PostgresContainer("postgres:16-alpine")
+_postgres.start()
+
+# Patch the application's environment variables with the testcontainer's details
+os.environ["POSTGRES_USER"] = _postgres.username
+os.environ["POSTGRES_PASSWORD"] = _postgres.password
+os.environ["POSTGRES_SERVER"] = _postgres.get_container_host_ip()
+os.environ["POSTGRES_PORT"] = str(_postgres.get_exposed_port(5432))
+os.environ["POSTGRES_DB"] = _postgres.dbname
+os.environ["ENVIRONMENT"] = "test"
 
 
-def _hard_delete_test_user_from_db() -> None:
+def pytest_sessionfinish(session, exitstatus):
     """
-    Hard delete the test user from the database using psql.
-    This ensures we start with a clean slate for tests.
+    Hook function called by pytest after the entire test session completes.
+    Stops the PostgreSQL container to ensure proper cleanup.
     """
+    _postgres.stop()
+
+
+# ===========================================================================
+# 2. TEST FIXTURES
+# ===========================================================================
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def client():
+    """
+    Pytest fixture to provide an async HTTPX AsyncClient for testing.
+
+    This fixture ensures that the application has a fully functioning environment
+    (Database and Cache) before yielding the client to the tests.
+
+    The 'session' scope guarantees this setup is run exactly once for all tests,
+    saving time and preserving the state (like sequential IDs) across tests.
+    """
+
+    # -----------------------------------------------------------------------
+    # STAGE 1: Lazy Imports
+    # -----------------------------------------------------------------------
+    # We import the application modules only here, inside the function.
+    # This ensures that the database environment variables (configured above
+    # by Testcontainers) are already injected into `os.environ` before
+    # `settings` and the SQLAlchemy `session` are loaded for the first time.
+    from src.core.setup import create_tables, run_seed_scripts
+    from src.core.utils import cache, rate_limit
+    from src.core.config import settings
+    from src.main import app
+    import redis.asyncio as aioredis
+
+    # -----------------------------------------------------------------------
+    # STAGE 2: Initialization (STARTUP)
+    # -----------------------------------------------------------------------
+    # Since we are not using the standard FastAPI Lifespan context in our
+    # tests (to prevent conflicts regarding the closure of the event loop
+    # by pytest-asyncio), we must manually replicate the startup process here.
+
+    # 2.1. Create Database Schema
+    # Testcontainers boots a completely empty PostgreSQL database.
+    # The command below creates all tables and schemas defined by SQLModel.
+    await create_tables()
+
+    # 2.2. Run Seed Scripts
+    # Populates the database with the minimum data required by the system
+    # to operate, such as the 'Default' Tier, the Admin Superuser, and the first Post.
+    await run_seed_scripts()
+
+    # 2.3. Configure Redis Connection Pools
+    # The system utilizes middlewares and dependencies (like Rate Limiting and Caching)
+    # that require Redis pools to exist in the application's memory. Here we
+    # initialize them based on the environment configuration (local/mocked context).
+    cache.pool = aioredis.ConnectionPool.from_url(
+        settings.REDIS_CACHE_URL, encoding="utf8", decode_responses=True
+    )
+    cache.client = aioredis.Redis.from_pool(cache.pool)  # type: ignore
+
+    rate_limit.pool = aioredis.ConnectionPool.from_url(
+        settings.REDIS_RATE_LIMIT_URL, encoding="utf8", decode_responses=True
+    )
+    rate_limit.client = aioredis.Redis.from_pool(rate_limit.pool)  # type: ignore
+
+    # -----------------------------------------------------------------------
+    # STAGE 3: Test Execution (YIELD)
+    # -----------------------------------------------------------------------
+    # Creates the AsyncClient using the ASGITransport, which sends requests
+    # directly to the instance of our FastAPI application (`app`) in memory,
+    # without needing to boot a real web server (like Uvicorn) on HTTP ports.
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as ac:
+        yield ac
+
+    # -----------------------------------------------------------------------
+    # STAGE 4: Finalization (SHUTDOWN)
+    # -----------------------------------------------------------------------
+    # After all tests in the session have finished running, we gracefully close
+    # the active Redis connections. The database (Testcontainers) will be
+    # torn down by the `pytest_sessionfinish` function declared above.
     try:
-        # Build the connection string
-        user = settings.POSTGRES_USER
-        password = settings.POSTGRES_PASSWORD
-        host = settings.POSTGRES_SERVER
-        port = settings.POSTGRES_PORT
-        db = settings.POSTGRES_DB
-
-        # Build the DELETE query
-        query = f"DELETE FROM sys_user WHERE email = '{settings.TEST_EMAIL}';"
-
-        # Execute the query using psql
-        env = os.environ.copy()
-        env["PGPASSWORD"] = password
-
-        subprocess.run(
-            ["psql", "-h", host, "-p", str(port), "-U", user, "-d", db, "-c", query],
-            env=env,
-            capture_output=True,
-            timeout=5,
-        )
+        await cache.client.aclose()  # type: ignore
     except Exception:
-        # Silently fail if we can't delete from DB
         pass
 
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_clean_db():
-    """
-    Clean up test user from database before running tests.
-    """
-    _hard_delete_test_user_from_db()
-    yield
-    # Optionally clean up after tests too
-    # _hard_delete_test_user_from_db()
-
-
-@pytest.fixture(scope="session")
-def client():
-    """
-    Pytest fixture to provide a FastAPI TestClient instance for testing.
-
-    This fixture sets up a TestClient instance using the main FastAPI app, and the scope is set to session,
-    meaning it will be shared among all test functions in a session.
-
-    Returns
-    ----------
-    TestClient
-        The FastAPI TestClient instance.
-
-    Example
-    ----------
-    Using the `client` fixture in a test function:
-    ```python
-    def test_example(client):
-        response = client.get("/example")
-        assert response.status_code == 200
-        assert response.json() == {"message": "Example response"}
-    ```
-    """
-    with TestClient(app) as _client:
-        yield _client
+    try:
+        await rate_limit.client.aclose()  # type: ignore
+    except Exception:
+        pass

@@ -36,6 +36,9 @@ mypy = "^2.1.0"
 pre-commit = "^4.6.0"
 pytest = "^9.0.3"
 types-redis = "^4.6.0.20241004"
+pytest-asyncio = "^1.4.0"
+testcontainers = {extras = ["postgres"], version = "^4.14.2"}
+asgi-lifespan = "^2.1.0"
 
 [tool.black]
 line-length = 100

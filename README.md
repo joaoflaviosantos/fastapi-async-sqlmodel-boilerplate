@@ -78,7 +78,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Utilize Celery for handling background tasks asynchronously with full async/await support.
 - [x] Implement a robust logging system to track and manage application events efficiently.
 - [x] Manage database migrations seamlessly using Alembic.
-- [x] Develop comprehensive unit tests for API endpoints using pytest.
+- [x] Develop comprehensive and fully asynchronous tests for API endpoints using `pytest-asyncio` and `testcontainers` for isolated PostgreSQL instances.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
 - [x] Adopt Repository and Service patterns for clean separation of concerns and enhanced testability.
 - [x] Write isolated unit tests for services (with mocked repositories) and integration tests for repositories.

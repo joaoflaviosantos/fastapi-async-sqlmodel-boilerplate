@@ -1,11 +1,11 @@
 # Third-Party Dependencies
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 # Local Dependencies
 from src.core.config import settings
 
 
-def _get_token(username: str, password: str, client: TestClient):
+async def _get_token(username: str, password: str, client: AsyncClient):
     """
     Helper function to obtain an authentication token by making a login request to the authentication endpoint.
 
@@ -15,8 +15,8 @@ def _get_token(username: str, password: str, client: TestClient):
         The username for authentication.
     password : str
         The password for authentication.
-    client : TestClient
-        The FastAPI test client instance.
+    client : AsyncClient
+        The HTTPX async client instance.
 
     Returns
     ----------
@@ -27,25 +27,25 @@ def _get_token(username: str, password: str, client: TestClient):
     ----------
     Obtaining an authentication token:
     ```python
-    token_response = _get_token("example_user", "example_password", test_client_instance)
+    token_response = await _get_token("example_user", "example_password", async_client_instance)
     ```
     """
-    return client.post(
+    return await client.post(
         "/api/v1/system/auth/login",
         data={"username": username, "password": password},
         headers={"content-type": "application/x-www-form-urlencoded"},
     )
 
 
-def _ensure_test_user_exists(client: TestClient) -> str:
+async def _ensure_test_user_exists(client: AsyncClient) -> str:
     """
     Helper function to ensure the test user exists and return their ID.
     If the user doesn't exist, creates it.
 
     Parameters
     ----------
-    client : TestClient
-        The FastAPI test client instance.
+    client : AsyncClient
+        The HTTPX async client instance.
 
     Returns
     ----------
@@ -56,11 +56,11 @@ def _ensure_test_user_exists(client: TestClient) -> str:
     ----------
     Ensuring test user exists:
     ```python
-    user_id = _ensure_test_user_exists(test_client_instance)
+    user_id = await _ensure_test_user_exists(async_client_instance)
     ```
     """
     # Get admin token
-    admin_token = _get_token(
+    admin_token = await _get_token(
         username=settings.ADMIN_USERNAME, password=settings.ADMIN_PASSWORD, client=client
     )
 
@@ -70,7 +70,7 @@ def _ensure_test_user_exists(client: TestClient) -> str:
     admin_access_token = admin_token.json()["access_token"]
 
     # Try to find the test user
-    response = client.get(
+    response = await client.get(
         "/api/v1/system/users",
         headers={"Authorization": f"Bearer {admin_access_token}"},
     )
@@ -82,7 +82,7 @@ def _ensure_test_user_exists(client: TestClient) -> str:
             return existing_user["id"]
 
     # User doesn't exist, try to create it
-    response = client.post(
+    response = await client.post(
         "/api/v1/system/users",
         json={
             "name": settings.TEST_NAME,

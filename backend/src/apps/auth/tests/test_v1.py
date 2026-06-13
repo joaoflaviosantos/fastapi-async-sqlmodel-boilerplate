@@ -1,5 +1,6 @@
 # Third-Party Dependencies
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 
 # Local Dependencies
 from src.core.config import settings
@@ -13,11 +14,12 @@ test_access_token = None
 test_refresh_token_cookie = None
 
 
-def test_auth_login(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_auth_login(client: AsyncClient) -> None:
     global test_access_token
     global test_refresh_token_cookie
 
-    response = client.post(
+    response = await client.post(
         "/api/v1/system/auth/login",
         data={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
         headers={"content-type": "application/x-www-form-urlencoded"},
@@ -33,10 +35,10 @@ def test_auth_login(client: TestClient) -> None:
     assert test_token_type == "bearer"
 
 
-def test_auth_refresh(client: TestClient) -> None:
-    client.cookies.update({"refresh_token": test_refresh_token_cookie})
-
-    response = client.post("/api/v1/system/auth/refresh")
+@pytest.mark.asyncio
+async def test_auth_refresh(client: AsyncClient) -> None:
+    client.cookies.set("refresh_token", test_refresh_token_cookie or "")
+    response = await client.post("/api/v1/system/auth/refresh")
 
     response_json = response.json()
     new_access_token = response_json["access_token"]
@@ -47,8 +49,9 @@ def test_auth_refresh(client: TestClient) -> None:
     assert token_type == "bearer"
 
 
-def test_auth_logout(client: TestClient) -> None:
-    response_logout = client.post(
+@pytest.mark.asyncio
+async def test_auth_logout(client: AsyncClient) -> None:
+    response_logout = await client.post(
         "/api/v1/system/auth/logout",
         headers={"Authorization": f"Bearer {test_access_token}"},
     )

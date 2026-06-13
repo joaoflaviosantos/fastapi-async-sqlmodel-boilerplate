@@ -1,5 +1,6 @@
 # Third-Party Dependencies
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 
 # Local Dependencies
 from src.core.config import settings
@@ -22,23 +23,25 @@ DEFAULT_TIER_NAME = settings.TIER_NAME_DEFAULT
 user_id = None
 
 
-def test_post_user(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_post_user(client: AsyncClient) -> None:
     global user_id
 
     # Ensure test user exists (will restore if soft-deleted or create if doesn't exist)
-    user_id = _ensure_test_user_exists(client)
+    user_id = await _ensure_test_user_exists(client)
 
     assert user_id is not None
 
 
-def test_get_own_user_data(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_own_user_data(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+    token = await _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/users/me/",
+    response = await client.get(
+        url="/api/v1/system/users/me/",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -47,13 +50,14 @@ def test_get_own_user_data(client: TestClient) -> None:
     assert response.json()["username"] == TEST_USERNAME
 
 
-def test_get_user(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_user(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+    token = await _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -62,11 +66,12 @@ def test_get_user(client: TestClient) -> None:
     assert response.json()["username"] == TEST_USERNAME
 
 
-def test_get_multiple_users(client: TestClient) -> None:
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+@pytest.mark.asyncio
+async def test_get_multiple_users(client: AsyncClient) -> None:
+    token = await _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/users",
+    response = await client.get(
+        url="/api/v1/system/users",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -81,13 +86,14 @@ def test_get_multiple_users(client: TestClient) -> None:
     assert "items_per_page" in result
 
 
-def test_update_your_own_user(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_update_your_own_user(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+    token = await _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
-    response = client.patch(
+    response = await client.patch(
         url=f"/api/v1/system/users/{user_id}",
         json={"name": f"Updated {TEST_NAME}"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
@@ -97,13 +103,14 @@ def test_update_your_own_user(client: TestClient) -> None:
     assert response.json() == {"message": "User updated"}
 
 
-def test_update_user_as_admin(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_update_user_as_admin(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.patch(
+    response = await client.patch(
         url=f"/api/v1/system/users/{user_id}",
         json={"name": f"Updated {TEST_NAME} (again)"},
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
@@ -113,13 +120,14 @@ def test_update_user_as_admin(client: TestClient) -> None:
     assert response.json() == {"message": "User updated"}
 
 
-def test_get_user_rate_limits(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_user_rate_limits(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/system/users/{user_id}/rate-limits",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -128,13 +136,14 @@ def test_get_user_rate_limits(client: TestClient) -> None:
     assert "tier_rate_limits" in response.json()
 
 
-def test_get_user_tier(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_user_tier(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/system/users/{user_id}/tier",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -143,13 +152,14 @@ def test_get_user_tier(client: TestClient) -> None:
     assert response.json()["tier_name"] == DEFAULT_TIER_NAME
 
 
-def test_delete_user(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_user(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
+    token = await _get_token(username=TEST_USERNAME, password=TEST_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -158,13 +168,14 @@ def test_delete_user(client: TestClient) -> None:
     assert response.json() == {"message": "User deleted"}
 
 
-def test_delete_already_deleted_user_as_admin(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_already_deleted_user_as_admin(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/system/users/{user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -173,13 +184,14 @@ def test_delete_already_deleted_user_as_admin(client: TestClient) -> None:
     assert response.json() == {"detail": "User already deleted (soft delete)."}
 
 
-def test_delete_db_user(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_db_user(client: AsyncClient) -> None:
     global user_id
     assert user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/system/users/{user_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )

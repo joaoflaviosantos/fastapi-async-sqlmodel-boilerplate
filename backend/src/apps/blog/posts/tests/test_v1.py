@@ -1,5 +1,6 @@
 # Third-Party Dependencies
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 
 # Local Dependencies
 from src.core.config import settings
@@ -19,14 +20,15 @@ test_post = {
 }
 
 
-def test_get_post_user_data(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_post_user_data(client: AsyncClient) -> None:
     global test_post_user_id
     assert test_post_user_id is None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
-        url=f"/api/v1/system/users/me/",
+    response = await client.get(
+        url="/api/v1/system/users/me/",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -37,15 +39,16 @@ def test_get_post_user_data(client: TestClient) -> None:
     assert response.json()["username"] == ADMIN_USERNAME
 
 
-def test_create_post(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_create_post(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.post(
+    response = await client.post(
         url=f"/api/v1/blog/posts/user/{test_post_user_id}",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
@@ -57,15 +60,16 @@ def test_create_post(client: TestClient) -> None:
     assert test_post_id is not None
 
 
-def test_get_created_post(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_created_post(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -78,13 +82,14 @@ def test_get_created_post(client: TestClient) -> None:
     assert post["media_url"] == test_post["media_url"]
 
 
-def test_get_multiple_user_posts(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_get_multiple_user_posts(client: AsyncClient) -> None:
     global test_post_user_id
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.get(
+    response = await client.get(
         url=f"/api/v1/blog/posts/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -100,15 +105,16 @@ def test_get_multiple_user_posts(client: TestClient) -> None:
     assert "items_per_page" in result
 
 
-def test_update_post(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_update_post(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.patch(
+    response = await client.patch(
         url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         json=test_post,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
@@ -118,15 +124,16 @@ def test_update_post(client: TestClient) -> None:
     assert response.json() == {"message": "Post updated"}
 
 
-def test_delete_post(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_post(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -135,15 +142,16 @@ def test_delete_post(client: TestClient) -> None:
     assert response.json() == {"message": "Post deleted"}
 
 
-def test_delete_already_deleted_post_as_admin(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_already_deleted_post_as_admin(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -152,15 +160,16 @@ def test_delete_already_deleted_post_as_admin(client: TestClient) -> None:
     assert response.json() == {"detail": "Post already deleted (soft delete)."}
 
 
-def test_delete_db_post(client: TestClient) -> None:
+@pytest.mark.asyncio
+async def test_delete_db_post(client: AsyncClient) -> None:
     global test_post_id
     global test_post_user_id
     assert test_post_id is not None
     assert test_post_user_id is not None
 
-    token = _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
-    response = client.delete(
+    response = await client.delete(
         url=f"/api/v1/blog/posts/{test_post_id}/user/{test_post_user_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
