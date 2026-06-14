@@ -1,5 +1,7 @@
 # Built-in Dependencies
 import os
+import sys
+import subprocess
 
 # Third-Party Dependencies
 import pytest
@@ -7,8 +9,38 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from testcontainers.postgres import PostgresContainer
 
+
 # ===========================================================================
-# 1. TEST ENVIRONMENT INITIALIZATION
+# 1. DOCKER AVAILABILITY CHECK
+# ===========================================================================
+def _is_docker_available() -> bool:
+    """Check if Docker is available and running on the system."""
+    try:
+        result = subprocess.run(
+            ["docker", "info"],
+            capture_output=True,
+            timeout=5,
+        )
+        return result.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
+
+
+if not _is_docker_available():
+    _hint = (
+        "Please ensure Docker Desktop is installed and running."
+        if sys.platform == "win32"
+        else "Please ensure Docker is installed and the daemon is running."
+    )
+    pytest.exit(
+        f"Docker is not available or not running. {_hint} "
+        f"Tests require Docker to spin up a PostgreSQL test container.",
+        returncode=1,
+    )
+
+
+# ===========================================================================
+# 2. TEST ENVIRONMENT INITIALIZATION
 # ===========================================================================
 # Start the PostgreSQL container eagerly at module import time.
 # We do this here so that the database environment variables are patched
@@ -19,7 +51,8 @@ from testcontainers.postgres import PostgresContainer
 # on Windows/Docker Desktop. Cleanup is instead handled in `pytest_sessionfinish`.
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
-_postgres = PostgresContainer("postgres:16-alpine")
+# Use pgvector image to support vector embeddings
+_postgres = PostgresContainer("pgvector/pgvector:0.8.0-pg17")
 _postgres.start()
 
 # Patch the application's environment variables with the testcontainer's details
@@ -40,7 +73,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 # ===========================================================================
-# 2. TEST FIXTURES
+# 3. TEST FIXTURES
 # ===========================================================================
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def client():
@@ -61,11 +94,13 @@ async def client():
     # This ensures that the database environment variables (configured above
     # by Testcontainers) are already injected into `os.environ` before
     # `settings` and the SQLAlchemy `session` are loaded for the first time.
-    from src.core.setup import create_tables, run_seed_scripts
-    from src.core.utils import cache, rate_limit
-    from src.core.config import settings
-    from src.main import app
     import redis.asyncio as aioredis
+    from src.core.utils.alembic import run_alembic_migration_sync
+    from src.core.utils import rate_limit
+    from src.core.utils import cache
+    from src.core.config import settings
+    from src.core.setup import run_seed_scripts
+    from src.main import app
 
     # -----------------------------------------------------------------------
     # STAGE 2: Initialization (STARTUP)
@@ -76,8 +111,9 @@ async def client():
 
     # 2.1. Create Database Schema
     # Testcontainers boots a completely empty PostgreSQL database.
-    # The command below creates all tables and schemas defined by SQLModel.
-    await create_tables()
+    # We run Alembic migrations to ensure the schema matches production exactly,
+    # including pgvector extension, HNSW indexes, partial unique indexes, etc.
+    run_alembic_migration_sync()
 
     # 2.2. Run Seed Scripts
     # Populates the database with the minimum data required by the system

@@ -7,6 +7,7 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, APIRouter, Depends
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import text
 import redis.asyncio as redis
 import fastapi
 import anyio
@@ -18,6 +19,7 @@ from src.apps.system.tiers._management.commands import create_first_tier
 from src.apps.blog.posts._management.commands import create_first_post
 from src.core.api.dependencies import get_current_superuser
 from src.core.db.session import async_engine as engine
+from src.core.utils.alembic import get_latest_migration_version
 from src.core.utils.log import log_system_info
 from src.core.utils import cache, rate_limit
 from src.core.common.models import Base
@@ -53,10 +55,59 @@ async def shutdown_logging() -> None:
 # --------------------------------------
 # -------------- DATABASE --------------
 # --------------------------------------
-# Function to create database tables during startup
-async def create_tables() -> None:
+# Function to check if the 'public' schema exists and migrations are executed
+async def ensure_database_migrations() -> None:
+    """
+    Verifies that the database schema exists and migrations have been applied.
+
+    This function checks:
+    1. If the 'public' schema exists in the database
+    2. If Alembic migrations have been executed
+    3. If the current migration version matches the latest available version
+
+    Raises:
+        Exception: If the schema doesn't exist or migrations are not up to date.
+    """
+    error_message = "Please run migrations with the command: " "'poetry run alembic upgrade head'"
+
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        # Check if the 'public' schema exists
+        schema_exists = await conn.execute(
+            text(
+                "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'public';"
+            )
+        )
+        if not schema_exists.fetchone():
+            logger_api.error(f"Schema 'public' not found. {error_message}")
+            raise Exception(f"Schema 'public' not found. {error_message}")
+
+        # Check if migrations are executed (alembic_version table exists and has data)
+        try:
+            migrations_query = text("SELECT version_num FROM public.alembic_version;")
+            version_result = await conn.execute(migrations_query)
+            version_num = version_result.fetchone()
+        except Exception:
+            logger_api.error(f"Alembic version table not found. {error_message}")
+            raise Exception(f"Alembic version table not found. {error_message}")
+
+        if not version_num:
+            logger_api.error(f"No migration version found. {error_message}")
+            raise Exception(f"No migration version found. {error_message}")
+
+        # Get the latest Alembic version from migration scripts
+        latest_alembic_version = get_latest_migration_version("alembic.ini")
+
+        if latest_alembic_version and latest_alembic_version != version_num[0]:
+            logger_api.error(
+                f"Invalid migration version in 'public' schema. "
+                f"Current: {version_num[0]}, Expected: {latest_alembic_version}. {error_message}"
+            )
+            raise Exception(
+                f"Invalid migration version in 'public' schema. "
+                f"Current: {version_num[0]}, Expected: {latest_alembic_version}. {error_message}"
+            )
+
+        logger_api.info(f"Database migration version: {version_num[0]}")
 
 
 async def run_seed_scripts() -> None:
@@ -138,7 +189,7 @@ async def lifespan_context(
     await set_threadpool_tokens()
 
     if isinstance(settings_obj, PostgresSettings):
-        await create_tables()
+        await ensure_database_migrations()
         await run_seed_scripts()
 
     if isinstance(settings_obj, RedisCacheSettings):
