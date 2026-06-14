@@ -36,7 +36,7 @@ class PostMediaBase(Base):
     )
 
 
-class PostUserBase(Base):
+class PostRelationshipBase(Base):
     user_id: UUID = Field(
         description="User ID associated with the post",
         foreign_key="sys_user.id",
@@ -48,7 +48,7 @@ class Post(
     UUIDMixin,
     PostContentBase,
     PostMediaBase,
-    PostUserBase,
+    PostRelationshipBase,
     TimestampMixin,
     SoftDeleteMixin,
     table=True,

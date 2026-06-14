@@ -39,7 +39,7 @@ class RateLimitNameBase(Base):
     )
 
 
-class RateLimitTierBase(Base):
+class RateLimitRelationshipBase(Base):
     tier_id: UUID = Field(
         description="Tier ID to which the rate limit is associated",
         foreign_key="sys_tier.id",
@@ -48,7 +48,12 @@ class RateLimitTierBase(Base):
 
 
 class RateLimit(
-    UUIDMixin, RateLimitConfigBase, RateLimitNameBase, RateLimitTierBase, TimestampMixin, table=True
+    UUIDMixin,
+    RateLimitConfigBase,
+    RateLimitNameBase,
+    RateLimitRelationshipBase,
+    TimestampMixin,
+    table=True,
 ):
     __tablename__ = "sys_rate_limit"
     __table_args__ = ({"comment": "Rate limit configuration"},)

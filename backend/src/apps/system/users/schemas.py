@@ -11,7 +11,7 @@ from src._overrides.pydantic.optional import optional
 from src.apps.system.users.models import (
     UserPersonalInfoBase,
     UserMediaBase,
-    UserTierBase,
+    UserRelationshipBase,
     UserPermissionBase,
     UserSecurityBase,
 )
@@ -24,7 +24,7 @@ class UserBase(UserPersonalInfoBase):
 class User(
     UserBase,
     UserMediaBase,
-    UserTierBase,
+    UserRelationshipBase,
     UserPermissionBase,
     UserSecurityBase,
     UUIDMixin,
@@ -34,7 +34,7 @@ class User(
     pass
 
 
-class UserRead(UserBase, UserMediaBase, UserTierBase, UUIDMixin):
+class UserRead(UserBase, UserMediaBase, UserRelationshipBase, UUIDMixin):
     pass
 
 
@@ -50,7 +50,7 @@ class UserCreate(UserBase):
     ]
 
 
-class UserCreateInternal(UserBase, UserSecurityBase, UserTierBase):
+class UserCreateInternal(UserBase, UserSecurityBase, UserRelationshipBase):
     pass
 
 
@@ -63,7 +63,7 @@ class UserUpdateInternal(UserUpdate):
     updated_at: datetime
 
 
-class UserTierUpdate(UserTierBase):
+class UserTierUpdate(UserRelationshipBase):
     model_config = ConfigDict(extra="forbid")
 
 

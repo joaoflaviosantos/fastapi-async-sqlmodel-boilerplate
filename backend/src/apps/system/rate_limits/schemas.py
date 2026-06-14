@@ -11,7 +11,7 @@ from src._overrides.pydantic.optional import optional
 from src.apps.system.rate_limits.models import (
     RateLimitConfigBase,
     RateLimitNameBase,
-    RateLimitTierBase,
+    RateLimitRelationshipBase,
 )
 
 
@@ -21,11 +21,11 @@ class RateLimitBase(RateLimitConfigBase):
         return sanitize_path(v)
 
 
-class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
+class RateLimit(TimestampMixin, RateLimitBase, RateLimitNameBase, RateLimitRelationshipBase):
     pass
 
 
-class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitTierBase):
+class RateLimitRead(UUIDMixin, RateLimitBase, RateLimitNameBase, RateLimitRelationshipBase):
     pass
 
 
@@ -33,7 +33,7 @@ class RateLimitCreate(RateLimitBase, RateLimitNameBase):
     model_config = ConfigDict(extra="forbid")
 
 
-class RateLimitCreateInternal(RateLimitCreate, RateLimitTierBase):
+class RateLimitCreateInternal(RateLimitCreate, RateLimitRelationshipBase):
     pass
 
 

@@ -3,6 +3,8 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel import Field, text
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 
 # Local Dependencies
 from src.core.common.models import (
@@ -11,6 +13,7 @@ from src.core.common.models import (
     UUIDMixin,
     Base,
 )
+from typing import Any
 
 
 class UserPersonalInfoBase(Base):
@@ -70,7 +73,38 @@ class UserSecurityBase(Base):
     )
 
 
-class UserTierBase(Base):
+class UserPreferencesBase(Base):
+    country: str = Field(
+        default="BR",
+        min_length=2,
+        max_length=2,
+        nullable=False,
+        description="User's country code (ISO 3166-1 alpha-2)",
+        schema_extra={"examples": ["BR", "US", "FR"]},
+    )
+    locale: str = Field(
+        default="pt-BR",
+        min_length=2,
+        max_length=5,
+        nullable=False,
+        description="User's locale/language preference (e.g., pt-BR, en-US)",
+        schema_extra={"examples": ["pt-BR", "en-US", "fr-FR"]},
+    )
+    preferences_tags: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB, nullable=False, server_default="[]"),
+        description="User's content tag preferences (JSONB)",
+        schema_extra={"examples": [{}]},
+    )
+    preferences_styles: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB, nullable=False, server_default="[]"),
+        description="User's content style preferences (JSONB)",
+        schema_extra={"examples": [{}]},
+    )
+
+
+class UserRelationshipBase(Base):
     tier_id: UUID | None = Field(
         default=None,
         foreign_key="sys_tier.id",
@@ -85,7 +119,8 @@ class User(
     UserMediaBase,
     UserPermissionBase,
     UserSecurityBase,
-    UserTierBase,
+    UserPreferencesBase,
+    UserRelationshipBase,
     TimestampMixin,
     SoftDeleteMixin,
     table=True,

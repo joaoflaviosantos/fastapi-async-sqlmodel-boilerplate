@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import ConfigDict
 
 # Local Dependencies
-from src.apps.blog.posts.models import PostContentBase, PostMediaBase, PostUserBase
+from src.apps.blog.posts.models import PostContentBase, PostMediaBase, PostRelationshipBase
 from src.core.common.models import UUIDMixin, TimestampMixin, SoftDeleteMixin
 from src._overrides.pydantic.optional import optional
 
@@ -14,11 +14,13 @@ class PostBase(PostContentBase):
     pass
 
 
-class Post(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin, SoftDeleteMixin):
+class Post(
+    PostBase, PostMediaBase, PostRelationshipBase, UUIDMixin, TimestampMixin, SoftDeleteMixin
+):
     pass
 
 
-class PostRead(PostBase, PostMediaBase, PostUserBase, UUIDMixin, TimestampMixin):
+class PostRead(PostBase, PostMediaBase, PostRelationshipBase, UUIDMixin, TimestampMixin):
     pass
 
 
@@ -26,7 +28,7 @@ class PostCreate(PostBase, PostMediaBase):
     model_config = ConfigDict(extra="forbid")
 
 
-class PostCreateInternal(PostCreate, PostUserBase):
+class PostCreateInternal(PostCreate, PostRelationshipBase):
     pass
 
 
