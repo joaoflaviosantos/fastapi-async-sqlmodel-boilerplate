@@ -81,9 +81,9 @@ async def ensure_database_migrations() -> None:
             logger_api.error(f"Schema 'public' not found. {error_message}")
             raise Exception(f"Schema 'public' not found. {error_message}")
 
-        # Check if migrations are executed (alembic_version table exists and has data)
+        # Check if migrations are executed ('_alembic_version' table exists and has data)
         try:
-            migrations_query = text("SELECT version_num FROM public.alembic_version;")
+            migrations_query = text("SELECT version_num FROM public._alembic_version;")
             version_result = await conn.execute(migrations_query)
             version_num = version_result.fetchone()
         except Exception:
