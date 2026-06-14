@@ -73,41 +73,10 @@ class UserSecurityBase(Base):
     )
 
 
-class UserPreferencesBase(Base):
-    country: str = Field(
-        default="BR",
-        min_length=2,
-        max_length=2,
-        nullable=False,
-        description="User's country code (ISO 3166-1 alpha-2)",
-        schema_extra={"examples": ["BR", "US", "FR"]},
-    )
-    locale: str = Field(
-        default="pt-BR",
-        min_length=2,
-        max_length=5,
-        nullable=False,
-        description="User's locale/language preference (e.g., pt-BR, en-US)",
-        schema_extra={"examples": ["pt-BR", "en-US", "fr-FR"]},
-    )
-    preferences_tags: dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column(JSONB, nullable=False, server_default="[]"),
-        description="User's content tag preferences (JSONB)",
-        schema_extra={"examples": [{}]},
-    )
-    preferences_styles: dict[str, Any] = Field(
-        default_factory=dict,
-        sa_column=Column(JSONB, nullable=False, server_default="[]"),
-        description="User's content style preferences (JSONB)",
-        schema_extra={"examples": [{}]},
-    )
-
-
 class UserRelationshipBase(Base):
     tier_id: UUID | None = Field(
         default=None,
-        foreign_key="sys_tier.id",
+        foreign_key="system_tier.id",
         index=True,
         description="ID of the tier to which the user belongs",
     )
@@ -119,11 +88,10 @@ class User(
     UserMediaBase,
     UserPermissionBase,
     UserSecurityBase,
-    UserPreferencesBase,
     UserRelationshipBase,
     TimestampMixin,
     SoftDeleteMixin,
     table=True,
 ):
-    __tablename__ = "sys_user"
+    __tablename__ = "system_users"
     __table_args__ = ({"comment": "User account information"},)
