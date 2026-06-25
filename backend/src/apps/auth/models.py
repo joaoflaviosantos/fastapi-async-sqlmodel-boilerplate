@@ -22,6 +22,6 @@ class TokenBlacklistBase(Base):
     )
 
 
-class TokenBlacklist(UUIDMixin, TokenBlacklistBase, TimestampMixin, table=True):
+class TokenBlacklist(TimestampMixin, TokenBlacklistBase, UUIDMixin, table=True):
     __tablename__ = "system_token_blacklist"
     __table_args__ = {"comment": "Token blacklist for authentication"}

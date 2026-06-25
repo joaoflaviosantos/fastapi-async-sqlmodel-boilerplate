@@ -48,11 +48,11 @@ class RateLimitRelationshipBase(Base):
 
 
 class RateLimit(
-    UUIDMixin,
-    RateLimitConfigBase,
-    RateLimitNameBase,
-    RateLimitRelationshipBase,
     TimestampMixin,
+    RateLimitRelationshipBase,
+    RateLimitNameBase,
+    RateLimitConfigBase,
+    UUIDMixin,
     table=True,
 ):
     __tablename__ = "system_rate_limit"

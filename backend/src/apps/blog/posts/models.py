@@ -45,12 +45,12 @@ class PostRelationshipBase(Base):
 
 
 class Post(
-    UUIDMixin,
-    PostContentBase,
-    PostMediaBase,
-    PostRelationshipBase,
-    TimestampMixin,
     SoftDeleteMixin,
+    TimestampMixin,
+    PostRelationshipBase,
+    PostMediaBase,
+    PostContentBase,
+    UUIDMixin,
     table=True,
 ):
     __tablename__ = "blog_post"

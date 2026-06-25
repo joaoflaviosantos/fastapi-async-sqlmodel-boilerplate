@@ -83,14 +83,14 @@ class UserRelationshipBase(Base):
 
 
 class User(
-    UUIDMixin,
-    UserPersonalInfoBase,
-    UserMediaBase,
-    UserPermissionBase,
-    UserSecurityBase,
-    UserRelationshipBase,
-    TimestampMixin,
     SoftDeleteMixin,
+    TimestampMixin,
+    UserRelationshipBase,
+    UserSecurityBase,
+    UserPermissionBase,
+    UserMediaBase,
+    UserPersonalInfoBase,
+    UUIDMixin,
     table=True,
 ):
     __tablename__ = "system_users"
