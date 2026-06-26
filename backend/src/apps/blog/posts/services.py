@@ -7,9 +7,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 # Local Dependencies
-from src.apps.system.users.repositories import UserRepository
+from src.apps.system.users.repositories import UserRepository, user_repository
 from src.apps.system.users.schemas import UserRead
-from src.apps.blog.posts.repositories import PostRepository
+from src.apps.blog.posts.repositories import PostRepository, post_repository
 from src.apps.blog.posts.schemas import (
     Post,
     PostCreate,
@@ -154,3 +154,7 @@ class PostService:
             )
 
         return {"message": "Post deleted from the database"}
+
+
+# Module-level singleton
+post_service = PostService(post_repository, user_repository)

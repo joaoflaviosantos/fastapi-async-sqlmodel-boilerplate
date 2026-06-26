@@ -11,7 +11,7 @@ from sqlalchemy import not_ as sa_not
 
 # Local Dependencies
 from src.apps.system.tasks.tasks import sample_background_task
-from src.apps.system.tasks.repositories import TaskRepository
+from src.apps.system.tasks.repositories import TaskRepository, task_repository
 from src.apps.system.tasks.models import Task
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.worker import app as celery_app
@@ -160,3 +160,7 @@ class TaskService:
             )
 
         return job_info
+
+
+# Module-level singleton
+task_service = TaskService(task_repository)

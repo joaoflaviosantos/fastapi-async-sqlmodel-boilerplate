@@ -6,26 +6,22 @@ from fastapi import Depends, HTTPException, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.apps.auth.repositories import TokenBlacklistRepository, token_blacklist_repository
-from src.apps.auth.services import AuthService
-from src.apps.system.users.services import UserService
-from src.apps.system.tiers.services import TierService
-from src.apps.system.rate_limits.services import RateLimitService
-from src.apps.system.tasks.repositories import TaskRepository, task_repository
-from src.apps.system.tasks.services import TaskService
-from src.apps.blog.posts.repositories import PostRepository, post_repository
-from src.apps.blog.posts.services import PostService
-from src.apps.system.rate_limits.repositories import RateLimitRepository, rate_limit_repository
-from src.apps.system.rate_limits.schemas import sanitize_path
-from src.core.utils.rate_limit import is_rate_limited
-from src.apps.system.tiers.repositories import TierRepository, tier_repository
-from src.apps.system.users.repositories import UserRepository, user_repository
+from src.apps.auth.services import AuthService, auth_service
+from src.apps.system.users.services import UserService, user_service
+from src.apps.system.tiers.services import TierService, tier_service
+from src.apps.system.rate_limits.services import RateLimitService, rate_limit_service
+from src.apps.system.tasks.services import TaskService, task_service
+from src.apps.blog.posts.services import PostService, post_service
+from src.apps.system.rate_limits.repositories import rate_limit_repository
+from src.apps.system.tiers.repositories import tier_repository
+from src.apps.system.users.repositories import user_repository
 from src.core.exceptions.http_exceptions import (
     UnauthorizedException,
     ForbiddenException,
     RateLimitException,
 )
-from src.apps.system.users.models import User
+from src.apps.system.rate_limits.schemas import sanitize_path
+from src.core.utils.rate_limit import is_rate_limited
 from src.core.db.session import async_get_db
 from src.core.security import oauth2_scheme
 from src.core.security import verify_token
@@ -111,14 +107,14 @@ async def get_current_superuser(current_user: Annotated[dict, Depends(get_curren
 async def rate_limiter(
     request: Request,
     db: Annotated[AsyncSession, Depends(async_get_db)],
-    user: User | None = Depends(get_optional_user),
+    user: dict | None = Depends(get_optional_user),
 ) -> None:
     # Sanitize the path from the request URL
     path = sanitize_path(request.url.path)
     if user:
         # If a user is present, retrieve user-specific rate limit settings
         user_id = user["id"]
-        tier = await tier_repository.get(db, id=user["tier_id"])
+        tier = await tier_repository.get(db=db, id=user["tier_id"])
         if tier:
             rate_limit = await rate_limit_repository.get(db=db, tier_id=tier["id"], path=path)
             if rate_limit:
@@ -161,66 +157,28 @@ async def rate_limiter(
         raise RateLimitException(detail="Rate limit exceeded.")
 
 
-async def get_user_repository() -> UserRepository:
-    return user_repository
+# ---------------------------------------------------------------------------
+# System / Auth / Blog — Service Dependencies (return module-level singletons)
+# ---------------------------------------------------------------------------
+async def get_auth_service() -> AuthService:
+    return auth_service
 
 
-async def get_tier_repository() -> TierRepository:
-    return tier_repository
+async def get_user_service() -> UserService:
+    return user_service
 
 
-async def get_rate_limit_repository() -> RateLimitRepository:
-    return rate_limit_repository
+async def get_tier_service() -> TierService:
+    return tier_service
 
 
-async def get_token_blacklist_repository() -> TokenBlacklistRepository:
-    return token_blacklist_repository
+async def get_rate_limit_service() -> RateLimitService:
+    return rate_limit_service
 
 
-async def get_task_repository() -> TaskRepository:
-    return task_repository
+async def get_task_service() -> TaskService:
+    return task_service
 
 
-async def get_post_repository() -> PostRepository:
-    return post_repository
-
-
-async def get_auth_service(
-    user_repo: UserRepository = Depends(get_user_repository),
-    token_blacklist_repo: TokenBlacklistRepository = Depends(get_token_blacklist_repository),
-) -> AuthService:
-    return AuthService(user_repo, token_blacklist_repo)
-
-
-async def get_user_service(
-    user_repo: UserRepository = Depends(get_user_repository),
-    tier_repo: TierRepository = Depends(get_tier_repository),
-    rate_limit_repo: RateLimitRepository = Depends(get_rate_limit_repository),
-) -> UserService:
-    return UserService(user_repo, tier_repo, rate_limit_repo)
-
-
-async def get_tier_service(
-    tier_repo: TierRepository = Depends(get_tier_repository),
-) -> TierService:
-    return TierService(tier_repo)
-
-
-async def get_rate_limit_service(
-    rate_limit_repo: RateLimitRepository = Depends(get_rate_limit_repository),
-    tier_repo: TierRepository = Depends(get_tier_repository),
-) -> RateLimitService:
-    return RateLimitService(rate_limit_repo, tier_repo)
-
-
-async def get_task_service(
-    task_repo: TaskRepository = Depends(get_task_repository),
-) -> TaskService:
-    return TaskService(task_repo)
-
-
-async def get_post_service(
-    post_repo: PostRepository = Depends(get_post_repository),
-    user_repo: UserRepository = Depends(get_user_repository),
-) -> PostService:
-    return PostService(post_repo, user_repo)
+async def get_post_service() -> PostService:
+    return post_service

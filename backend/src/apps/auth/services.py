@@ -18,14 +18,11 @@ from src.core.security import (
     verify_token,
     blacklist_token,
 )
-from src.apps.auth.repositories import TokenBlacklistRepository
-from src.apps.system.users.repositories import UserRepository
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository, token_blacklist_repo: TokenBlacklistRepository):
-        self.user_repo = user_repo
-        self.token_blacklist_repo = token_blacklist_repo
+    def __init__(self):
+        pass
 
     async def login(
         self, username: str, password: str, response: Response, db: AsyncSession
@@ -76,3 +73,7 @@ class AuthService:
 
         except JWTError:
             raise UnauthorizedException(detail="Invalid token.")
+
+
+# Module-level singleton
+auth_service = AuthService()

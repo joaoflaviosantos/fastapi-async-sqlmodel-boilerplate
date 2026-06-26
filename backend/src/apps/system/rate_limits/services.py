@@ -8,8 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import FastAPI
 
 # Local Dependencies
-from src.apps.system.rate_limits.repositories import RateLimitRepository
-from src.apps.system.tiers.repositories import TierRepository
+from src.apps.system.rate_limits.repositories import RateLimitRepository, rate_limit_repository
+from src.apps.system.tiers.repositories import TierRepository, tier_repository
 from src.core.utils.rate_limit import is_valid_path
 from src.core.exceptions.http_exceptions import (
     UnprocessableEntityException,
@@ -149,3 +149,7 @@ class RateLimitService:
             )
 
         return {"message": "Rate Limit deleted from the database"}
+
+
+# Module-level singleton
+rate_limit_service = RateLimitService(rate_limit_repository, tier_repository)

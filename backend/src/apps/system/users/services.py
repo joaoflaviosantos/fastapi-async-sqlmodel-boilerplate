@@ -7,9 +7,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 # Local Dependencies
-from src.apps.system.users.repositories import UserRepository
-from src.apps.system.tiers.repositories import TierRepository
-from src.apps.system.rate_limits.repositories import RateLimitRepository
+from src.apps.system.users.repositories import UserRepository, user_repository
+from src.apps.system.tiers.repositories import TierRepository, tier_repository
+from src.apps.system.rate_limits.repositories import RateLimitRepository, rate_limit_repository
 from src.apps.system.users.schemas import (
     UserCreate,
     UserCreateInternal,
@@ -225,3 +225,7 @@ class UserService:
         return {
             "message": f"User '{db_user['username']}' have been assigned to '{db_tier['name']}' tier."
         }
+
+
+# Module-level singleton
+user_service = UserService(user_repository, tier_repository, rate_limit_repository)

@@ -86,7 +86,7 @@ def is_valid_path(path: str, app: FastAPI) -> bool:
 async def is_rate_limited(
     app: FastAPI,
     db: AsyncSession,
-    user_id: int,
+    user_id: int | str,
     path: str,
     limit: int,
     period: int,
@@ -97,7 +97,7 @@ async def is_rate_limited(
     Args:
         app (FastAPI): The FastAPI application instance.
         db (AsyncSession): The asynchronous session for interacting with the database.
-        user_id (int): The ID of the user to check for rate limiting.
+        user_id (int | str): The ID of the user (or IP address/identifier if unauthenticated) to check for rate limiting.
         path (str): The path to check for rate limiting.
         limit (int): The maximum number of requests allowed within the specified period.
         period (int): The duration of the rate limiting period in seconds.
@@ -112,6 +112,9 @@ async def is_rate_limited(
     # Calculate the start of the current time window
     current_timestamp = int(datetime.now(UTC).timestamp())
     window_start = current_timestamp - (current_timestamp % period)
+
+    # Making sure user_id is a string
+    user_id = str(user_id)
 
     # Checks if the path is a valid route
     if not is_valid_path(path=path, app=app):

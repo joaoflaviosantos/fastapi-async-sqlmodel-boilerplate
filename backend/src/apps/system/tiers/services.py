@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 # Local Dependencies
-from src.apps.system.tiers.repositories import TierRepository
+from src.apps.system.tiers.repositories import TierRepository, tier_repository
 from src.apps.system.tiers.schemas import (
     TierRead,
     TierCreate,
@@ -83,3 +83,7 @@ class TierService:
             )
 
         return {"message": "Tier deleted from the database"}
+
+
+# Module-level singleton
+tier_service = TierService(tier_repository)
