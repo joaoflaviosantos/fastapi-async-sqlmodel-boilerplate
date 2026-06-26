@@ -7,14 +7,14 @@ from src.core.config import settings
 from tests.helper import _get_token, _ensure_test_user_exists
 
 # Test data: 'common user'
-TEST_NAME = settings.TEST_NAME
-TEST_USERNAME = settings.TEST_USERNAME
-TEST_EMAIL = settings.TEST_EMAIL
-TEST_PASSWORD = settings.TEST_PASSWORD
+TEST_NAME = settings.USER_TEST_NAME
+TEST_USERNAME = settings.USER_TEST_USERNAME
+TEST_EMAIL = settings.USER_TEST_EMAIL
+TEST_PASSWORD = settings.USER_TEST_PASSWORD
 
 # Test data: admin/superuser 'test' credentials
-ADMIN_USERNAME = settings.ADMIN_USERNAME
-ADMIN_PASSWORD = settings.ADMIN_PASSWORD
+ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
+ADMIN_PASSWORD = settings.USER_FIRST_ADMIN_PASSWORD
 
 # Test data: default tier
 DEFAULT_TIER_NAME = settings.TIER_NAME_DEFAULT

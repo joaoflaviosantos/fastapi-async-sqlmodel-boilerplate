@@ -123,7 +123,7 @@ class UserService:
     async def delete_user(
         self, db: AsyncSession, user_id: UUID, current_user: dict
     ) -> Dict[str, str]:
-        db_user = await self.user_repo.get(db=db, schema_to_select=User, id=user_id)
+        db_user = await self.user_repo.get(db=db, return_is_deleted=True, id=user_id)
         if db_user is None:
             raise NotFoundException(detail="User not found")
         if db_user["is_deleted"]:
@@ -147,7 +147,7 @@ class UserService:
         return {"message": "User deleted"}
 
     async def db_delete_user(self, db: AsyncSession, user_id: UUID) -> Dict[str, str]:
-        db_user = await self.user_repo.get(db=db, schema_to_select=UserRead, id=user_id)
+        db_user = await self.user_repo.get(db=db, return_is_deleted=True, id=user_id)
         if not db_user:
             raise NotFoundException(detail="User not found")
 

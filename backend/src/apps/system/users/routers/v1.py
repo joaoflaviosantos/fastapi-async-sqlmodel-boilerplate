@@ -8,7 +8,7 @@ from fastapi import Depends, Request
 import fastapi
 
 # Local Dependencies
-from src.core.api.dependencies import get_current_user, get_current_superuser, get_user_service
+from src.core.common.deps import get_current_user, get_current_superuser, get_user_service
 from src.apps.system.users.services import UserService
 from src.core.db.session import async_get_db
 from src.core.common.schemas import PaginatedListResponse

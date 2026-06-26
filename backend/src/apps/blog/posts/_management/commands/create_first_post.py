@@ -31,7 +31,7 @@ async def create_first_post(session: AsyncSession) -> None:
     # Creating post if it doesn't exist
     if post is None:
         # Getting admin user as post author
-        query = select(User).where(User.username == settings.ADMIN_USERNAME)
+        query = select(User).where(User.username == settings.USER_FIRST_ADMIN_USERNAME)
         result = await session.exec(query)
         user = result.one_or_none()
 

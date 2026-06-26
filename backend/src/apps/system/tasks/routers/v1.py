@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, Body, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.core.api.dependencies import get_task_service, async_get_db
+from src.core.common.deps import get_task_service, async_get_db
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.apps.system.tasks.services import TaskService
 from src.core.common.schemas import PaginatedListResponse

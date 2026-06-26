@@ -8,7 +8,7 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.api.dependencies import get_current_user, get_current_superuser, get_post_service
+from src.core.common.deps import get_current_user, get_current_superuser, get_post_service
 from src.apps.system.users.schemas import UserRead
 from src.apps.blog.posts.services import PostService
 from src.core.db.session import async_get_db

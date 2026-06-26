@@ -139,16 +139,15 @@ class SoftDeleteMixin(SQLModel):
     Adds 'deleted_at' and 'is_deleted' fields for soft deletion functionality.
     """
 
-    # Data Columns
-    deleted_at: Optional[datetime] = Field(
-        sa_type=DateTime(timezone=True),
-        default=None,
-        description="Timestamp for the deletion of the record (soft deletion)",
-    )
     is_deleted: bool = Field(
         default=False,
         index=True,
         description="Flag indicating whether the record is deleted (soft deletion)",
+    )
+    deleted_at: Optional[datetime] = Field(
+        sa_type=DateTime(timezone=True),
+        default=None,
+        description="Timestamp for the deletion of the record (soft deletion)",
     )
 
     @field_serializer("deleted_at")
@@ -157,3 +156,20 @@ class SoftDeleteMixin(SQLModel):
             return deleted_at.isoformat()
 
         return None
+
+
+class UserTrackingMixin(SQLModel):
+    """
+    Mixin class for tracking user actions such as creation and updates.
+    """
+
+    created_by_user_id: Optional[UUID] = Field(
+        default=None,
+        foreign_key="system_users.id",
+        description="ID of the user who created the record",
+    )
+    updated_by_user_id: Optional[UUID] = Field(
+        default=None,
+        foreign_key="system_users.id",
+        description="ID of the user who last updated the record",
+    )

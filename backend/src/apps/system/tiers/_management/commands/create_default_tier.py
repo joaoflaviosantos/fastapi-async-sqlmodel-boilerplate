@@ -10,7 +10,7 @@ from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
 
-async def create_first_tier(session: AsyncSession) -> None:
+async def create_default_tier(session: AsyncSession) -> None:
     # First tier data
     default_tier_name = settings.TIER_NAME_DEFAULT
 
@@ -37,9 +37,8 @@ async def create_first_tier(session: AsyncSession) -> None:
 
 async def main():
     async with local_session() as session:
-        await create_first_tier(session=session)
+        await create_default_tier(session=session)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

@@ -61,7 +61,9 @@ async def _ensure_test_user_exists(client: AsyncClient) -> str:
     """
     # Get admin token
     admin_token = await _get_token(
-        username=settings.ADMIN_USERNAME, password=settings.ADMIN_PASSWORD, client=client
+        username=settings.USER_FIRST_ADMIN_USERNAME,
+        password=settings.USER_FIRST_ADMIN_PASSWORD,
+        client=client,
     )
 
     if admin_token.status_code != 200:
@@ -77,7 +79,7 @@ async def _ensure_test_user_exists(client: AsyncClient) -> str:
 
     if response.status_code == 200:
         users = response.json().get("data", [])
-        existing_user = next((u for u in users if u["email"] == settings.TEST_EMAIL), None)
+        existing_user = next((u for u in users if u["email"] == settings.USER_TEST_EMAIL), None)
         if existing_user:
             return existing_user["id"]
 
@@ -85,10 +87,10 @@ async def _ensure_test_user_exists(client: AsyncClient) -> str:
     response = await client.post(
         "/api/v1/system/users",
         json={
-            "name": settings.TEST_NAME,
-            "username": settings.TEST_USERNAME,
-            "email": settings.TEST_EMAIL,
-            "password": settings.TEST_PASSWORD,
+            "name": settings.USER_TEST_NAME,
+            "username": settings.USER_TEST_USERNAME,
+            "email": settings.USER_TEST_EMAIL,
+            "password": settings.USER_TEST_PASSWORD,
         },
         headers={"Authorization": f"Bearer {admin_access_token}"},
     )

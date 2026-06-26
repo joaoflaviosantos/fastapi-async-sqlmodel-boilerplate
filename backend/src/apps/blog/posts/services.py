@@ -140,7 +140,7 @@ class PostService:
         if db_user is None:
             raise NotFoundException(detail="User not found")
 
-        db_post = await self.post_repo.get(db=db, schema_to_select=PostRead, id=post_id)
+        db_post = await self.post_repo.get(db=db, return_is_deleted=True, id=post_id)
         if db_post is None:
             raise NotFoundException(detail="Post not found")
 

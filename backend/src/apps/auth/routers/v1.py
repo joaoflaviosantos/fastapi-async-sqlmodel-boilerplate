@@ -12,7 +12,7 @@ from src.apps.auth.schemas import Token
 from src.core.db.session import async_get_db
 from src.core.security import oauth2_scheme
 from src.apps.auth.services import AuthService
-from src.core.api.dependencies import get_auth_service
+from src.core.common.deps import get_auth_service
 
 router = fastapi.APIRouter(tags=["Authentication"])
 

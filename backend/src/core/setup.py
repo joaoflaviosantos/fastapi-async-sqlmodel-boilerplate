@@ -14,15 +14,11 @@ import anyio
 
 # Local Dependencies
 from src.core.middlewares.client_cache_middleware import ClientCacheMiddleware
-from src.apps.system.users._management.commands import create_first_superuser
-from src.apps.system.tiers._management.commands import create_first_tier
-from src.apps.blog.posts._management.commands import create_first_post
-from src.core.api.dependencies import get_current_superuser
+from src.core.common.deps import get_current_superuser
 from src.core.db.session import async_engine as engine
 from src.core.utils.alembic import get_latest_migration_version
 from src.core.utils.log import log_system_info
-from src.core.utils import cache, rate_limit
-from src.core.common.models import Base
+from src.core.utils import cache, rate_limit, seed
 from src.core.config import settings
 from src.core.logger import logger_api
 from src.core.config import (
@@ -112,9 +108,7 @@ async def ensure_database_migrations() -> None:
 
 async def run_seed_scripts() -> None:
     # Function to run seed scripts during startup
-    await create_first_tier.main()
-    await create_first_superuser.main()
-    await create_first_post.main()
+    await seed.main()
 
 
 # --------------------------------------

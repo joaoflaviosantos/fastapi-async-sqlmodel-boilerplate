@@ -11,8 +11,8 @@ from src.core.config import settings
 from tests.helper import _get_token
 
 # Test data: admin/superuser 'test' credentials
-ADMIN_USERNAME = settings.ADMIN_USERNAME
-ADMIN_PASSWORD = settings.ADMIN_PASSWORD
+ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
+ADMIN_PASSWORD = settings.USER_FIRST_ADMIN_PASSWORD
 
 # Test global variables
 test_related_tier_id = None

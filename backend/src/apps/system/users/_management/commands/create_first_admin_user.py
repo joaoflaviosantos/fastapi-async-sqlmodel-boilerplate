@@ -2,7 +2,7 @@
 import asyncio
 
 # Third-Party Dependencies
-from sqlmodel import select
+from sqlmodel import select, or_
 
 # Local Dependencies
 from src.core.db.session import AsyncSession, local_session
@@ -12,15 +12,16 @@ from src.apps.system.tiers.models import Tier
 from src.core.config import settings
 
 
-async def create_first_user(session: AsyncSession) -> None:
+async def create_first_admin_user(session: AsyncSession) -> None:
     # First user/admin data
-    name = settings.ADMIN_NAME
-    email = settings.ADMIN_EMAIL
-    username = settings.ADMIN_USERNAME
-    hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
+    id = settings.USER_FIRST_ADMIN_ID
+    name = settings.USER_FIRST_ADMIN_NAME
+    email = settings.USER_FIRST_ADMIN_EMAIL
+    username = settings.USER_FIRST_ADMIN_USERNAME
+    hashed_password = get_password_hash(settings.USER_FIRST_ADMIN_PASSWORD)
 
-    # Checking if user already exists
-    query = select(User).filter_by(email=email)
+    # Checking if user already exists (by id OR email)
+    query = select(User).where(or_(User.id == id, User.email == email))
     result = await session.exec(query)
     user = result.one_or_none()
 
@@ -38,6 +39,7 @@ async def create_first_user(session: AsyncSession) -> None:
         # See: https://github.com/tiangolo/sqlmodel/issues/52#issuecomment-1311987732
         db_user = User.model_validate(
             {
+                "id": id,
                 "name": name,
                 "email": email,
                 "username": username,
@@ -55,9 +57,8 @@ async def create_first_user(session: AsyncSession) -> None:
 
 async def main():
     async with local_session() as session:
-        await create_first_user(session=session)
+        await create_first_admin_user(session=session)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

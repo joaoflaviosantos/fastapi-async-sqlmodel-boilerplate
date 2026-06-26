@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings
 from starlette.config import Config
 
 # Local Dependencies
+from src.core.utils.string import generate_random_password
 from src.core.common.enums import EmailSenderType
 
 # Environment Variables Config Getters
@@ -138,22 +139,31 @@ class PostgresSettings(BaseSettings):
         return v
 
 
-class FirstTierSettings(BaseSettings):
+class DefaultTierSettings(BaseSettings):
     TIER_NAME_DEFAULT: str = config("TIER_NAME_DEFAULT", default="Free")
 
 
-class FirstUserSettings(BaseSettings):
-    ADMIN_NAME: str = config("ADMIN_NAME", default="admin")
-    ADMIN_EMAIL: str = config("ADMIN_EMAIL", default="admin@admin.com")
-    ADMIN_USERNAME: str = config("ADMIN_USERNAME", default="admin")
-    ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
+class SystemUserSettings(BaseSettings):
+    USER_SYSTEM_ID: str = config("USER_SYSTEM_ID", default="94c51c02-01eb-4d72-91d1-4f6c10f08e19")  # fmt: skip
+    USER_SYSTEM_NAME: str = config("USER_SYSTEM_NAME", default="System User")
+    USER_SYSTEM_EMAIL: str = config("USER_SYSTEM_EMAIL", default="system@system.com")
+    USER_SYSTEM_USERNAME: str = config("USER_SYSTEM_USERNAME", default="system")
+    USER_SYSTEM_PASSWORD: str = config("USER_SYSTEM_PASSWORD", default=generate_random_password())  # fmt: skip
+
+
+class FirstAdminUserSettings(BaseSettings):
+    USER_FIRST_ADMIN_ID: str = config("USER_FIRST_ADMIN_ID", default="2f205816-bfe8-41b2-8178-8cfb6b27ba22")  # fmt: skip
+    USER_FIRST_ADMIN_NAME: str = config("USER_FIRST_ADMIN_NAME", default="Admin User")  # fmt: skip
+    USER_FIRST_ADMIN_EMAIL: str = config("USER_FIRST_ADMIN_EMAIL", default="admin@system.com")  # fmt: skip
+    USER_FIRST_ADMIN_USERNAME: str = config("USER_FIRST_ADMIN_USERNAME", default="admin")  # fmt: skip
+    USER_FIRST_ADMIN_PASSWORD: str = config("USER_FIRST_ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")  # fmt: skip
 
 
 class TestSettings(BaseSettings):
-    TEST_NAME: str = config("TEST_NAME", default="Tester User")
-    TEST_EMAIL: str = config("TEST_EMAIL", default="test@tester.com")
-    TEST_USERNAME: str = config("TEST_USERNAME", default="testeruser")
-    TEST_PASSWORD: str = config("TEST_PASSWORD", default="Str1ng$t")
+    USER_TEST_NAME: str = config("USER_TEST_NAME", default="Tester User")
+    USER_TEST_EMAIL: str = config("USER_TEST_EMAIL", default="test@tester.com")
+    USER_TEST_USERNAME: str = config("USER_TEST_USERNAME", default="testeruser")
+    USER_TEST_PASSWORD: str = config("USER_TEST_PASSWORD", default="Str1ng$t")
 
 
 class RedisCacheSettings(BaseSettings):
@@ -285,8 +295,9 @@ class Settings(
     CryptSettings,
     EmailSettings,
     PostgresSettings,
-    FirstUserSettings,
-    FirstTierSettings,
+    DefaultTierSettings,
+    SystemUserSettings,
+    FirstAdminUserSettings,
     TestSettings,
     RedisCacheSettings,
     ClientSideCacheSettings,

@@ -9,7 +9,7 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.api.dependencies import get_current_superuser, get_tier_service
+from src.core.common.deps import get_current_superuser, get_tier_service
 from src.apps.system.tiers.services import TierService
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import InternalErrorException, ForbiddenException
