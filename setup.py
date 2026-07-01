@@ -56,36 +56,71 @@ def display_help():
 # Check if Python and Poetry are installed
 def check_dependencies():
     if OPERATING_SYSTEM == "Windows":
-        python_check = subprocess.run(["py", "--list-paths"], capture_output=True, text=True)
-        python_paths = re.findall(r"\s-V:3\.11\s+[^*]*?\s+(\S+)", python_check.stdout)
-        python_installed = bool(python_paths)
-        python_path = python_paths[0] if python_installed else None
+        python_path = None
+        python_version_check = (
+            "import sys; "
+            "print(sys.executable); "
+            "sys.exit(0 if sys.version_info[:2] == (3, 11) else 1)"
+        )
+        python_commands = [
+            ["py", "-3.11", "-c", python_version_check],
+            ["python", "-c", python_version_check],
+        ]
+
+        for command in python_commands:
+            try:
+                python_check = subprocess.run(command, capture_output=True, text=True)
+            except FileNotFoundError:
+                continue
+
+            if python_check.returncode == 0 and python_check.stdout.strip():
+                python_path = python_check.stdout.strip()
+                break
+
+        python_installed = python_path is not None
     else:
-        python_installed = (
+        try:
+            python_installed = (
+                subprocess.run(
+                    ["python3.11", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                ).returncode
+                == 0
+            )
+        except FileNotFoundError:
+            python_installed = False
+
+        python_path = (
+            subprocess.run(["which", "python3.11"], capture_output=True, text=True).stdout.strip()
+            if python_installed
+            else None
+        )
+
+    try:
+        poetry_installed = (
             subprocess.run(
-                ["python3.11", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                ["poetry", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             ).returncode
             == 0
         )
-        python_path = subprocess.run(
-            ["which", "python3.11"], capture_output=True, text=True
-        ).stdout.strip()
+    except FileNotFoundError:
+        poetry_installed = False
 
-    poetry_installed = (
-        subprocess.run(
-            ["poetry", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        ).returncode
-        == 0
-    )
     return python_installed, python_path, poetry_installed
 
 
 # Step 0: Check dependencies
 python_installed, python_path, poetry_installed = check_dependencies()
 if not python_installed or not poetry_installed:
+    missing_dependencies = []
+    if not python_installed:
+        missing_dependencies.append("Python 3.11")
+    if not poetry_installed:
+        missing_dependencies.append("Poetry")
+
     print_color(
         "RED",
-        "\nError: Python 3.11 and Poetry are required. Please install them before running this setup.",
+        f"\nError: missing required dependencies: {', '.join(missing_dependencies)}. "
+        "Please install them before running this setup.",
     )
     exit(1)
 
