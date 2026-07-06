@@ -1,0 +1,237 @@
+# docker compose --env-file backend/.env -f development/compose/full-stack/docker-compose.yml --project-name fastapi-async-sqlmodel-boilerplate up -d
+
+services:
+  
+  # ---------------------------------------------------------------------------
+  # Infrastructure (with host ports bound for local debugging tools like DBeaver)
+  # ---------------------------------------------------------------------------
+
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    command: >
+      -c "max_connections=100"
+      -c "shared_buffers=512MB"
+      -c "work_mem=8MB"
+      -c "maintenance_work_mem=128MB"
+      -c "effective_cache_size=2GB"
+      -c "max_wal_size=1GB"
+      -c "min_wal_size=80MB"
+      -c "checkpoint_timeout=10min"
+    container_name: fastapi-async-sqlmodel-boilerplate-postgres
+    restart: unless-stopped
+    # Reads POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB from env_file
+    env_file:
+      - ../../../backend/.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?Set POSTGRES_USER} -d ${POSTGRES_DB:?Set POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:alpine
+    container_name: fastapi-async-sqlmodel-boilerplate-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_CACHE_PASSWORD:?Set REDIS_CACHE_PASSWORD in backend/.env}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_CACHE_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # Migration (runs once, then exits)
+  # ---------------------------------------------------------------------------
+
+  migrate:
+    profiles:
+      - migrate
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: dev
+    container_name: fastapi-async-sqlmodel-boilerplate-migrate
+    env_file:
+      - ../../../backend/.env
+    environment:
+      POSTGRES_SERVER: postgres
+      REDIS_CACHE_HOST: redis
+      REDIS_BROKER_HOST: redis
+      REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
+    command: alembic upgrade head
+    volumes:
+      - ../../../backend:/app
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Application (hot-reload enabled)
+  # ---------------------------------------------------------------------------
+
+  api:
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: dev
+    container_name: fastapi-async-sqlmodel-boilerplate-api
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    environment:
+      # Passwords and other configs are automatically inherited from backend/.env.
+      # We only need to override the Hosts to point to the docker container names,
+      # and ensure the passwords for secondary Redis connections fallback to the cache password.
+      POSTGRES_SERVER: postgres
+      REDIS_CACHE_HOST: redis
+      REDIS_RATE_LIMIT_HOST: redis
+      REDIS_RATE_LIMIT_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_QUEUE_HOST: redis
+      REDIS_QUEUE_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_BROKER_HOST: redis
+      REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_PUBSUB_HOST: redis
+      REDIS_PUBSUB_PASSWORD: ${REDIS_CACHE_PASSWORD}
+    command: >
+      uvicorn src.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-delay 0.25
+      --reload-include '*.py'
+      --timeout-keep-alive 5
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../../backend:/app  # hot-reload: mounts source code into container
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    profiles:
+      - worker
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: dev
+    container_name: fastapi-async-sqlmodel-boilerplate-celery-worker
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    environment:
+      POSTGRES_SERVER: postgres
+      REDIS_CACHE_HOST: redis
+      REDIS_RATE_LIMIT_HOST: redis
+      REDIS_RATE_LIMIT_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_QUEUE_HOST: redis
+      REDIS_QUEUE_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_BROKER_HOST: redis
+      REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_PUBSUB_HOST: redis
+      REDIS_PUBSUB_PASSWORD: ${REDIS_CACHE_PASSWORD}
+    command: celery -A src.worker worker --loglevel=info --concurrency=1 --prefetch-multiplier=1
+    volumes:
+      - ../../../backend:/app
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    profiles:
+      - scheduler
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: dev
+    container_name: fastapi-async-sqlmodel-boilerplate-celery-beat
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    environment:
+      POSTGRES_SERVER: postgres
+      REDIS_CACHE_HOST: redis
+      REDIS_RATE_LIMIT_HOST: redis
+      REDIS_RATE_LIMIT_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_QUEUE_HOST: redis
+      REDIS_QUEUE_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_BROKER_HOST: redis
+      REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_PUBSUB_HOST: redis
+      REDIS_PUBSUB_PASSWORD: ${REDIS_CACHE_PASSWORD}
+    command: celery -A src.worker beat --loglevel=info
+    volumes:
+      - ../../../backend:/app
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_flower:
+    profiles:
+      - observability
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: dev
+    container_name: fastapi-async-sqlmodel-boilerplate-celery-flower
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    environment:
+      POSTGRES_SERVER: postgres
+      REDIS_CACHE_HOST: redis
+      REDIS_RATE_LIMIT_HOST: redis
+      REDIS_RATE_LIMIT_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_QUEUE_HOST: redis
+      REDIS_QUEUE_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_BROKER_HOST: redis
+      REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      REDIS_PUBSUB_HOST: redis
+      REDIS_PUBSUB_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:?Set FLOWER_BASIC_AUTH=user:password in backend/.env}
+    command: celery -A src.worker flower --port=5555 --loglevel=info
+    ports:
+      - "5555:5555"
+    volumes:
+      - ../../../backend:/app
+    networks:
+      - fastapi_async_sqlmodel_boilerplate_network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  fastapi_async_sqlmodel_boilerplate_network:
+    name: fastapi-async-sqlmodel-boilerplate-network

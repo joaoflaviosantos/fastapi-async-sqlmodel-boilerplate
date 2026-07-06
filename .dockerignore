@@ -1,4 +1,25 @@
-.github
+# Version control
+.git/
+.github/
+
+# Editor configs
 .vscode/
 .cursor/
-backend/.venv
+
+# Python virtual env
+backend/.venv/
+
+# Python cache
+backend/__pycache__/
+backend/src/**/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# Celery beat schedule files
+backend/celerybeat-schedule.*
+
+# Test / dev artefacts
+backend/tests/
+locust/
+docs/
+deploy/

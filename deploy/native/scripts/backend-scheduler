@@ -7,4 +7,4 @@ cd $DIR
 
 source $VENV
 
-exec python3 -m celery -A src.worker worker --loglevel=info
+exec python3 -m celery -A src.worker beat --loglevel=info

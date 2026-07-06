@@ -130,14 +130,9 @@ If you prefer to use Docker containers for development, you can easily set up Po
 2. From the **root directory** of the project, run the following command to start PostgreSQL and Redis containers:
 
    ```bash
-   docker compose --env-file backend/.env -f docker/docker-compose.yml --project-name fastapi-async-sqlmodel-boilerplate up -d
+   docker compose --env-file backend/.env -f development/compose/infra-only/docker-compose.yml \
+     --project-name fastapi-async-sqlmodel-boilerplate up -d
    ```
-
-   This command will:
-   - Load environment variables from `backend/.env`
-   - Use the Docker Compose configuration from `docker/docker-compose.yml`
-   - Start PostgreSQL and Redis containers in detached mode
-   - Create necessary volumes for data persistence
 
 3. Verify the services are running:
 
@@ -154,6 +149,8 @@ If you prefer to use Docker containers for development, you can easily set up Po
 **Note:** The command uses environment variables from `backend/.env`, so ensure that file is properly configured before running the containers.
 
 Now that the prerequisites are met, you can begin working on your project. Choose either the manual setup or Docker Compose based on your preference.
+
+For a complete overview of all development modes, see the [Development Guide](docs/development-guide.md).
 
 ## 🤖 Running the Project CLI
 
@@ -182,6 +179,18 @@ This command automates various **setup tasks**, making it easier to **get starte
 For more details for a manual setup, please refer to the [Backend README](backend/README.md) section.
 
 For more details about load testing setup and usage, please refer to the [Locust Guide](docs/locust-guide.md).
+
+## 📚 Documentation
+
+| Guide                                                        | Description                                                    |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| [Development Guide](docs/development-guide.md)               | All local development modes (Docker, native, infra-only)       |
+| [Deployment Guide](docs/deploy-guide.md)                     | All production deployment modes (Docker Compose, PaaS, native) |
+| [Database Migration Guide](docs/database-migration-guide.md) | Alembic workflow for schema changes                            |
+| [Celery Guide](docs/celery-guide.md)                         | Celery worker setup and Windows-specific notes                 |
+| [Testing Guide](docs/testing-guide.md)                       | Running the test suite with pytest                             |
+| [Uvicorn Guide](docs/uvicorn-guide.md)                       | Uvicorn configuration options                                  |
+| [Locust Guide](docs/locust-guide.md)                         | Load testing with Locust                                       |
 
 ## 🌐 Reference Projects
 

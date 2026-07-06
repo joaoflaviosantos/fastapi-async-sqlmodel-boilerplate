@@ -1,0 +1,4 @@
+# Replace the wildcard below with your actual domain name (e.g. api.example.com) to enable automatic HTTPS via Let's Encrypt
+* {
+    reverse_proxy api:8000
+}

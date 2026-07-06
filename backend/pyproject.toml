@@ -15,6 +15,7 @@ bcrypt = "^5.0.0"
 celery = "^5.6.3"
 fastapi = {extras = ["all"], version = "^0.136.3"}
 fastapi-mail = "1.4.1"
+flower = "^2.0.1"
 gunicorn = "^26.0.0"
 httpx = "^0.28.1"
 pgvector = "^0.4.2"

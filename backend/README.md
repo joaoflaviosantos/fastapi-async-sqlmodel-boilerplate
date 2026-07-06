@@ -1,6 +1,10 @@
 # Backend - Manual Instructions
 
-After completing the requirements outlined in the **📋 Prerequisites** section of the section on main [README.md](../README.md) project file, proceed with the following steps:
+After completing the requirements outlined in the **📋 Prerequisites** section of the main [README.md](../README.md), proceed with the following steps.
+
+> For a higher-level overview of all development modes (Docker, infra-only, native), see the [Development Guide](../docs/development-guide.md).
+> For deployment options, see the [Deployment Guide](../docs/deploy-guide.md).
+
 
 ## 🛠️ Installation
 

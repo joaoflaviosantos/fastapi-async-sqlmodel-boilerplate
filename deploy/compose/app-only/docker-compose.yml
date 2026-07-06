@@ -1,0 +1,111 @@
+# docker compose --env-file backend/.env -f deploy/compose/app-only/docker-compose.yml --project-name fastapi-async-sqlmodel-boilerplate-prod up -d
+#
+# Use this when Postgres and Redis are provisioned externally (managed databases):
+#   - Dokploy / Coolify / CapRover / Portainer (add databases in the platform UI)
+#   - AWS RDS + ElastiCache, Supabase, Neon, Upstash, Railway, etc.
+#
+# The external network must already exist. Rename "app-network" to match the
+# network your platform (e.g. Dokploy) creates automatically, or create one:
+#   docker network create app-network
+#
+# All connection variables (POSTGRES_SERVER, REDIS_*_HOST, REDIS_*_PASSWORD, etc.)
+# must be set in backend/.env or via the platform's environment variables UI.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Migration (runs once, then exits)
+  # ---------------------------------------------------------------------------
+
+  migrate:
+    profiles:
+      - migrate
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: fastapi-async-sqlmodel-boilerplate-api:latest
+    env_file:
+      - ../../../backend/.env
+    command: alembic upgrade head
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Application
+  # ---------------------------------------------------------------------------
+
+  api:
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: fastapi-async-sqlmodel-boilerplate-api:latest
+    restart: always
+    env_file:
+      - ../../../backend/.env
+    command: >
+      uvicorn src.main:app
+      --host 0.0.0.0
+      --port 8000
+      --proxy-headers
+      --forwarded-allow-ips="*"
+    expose:
+      - "8000"
+    networks:
+      - app-network
+
+  celery_worker:
+    profiles:
+      - worker
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: fastapi-async-sqlmodel-boilerplate-api:latest
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    command: celery -A src.worker worker --loglevel=info --concurrency=1 --prefetch-multiplier=1
+    networks:
+      - app-network
+
+  celery_beat:
+    profiles:
+      - scheduler
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: fastapi-async-sqlmodel-boilerplate-api:latest
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    command: celery -A src.worker beat --loglevel=info
+    networks:
+      - app-network
+
+  celery_flower:
+    profiles:
+      - observability
+    build:
+      context: ../../../
+      dockerfile: backend/Dockerfile
+      target: prod
+    image: fastapi-async-sqlmodel-boilerplate-api:latest
+    restart: unless-stopped
+    env_file:
+      - ../../../backend/.env
+    environment:
+      # Mandatory: compose refuses to start if FLOWER_BASIC_AUTH is not set
+      # Format: user:password  (e.g. FLOWER_BASIC_AUTH=admin:s3cr3t)
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:?Set FLOWER_BASIC_AUTH=user:password in backend/.env}
+    command: celery -A src.worker flower --port=5555 --loglevel=info
+    expose:
+      - "5555"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true
