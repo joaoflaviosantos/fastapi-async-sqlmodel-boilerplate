@@ -29,7 +29,8 @@ class ClientCacheMiddleware(BaseHTTPMiddleware):
 
     Note
     ----
-        - The `Cache-Control` header instructs clients (e.g., browsers) to cache the response for the specified duration.
+        - Authenticated requests (`Authorization` header) get `private, no-store`.
+        - Unauthenticated responses use `public, max-age` for the configured duration.
     """
 
     def __init__(self, app: FastAPI, max_age: int = 60) -> None:
@@ -51,11 +52,12 @@ class ClientCacheMiddleware(BaseHTTPMiddleware):
         ----------
         Response
             The response object with the `Cache-Control` header set.
-
-        Note
-        ----
-            - This method is automatically called by Starlette for processing the request-response cycle.
         """
         response: Response = await call_next(request)
-        response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
+        # Authenticated responses are user-specific and must never be cached
+        # as public (browsers would serve stale library/content on soft refresh).
+        if request.headers.get("Authorization"):
+            response.headers["Cache-Control"] = "private, no-store"
+        else:
+            response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
         return response
