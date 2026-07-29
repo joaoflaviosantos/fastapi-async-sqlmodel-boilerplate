@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Dict
+from typing import Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -22,7 +22,7 @@ from src.core.exceptions.http_exceptions import (
     ForbiddenException,
     InternalErrorException,
 )
-from src.core.utils.paginated import compute_offset, paginated_response
+from src.core.utils.api_params import compute_offset, paginated_response
 
 
 class PostService:
@@ -50,7 +50,13 @@ class PostService:
         return await self.post_repo.create(db=db, object=post_internal)
 
     async def get_posts(
-        self, db: AsyncSession, user_id: UUID, page: int = 1, items_per_page: int = 10
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        page: int = 1,
+        items_per_page: int = 10,
+        filters: dict | None = None,
+        sort_by: Optional[List[Tuple[str, str]]] = None,
     ) -> dict:
         db_user = await self.user_repo.get(
             db=db, schema_to_select=UserRead, id=user_id, is_deleted=False
@@ -63,8 +69,10 @@ class PostService:
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             schema_to_select=PostRead,
+            sort_by=sort_by,
             user_id=db_user["id"],
             is_deleted=False,
+            **(filters or {}),
         )
         return paginated_response(data=posts_data, page=page, items_per_page=items_per_page)
 

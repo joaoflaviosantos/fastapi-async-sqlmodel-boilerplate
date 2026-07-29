@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -30,7 +30,7 @@ from src.core.exceptions.http_exceptions import (
 from src.core.security import get_password_hash
 from src.core.config import settings
 from src.core.utils import cache
-from src.core.utils.paginated import compute_offset, paginated_response
+from src.core.utils.api_params import compute_offset, paginated_response
 from src.apps.system.users.tasks import send_welcome_email
 
 
@@ -78,13 +78,22 @@ class UserService:
 
         return created_user
 
-    async def get_users(self, db: AsyncSession, page: int = 1, items_per_page: int = 10) -> dict:
+    async def get_users(
+        self,
+        db: AsyncSession,
+        page: int = 1,
+        items_per_page: int = 10,
+        filters: dict | None = None,
+        sort_by: Optional[List[Tuple[str, str]]] = None,
+    ) -> dict:
         users_data = await self.user_repo.get_multi(
             db=db,
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             schema_to_select=UserRead,
+            sort_by=sort_by,
             is_deleted=False,
+            **(filters or {}),
         )
         return paginated_response(data=users_data, page=page, items_per_page=items_per_page)
 

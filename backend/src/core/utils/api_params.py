@@ -1,5 +1,50 @@
 # Built-in Dependencies
-import math
+from typing import Optional, List, Tuple
+
+# Third-Party Dependencies
+from fastapi import HTTPException, Query
+
+
+def parse_sort_order(
+    sort_by: Optional[List[str]] = Query(None, description="Sort fields"),
+    allowed_sort_fields: Optional[List[str]] = None,
+) -> List[Tuple[str, str]]:
+    """
+    Parse sorting fields from query parameters, ensuring only valid fields are sorted.
+    Each field can be prefixed with '-' to indicate descending order.
+    """
+    if allowed_sort_fields is None:
+        allowed_sort_fields = []
+
+    sort_fields = []
+
+    if sort_by:
+        for field in sort_by:
+            # Detect ascending/descending order
+            if field.startswith("-"):
+                field_name = field[1:]
+                direction = "desc"
+            else:
+                field_name = field
+                direction = "asc"
+
+            # Validate if the field is in allowed fields
+            if field_name not in allowed_sort_fields:
+                raise HTTPException(
+                    status_code=422,
+                    detail=[
+                        {
+                            "loc": ["query", "sort_by"],
+                            "msg": f"Invalid sort field: {field_name}. Allowed fields are: {', '.join(allowed_sort_fields)}",
+                            "type": "value_error.sort_field",
+                        }
+                    ],
+                )
+
+            # Append valid field with direction
+            sort_fields.append((field_name, direction))
+
+    return sort_fields
 
 
 def paginated_response(data: dict, page: int, items_per_page: int) -> dict:

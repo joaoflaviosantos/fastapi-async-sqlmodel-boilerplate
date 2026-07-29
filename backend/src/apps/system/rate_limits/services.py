@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Dict
+from typing import Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -25,7 +25,7 @@ from src.apps.system.rate_limits.schemas import (
     RateLimitUpdate,
     RateLimitRead,
 )
-from src.core.utils.paginated import compute_offset, paginated_response
+from src.core.utils.api_params import compute_offset, paginated_response
 
 
 class RateLimitService:
@@ -57,7 +57,13 @@ class RateLimitService:
         return await self.rate_limit_repo.create(db=db, object=rate_limit_internal)
 
     async def get_rate_limits(
-        self, db: AsyncSession, tier_id: UUID, page: int = 1, items_per_page: int = 10
+        self,
+        db: AsyncSession,
+        tier_id: UUID,
+        page: int = 1,
+        items_per_page: int = 10,
+        filters: dict | None = None,
+        sort_by: Optional[List[Tuple[str, str]]] = None,
     ) -> dict:
         db_tier = await self.tier_repo.get(db=db, id=tier_id)
         if not db_tier:
@@ -68,7 +74,9 @@ class RateLimitService:
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             schema_to_select=RateLimitRead,
+            sort_by=sort_by,
             tier_id=tier_id,
+            **(filters or {}),
         )
         return paginated_response(data=rate_limits_data, page=page, items_per_page=items_per_page)
 

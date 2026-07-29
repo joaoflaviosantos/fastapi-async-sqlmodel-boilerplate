@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Annotated, Dict
+from typing import Annotated, Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -9,7 +9,8 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.common.deps import get_current_superuser, get_tier_service
+from src.apps.auth.deps import get_current_superuser
+from src.apps.system.tiers.deps import get_tier_service, tier_filters, tier_sort_order
 from src.apps.system.tiers.services import TierService
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import InternalErrorException, ForbiddenException
@@ -42,10 +43,18 @@ async def read_tiers(
     request: Request,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     tier_service: TierService = Depends(get_tier_service),
+    filters: dict = Depends(tier_filters),
+    sort_by: Optional[List[Tuple[str, str]]] = Depends(tier_sort_order),
     page: int = 1,
     items_per_page: int = 10,
 ) -> dict:
-    return await tier_service.get_tiers(db=db, page=page, items_per_page=items_per_page)
+    return await tier_service.get_tiers(
+        db=db,
+        page=page,
+        items_per_page=items_per_page,
+        filters=filters,
+        sort_by=sort_by,
+    )
 
 
 @router.get(

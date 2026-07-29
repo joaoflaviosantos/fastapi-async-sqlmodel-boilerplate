@@ -8,6 +8,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 
 # ===========================================================================
@@ -34,7 +35,7 @@ if not _is_docker_available():
     )
     pytest.exit(
         f"Docker is not available or not running. {_hint} "
-        f"Tests require Docker to spin up a PostgreSQL test container.",
+        f"Tests require Docker to spin up PostgreSQL and Redis test containers.",
         returncode=1,
     )
 
@@ -42,8 +43,8 @@ if not _is_docker_available():
 # ===========================================================================
 # 2. TEST ENVIRONMENT INITIALIZATION
 # ===========================================================================
-# Start the PostgreSQL container eagerly at module import time.
-# We do this here so that the database environment variables are patched
+# Start the PostgreSQL and Redis containers eagerly at module import time.
+# We do this here so that database/cache environment variables are patched
 # *before* `src.core.config.settings` and the SQLAlchemy engine are imported.
 # This prevents the application from initializing the engine with the wrong URL.
 
@@ -53,22 +54,48 @@ os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 # Use pgvector image to support vector embeddings
 _postgres = PostgresContainer("pgvector/pgvector:0.8.0-pg17")
-_postgres.start()
+_redis = RedisContainer("redis:alpine")
 
-# Patch the application's environment variables with the testcontainer's details
+try:
+    _postgres.start()
+    _redis.start()
+except Exception:
+    try:
+        _redis.stop()
+    except Exception:
+        pass
+    try:
+        _postgres.stop()
+    except Exception:
+        pass
+    raise
+
+# Patch the application's environment variables with the testcontainers' details
 os.environ["POSTGRES_USER"] = _postgres.username
 os.environ["POSTGRES_PASSWORD"] = _postgres.password
 os.environ["POSTGRES_SERVER"] = _postgres.get_container_host_ip()
 os.environ["POSTGRES_PORT"] = str(_postgres.get_exposed_port(5432))
 os.environ["POSTGRES_DB"] = _postgres.dbname
+
+_redis_host = _redis.get_container_host_ip()
+_redis_port = str(_redis.get_exposed_port(6379))
+os.environ["REDIS_CACHE_HOST"] = _redis_host
+os.environ["REDIS_CACHE_PORT"] = _redis_port
+os.environ["REDIS_CACHE_USERNAME"] = ""
+os.environ["REDIS_CACHE_PASSWORD"] = ""
+os.environ["REDIS_RATE_LIMIT_HOST"] = _redis_host
+os.environ["REDIS_RATE_LIMIT_PORT"] = _redis_port
+os.environ["REDIS_RATE_LIMIT_USERNAME"] = ""
+os.environ["REDIS_RATE_LIMIT_PASSWORD"] = ""
 os.environ["ENVIRONMENT"] = "test"
 
 
 def pytest_sessionfinish(session, exitstatus):
     """
     Hook function called by pytest after the entire test session completes.
-    Stops the PostgreSQL container to ensure proper cleanup.
+    Stops test containers to ensure proper cleanup.
     """
+    _redis.stop()
     _postgres.stop()
 
 
@@ -150,8 +177,8 @@ async def client():
     # STAGE 4: Finalization (SHUTDOWN)
     # -----------------------------------------------------------------------
     # After all tests in the session have finished running, we gracefully close
-    # the active Redis connections. The database (Testcontainers) will be
-    # torn down by the `pytest_sessionfinish` function declared above.
+    # the active Redis connections. Testcontainers will be torn down by the
+    # `pytest_sessionfinish` function declared above.
     try:
         await cache.client.aclose()  # type: ignore
     except Exception:

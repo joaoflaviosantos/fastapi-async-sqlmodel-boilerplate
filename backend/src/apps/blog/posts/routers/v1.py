@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Annotated, Dict
+from typing import Annotated, Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -8,7 +8,8 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.common.deps import get_current_user, get_current_superuser, get_post_service
+from src.apps.auth.deps import get_current_user, get_current_superuser
+from src.apps.blog.posts.deps import get_post_service, post_filters, post_sort_order
 from src.apps.system.users.schemas import UserRead
 from src.apps.blog.posts.services import PostService
 from src.core.db.session import async_get_db
@@ -37,7 +38,7 @@ async def write_post(
 
 @router.get("/blog/posts/user/{user_id}", response_model=PaginatedListResponse[PostRead])
 @cache(
-    key_prefix="blog:posts:user:{user_id}:page_{page}:items_per_page:{items_per_page}",
+    key_prefix="blog:posts:user:{user_id}:page_{page}:items_per_page:{items_per_page}:filters_{filters}:sort_by_{sort_by}",
     resource_id_name="user_id",
     expiration=60,
 )
@@ -46,11 +47,18 @@ async def read_posts(
     user_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     post_service: PostService = Depends(get_post_service),
+    filters: dict = Depends(post_filters),
+    sort_by: Optional[List[Tuple[str, str]]] = Depends(post_sort_order),
     page: int = 1,
     items_per_page: int = 10,
 ) -> dict:
     return await post_service.get_posts(
-        db=db, user_id=user_id, page=page, items_per_page=items_per_page
+        db=db,
+        user_id=user_id,
+        page=page,
+        items_per_page=items_per_page,
+        filters=filters,
+        sort_by=sort_by,
     )
 
 

@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 # Third-Party Dependencies
 from fastapi import HTTPException, status
@@ -15,7 +15,7 @@ from src.apps.system.tasks.repositories import TaskRepository, task_repository
 from src.apps.system.tasks.models import Task
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.worker import app as celery_app
-from src.core.utils.paginated import compute_offset, paginated_response
+from src.core.utils.api_params import compute_offset, paginated_response
 
 
 class TaskService:
@@ -27,20 +27,23 @@ class TaskService:
         return Job(id=job.id)
 
     async def get_processed_tasks(
-        self, session: AsyncSession, page: int = 1, items_per_page: int = 10
+        self,
+        session: AsyncSession,
+        page: int = 1,
+        items_per_page: int = 10,
+        filters: dict | None = None,
+        sort_by: Optional[List[Tuple[str, str]]] = None,
     ) -> dict:
-        stmt_count = (
-            select(func.count()).select_from(Task).where(sa_not(col(Task.status) == states.PENDING))
-        )
+        filters = filters or {}
+        stmt_without_pagination = select(Task).where(sa_not(col(Task.status) == states.PENDING))
+        stmt_without_pagination = self.task_repo.apply_filtering(stmt_without_pagination, **filters)
+
+        stmt_count = select(func.count()).select_from(stmt_without_pagination.subquery())
         count_result = await session.exec(stmt_count)
         total_count = count_result.one()
 
-        stmt = (
-            select(Task)
-            .where(sa_not(col(Task.status) == states.PENDING))
-            .offset(compute_offset(page, items_per_page))
-            .limit(items_per_page)
-        )
+        stmt = self.task_repo.apply_sorting(stmt_without_pagination, sort_by)
+        stmt = stmt.offset(compute_offset(page, items_per_page)).limit(items_per_page)
         result = await session.exec(stmt)
         tasks = result.all()
         data = [TaskRead.model_validate(task) for task in tasks]

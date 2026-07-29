@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Dict
+from typing import Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -20,7 +20,7 @@ from src.core.exceptions.http_exceptions import (
     ForbiddenException,
     NotFoundException,
 )
-from src.core.utils.paginated import compute_offset, paginated_response
+from src.core.utils.api_params import compute_offset, paginated_response
 from src.core.config import settings
 
 
@@ -37,12 +37,21 @@ class TierService:
         tier_internal = TierCreateInternal(**tier_internal_dict)
         return await self.tier_repo.create(db=db, object=tier_internal)
 
-    async def get_tiers(self, db: AsyncSession, page: int = 1, items_per_page: int = 10) -> dict:
+    async def get_tiers(
+        self,
+        db: AsyncSession,
+        page: int = 1,
+        items_per_page: int = 10,
+        filters: dict | None = None,
+        sort_by: Optional[List[Tuple[str, str]]] = None,
+    ) -> dict:
         tiers_data = await self.tier_repo.get_multi(
             db=db,
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             schema_to_select=TierRead,
+            sort_by=sort_by,
+            **(filters or {}),
         )
         return paginated_response(data=tiers_data, page=page, items_per_page=items_per_page)
 

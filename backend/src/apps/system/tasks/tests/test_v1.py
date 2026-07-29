@@ -1,5 +1,6 @@
 # Built-in Dependencies
 import asyncio
+from uuid import uuid4
 
 # Third-Party Dependencies
 import pytest
@@ -131,3 +132,62 @@ async def test_get_health_check_from_inexistent_queue(client: AsyncClient) -> No
     assert response.json() == {
         "detail": f"Queue with name '{inexistent_queue_name}' not found on broker."
     }
+
+
+@pytest.mark.asyncio
+async def test_tasks_get_route_rate_limiter_blocks_after_configured_limit(
+    client: AsyncClient,
+) -> None:
+    """Test that GET task routes enforce configured Redis-backed rate limits."""
+    from src.core.utils import rate_limit
+
+    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+    access_token = token.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    tiers_response = await client.get(
+        url="/api/v1/system/tiers",
+        headers=headers,
+    )
+    assert tiers_response.status_code == 200
+
+    default_tier = next(
+        tier for tier in tiers_response.json()["data"] if tier["name"] == settings.TIER_NAME_DEFAULT
+    )
+
+    rate_limit_response = await client.post(
+        url=f"/api/v1/system/rate-limits/tier/{default_tier['id']}",
+        json={
+            "name": f"Task Queue Health Test Rate Limit {uuid4()}",
+            "path": "/api/v1/system/tasks/queue-health",
+            "limit": 1,
+            "period": 3600,
+        },
+        headers=headers,
+    )
+    assert rate_limit_response.status_code == 201
+    rate_limit_id = rate_limit_response.json()["id"]
+
+    try:
+        await rate_limit.client.flushdb()  # type: ignore[union-attr]
+
+        first_response = await client.get(
+            url="/api/v1/system/tasks/queue-health",
+            params={"queue_name": "rate_limit_test_queue"},
+            headers=headers,
+        )
+        second_response = await client.get(
+            url="/api/v1/system/tasks/queue-health",
+            params={"queue_name": "rate_limit_test_queue"},
+            headers=headers,
+        )
+
+        assert first_response.status_code == 404
+        assert second_response.status_code == 429
+        assert second_response.json() == {"detail": "Rate limit exceeded."}
+    finally:
+        await rate_limit.client.flushdb()  # type: ignore[union-attr]
+        await client.delete(
+            url=f"/api/v1/system/rate-limits/{rate_limit_id}/tier/{default_tier['id']}/db",
+            headers=headers,
+        )

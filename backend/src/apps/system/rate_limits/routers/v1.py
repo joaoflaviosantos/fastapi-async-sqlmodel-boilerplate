@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Annotated, Dict
+from typing import Annotated, Dict, Optional, List, Tuple
 from uuid import UUID
 
 # Third-Party Dependencies
@@ -8,7 +8,12 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.core.common.deps import get_current_superuser, get_rate_limit_service
+from src.apps.auth.deps import get_current_superuser
+from src.apps.system.rate_limits.deps import (
+    get_rate_limit_service,
+    rate_limit_filters,
+    rate_limit_sort_order,
+)
 from src.core.db.session import async_get_db
 from src.apps.system.rate_limits.services import RateLimitService
 from src.apps.system.rate_limits.schemas import RateLimitCreate, RateLimitUpdate, RateLimitRead
@@ -44,11 +49,18 @@ async def read_rate_limits(
     tier_id: UUID,
     db: Annotated[AsyncSession, Depends(async_get_db)],
     rate_limit_service: RateLimitService = Depends(get_rate_limit_service),
+    filters: dict = Depends(rate_limit_filters),
+    sort_by: Optional[List[Tuple[str, str]]] = Depends(rate_limit_sort_order),
     page: int = 1,
     items_per_page: int = 10,
 ) -> dict:
     return await rate_limit_service.get_rate_limits(
-        db=db, tier_id=tier_id, page=page, items_per_page=items_per_page
+        db=db,
+        tier_id=tier_id,
+        page=page,
+        items_per_page=items_per_page,
+        filters=filters,
+        sort_by=sort_by,
     )
 
 
