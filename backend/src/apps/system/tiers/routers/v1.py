@@ -4,18 +4,15 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.apps.auth.deps import get_current_superuser
+from src.apps.auth.deps import get_current_user, get_current_superuser
 from src.apps.system.tiers.deps import get_tier_service, tier_filters, tier_sort_order
 from src.apps.system.tiers.services import TierService
 from src.core.db.session import async_get_db
-from src.core.exceptions.http_exceptions import InternalErrorException, ForbiddenException
 from src.apps.system.tiers.schemas import TierRead, TierCreate, TierUpdate
-from src.core.config import settings
 from src.core.common.schemas import PaginatedListResponse
 
 router = fastapi.APIRouter(tags=["System - Tiers"])
@@ -38,6 +35,7 @@ async def write_tier(
 @router.get(
     "/system/tiers",
     response_model=PaginatedListResponse[TierRead],
+    dependencies=[Depends(get_current_user)],
 )
 async def read_tiers(
     request: Request,
@@ -60,6 +58,7 @@ async def read_tiers(
 @router.get(
     "/system/tiers/{tier_id}",
     response_model=TierRead,
+    dependencies=[Depends(get_current_user)],
 )
 async def read_tier(
     request: Request,

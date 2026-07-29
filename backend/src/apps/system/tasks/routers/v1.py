@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
+from src.apps.auth.deps import get_current_superuser
 from src.core.db.session import async_get_db
 from src.apps.system.rate_limits.deps import rate_limiter
 from src.apps.system.tasks.deps import get_task_service, task_filters, task_sort_order
@@ -20,6 +21,7 @@ router = APIRouter(tags=["System - Tasks"])
     "/system/tasks/sample",
     response_model=Job,
     status_code=201,
+    dependencies=[Depends(get_current_superuser)],
 )
 async def create_sample_task(
     request: Request,
@@ -37,7 +39,7 @@ async def create_sample_task(
 @router.get(
     "/system/tasks/processed",
     response_model=PaginatedListResponse[TaskRead],
-    dependencies=[Depends(rate_limiter)],
+    dependencies=[Depends(get_current_superuser), Depends(rate_limiter)],
 )
 async def list_processed_tasks(
     request: Request,
@@ -65,7 +67,7 @@ async def list_processed_tasks(
 @router.get(
     "/system/tasks/pending",
     response_model=List[TaskRead],
-    dependencies=[Depends(rate_limiter)],
+    dependencies=[Depends(get_current_superuser), Depends(rate_limiter)],
 )
 async def read_pending_tasks(
     request: Request,
@@ -83,7 +85,7 @@ async def read_pending_tasks(
 @router.get(
     "/system/tasks/queue-health",
     response_model=dict,
-    dependencies=[Depends(rate_limiter)],
+    dependencies=[Depends(get_current_superuser), Depends(rate_limiter)],
 )
 async def get_queue_health(
     request: Request,
@@ -109,7 +111,7 @@ async def get_queue_health(
 @router.get(
     "/system/tasks/{task_id}",
     response_model=Optional[TaskRead],
-    dependencies=[Depends(rate_limiter)],
+    dependencies=[Depends(get_current_superuser), Depends(rate_limiter)],
 )
 async def read_task(
     request: Request,

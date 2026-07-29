@@ -9,7 +9,7 @@ from celery import states
 
 # Local Dependencies
 from src.core.config import settings
-from tests.helper import _get_token
+from tests.helper import _ensure_test_user_exists, _get_token
 
 # Test data: admin/superuser 'test' credentials
 ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
@@ -191,3 +191,25 @@ async def test_tasks_get_route_rate_limiter_blocks_after_configured_limit(
             url=f"/api/v1/system/rate-limits/{rate_limit_id}/tier/{default_tier['id']}/db",
             headers=headers,
         )
+
+
+@pytest.mark.asyncio
+async def test_tasks_get_route_forbids_authenticated_regular_user(
+    client: AsyncClient,
+) -> None:
+    """Test that task GET routes are restricted to superusers."""
+    await _ensure_test_user_exists(client=client)
+
+    token = await _get_token(
+        username=settings.USER_TEST_USERNAME,
+        password=settings.USER_TEST_PASSWORD,
+        client=client,
+    )
+
+    response = await client.get(
+        url="/api/v1/system/tasks/pending",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "You do not have enough privileges."}

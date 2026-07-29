@@ -4,7 +4,7 @@ from httpx import AsyncClient
 
 # Local Dependencies
 from src.core.config import settings
-from tests.helper import _get_token
+from tests.helper import _ensure_test_user_exists, _get_token
 
 # Test data: admin/superuser 'test' credentials
 ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
@@ -180,3 +180,23 @@ async def test_delete_default_tier(client: AsyncClient) -> None:
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Default Tier cannot be deleted"}
+
+
+@pytest.mark.asyncio
+async def test_get_tiers_as_authenticated_regular_user(client: AsyncClient) -> None:
+    """Test that GET tier routes allow any authenticated user."""
+    await _ensure_test_user_exists(client=client)
+
+    token = await _get_token(
+        username=settings.USER_TEST_USERNAME,
+        password=settings.USER_TEST_PASSWORD,
+        client=client,
+    )
+
+    response = await client.get(
+        url="/api/v1/system/tiers",
+        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+    )
+
+    assert response.status_code == 200
+    assert "data" in response.json()
