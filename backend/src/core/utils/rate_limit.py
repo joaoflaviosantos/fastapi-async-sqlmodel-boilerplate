@@ -63,8 +63,34 @@ def is_valid_path(path: str, app: FastAPI) -> bool:
     Returns:
         bool: True if the path is a valid route, False otherwise.
     """
+
+    def join_paths(prefix: str, route_path: str) -> str:
+        return f"/{prefix.strip('/')}/{route_path.strip('/')}".replace("//", "/")
+
+    def collect_route_paths(routes: list, prefix: str = "") -> list[str]:
+        route_paths = []
+        for route in routes:
+            original_router = getattr(route, "original_router", None)
+            if original_router is not None:
+                router_prefix = getattr(original_router, "prefix", "")
+                current_prefix = join_paths(prefix, router_prefix) if router_prefix else prefix
+                route_paths.extend(collect_route_paths(original_router.routes, current_prefix))
+                continue
+
+            route_path = getattr(route, "path", None)
+            if route_path is not None:
+                route_paths.append(join_paths(prefix, route_path))
+
+            nested_routes = getattr(route, "routes", None)
+            if nested_routes:
+                route_paths.extend(collect_route_paths(nested_routes, prefix))
+
+        return route_paths
+
     # Obtains all application routes and sanitize them for comparison
-    all_routes_sanitized = [sanitize_path(route.path) for route in app.routes]
+    all_routes_sanitized = [
+        sanitize_path(route_path) for route_path in collect_route_paths(app.routes)
+    ]
 
     # If the path looks like a sanitized path (no leading slash), use it directly
     # Otherwise, sanitize it first
