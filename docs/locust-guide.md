@@ -79,11 +79,11 @@ poetry run locust
 
 The `locust/config.py` file reads configuration from environment variables (loaded from `backend/.env`):
 
-| Variable         | Default                 | Description                       |
-| ---------------- | ----------------------- | --------------------------------- |
-| `LOCUST_HOST`    | `http://127.0.0.1:8000` | Target API host                   |
-| `ADMIN_EMAIL`    | `admin@admin.com`       | Admin email for authentication    |
-| `ADMIN_PASSWORD` | `admin`                 | Admin password for authentication |
+| Variable                    | Default                 | Description                       |
+| --------------------------- | ----------------------- | --------------------------------- |
+| `LOCUST_HOST`               | `http://127.0.0.1:8000` | Target API host                   |
+| `USER_FIRST_ADMIN_EMAIL`    | `admin@system.com`      | Admin email for authentication    |
+| `USER_FIRST_ADMIN_PASSWORD` | `!Ch4ng3Th1sP4ssW0rd!`  | Admin password for authentication |
 
 ### Overriding Configuration
 
@@ -185,7 +185,7 @@ poetry run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Authentication Failures
 
-Verify that `backend/.env` contains valid `ADMIN_EMAIL` and `ADMIN_PASSWORD` values and that the admin user has been created (run migrations first).
+Verify that `backend/.env` contains valid `USER_FIRST_ADMIN_EMAIL` and `USER_FIRST_ADMIN_PASSWORD` values and that the admin user has been created (run migrations first).
 
 ### Module Not Found
 

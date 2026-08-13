@@ -7,10 +7,14 @@ if TYPE_CHECKING:
     from locust.clients import HttpSession
 
 # Local Dependencies
-from config import ADMIN_EMAIL, ADMIN_PASSWORD, API_V1_PREFIX
+from config import USER_FIRST_ADMIN_EMAIL, USER_FIRST_ADMIN_PASSWORD, API_V1_PREFIX
 
 
-def login(client: HttpSession, email: str = ADMIN_EMAIL, password: str = ADMIN_PASSWORD) -> str:
+def login(
+    client: HttpSession,
+    email: str = USER_FIRST_ADMIN_EMAIL,
+    password: str = USER_FIRST_ADMIN_PASSWORD,
+) -> str:
     """
     Authenticate with the API and return the access token.
 
