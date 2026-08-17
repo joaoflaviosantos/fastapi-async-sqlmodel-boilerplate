@@ -1,5 +1,5 @@
 ---
-name: celery-backend
+name: celery
 description: Create or change Celery tasks.py, register modules on the worker, and use async_task plus local_session. Use when adding background jobs, Beat entries, or email/async work off the request path.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: sqlmodel-backend
+name: sqlmodel
 description: Create or change models.py, schemas.py, and repositories.py for a subapp. Use when adding SQLModel tables, Pydantic schemas, mixins, RepositoryBase, or table names. Do not use crud.py.
 ---
 
@@ -57,7 +57,7 @@ class Post(
     __tablename__ = "blog_post"
 ```
 
-After adding a table class, import it in `backend/src/core/db/__init__.py` and run Alembic (`.agents/skills/alembic-backend/SKILL.md`).
+After adding a table class, import it in `backend/src/core/db/__init__.py` and run Alembic (`.agents/skills/alembic/SKILL.md`).
 
 ## Schemas
 

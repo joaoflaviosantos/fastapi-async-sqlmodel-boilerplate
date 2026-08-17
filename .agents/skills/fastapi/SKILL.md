@@ -1,5 +1,5 @@
 ---
-name: fastapi-backend
+name: fastapi
 description: Create or change routers/v1.py, deps.py, and services.py. Use when adding HTTP endpoints, FastAPI Depends, filters, sort, cache, or service-layer authz. Routers must not call repositories.
 ---
 

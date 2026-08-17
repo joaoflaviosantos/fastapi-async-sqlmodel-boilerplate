@@ -1,5 +1,5 @@
 ---
-name: write-subapp-tests
+name: write-tests
 description: Write colocated async API tests in apps/<app>/<subapp>/tests/test_v1.py using the httpx client fixture. Use when adding or changing HTTP endpoints or subapp tests.
 ---
 

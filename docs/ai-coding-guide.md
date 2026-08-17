@@ -4,10 +4,10 @@ This repository ships a small harness so coding agents follow the same backend l
 
 ## What is already in the repo
 
-| Path                                  | Role                                                                                                                                   |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [AGENTS.md](../AGENTS.md)             | Always-on conventions: apps/subapps, router → service → repository, registration checklist, commands.                                  |
-| [.agents/skills/](../.agents/skills/) | On-demand recipes (`create-subapp`, `sqlmodel-backend`, `fastapi-backend`, `celery-backend`, `alembic-backend`, `write-subapp-tests`). |
+| Path                                  | Role                                                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [AGENTS.md](../AGENTS.md)             | Always-on conventions: apps/subapps, router → service → repository, registration checklist, commands.     |
+| [.agents/skills/](../.agents/skills/) | On-demand recipes (`create-subapp`, `sqlmodel`, `fastapi`, `celery`, `alembic`, `write-tests`, `locust`). |
 
 Do not add `crud.py`. Do not flatten the tree into `app/api/v1/endpoints/`. Copy `backend/src/apps/blog/posts/` or `backend/src/apps/system/users/`.
 
@@ -18,6 +18,8 @@ Do not add `crud.py`. Do not flatten the tree into `app/api/v1/endpoints/`. Copy
 ```markdown
 @AGENTS.md
 ```
+
+Claude Code loads `CLAUDE.md` at the root, not `AGENTS.md`. Create `CLAUDE.md` there with that one line. Do not copy conventions into `CLAUDE.md`; keep extra, tool-specific notes only in that adapter file.
 
 Keep extra, tool-specific notes out of `AGENTS.md`.
 
@@ -40,7 +42,7 @@ The first `npx skills add` creates `skills-lock.json` at the repository root (so
 
 ### Do not overwrite first-party folders
 
-`create-subapp`, `sqlmodel-backend`, `fastapi-backend`, `celery-backend`, `alembic-backend`, `write-subapp-tests`
+`create-subapp`, `sqlmodel`, `fastapi`, `celery`, `alembic`, `write-tests`, `locust`
 
 Do not run `npx skills remove` on those names.
 
@@ -54,3 +56,4 @@ Generic FastAPI / SQLModel / Celery packs (`fastapi-templates`, `sqlmodel-expert
 - [Testing Guide](testing-guide.md)
 - [Database Migration Guide](database-migration-guide.md)
 - [Celery Guide](celery-guide.md)
+- [Locust Guide](locust-guide.md)

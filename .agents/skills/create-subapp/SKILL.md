@@ -7,7 +7,7 @@ description: Scaffold a new Django-inspired subapp (models, schemas, repositorie
 
 Copy `backend/src/apps/blog/posts/` (CRUD) or `backend/src/apps/system/users/` (users + Celery). Do not invent `crud.py` or `app/api/v1/endpoints/`.
 
-For layer details use: `sqlmodel-backend`, `fastapi-backend`, `celery-backend`, `alembic-backend`, `write-subapp-tests`.
+For layer details use: `sqlmodel`, `fastapi`, `celery`, `alembic`, `write-tests`.
 
 ## 1. Choose names
 

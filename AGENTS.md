@@ -7,11 +7,12 @@ Canonical examples: `backend/src/apps/blog/posts/` (full CRUD) and `backend/src/
 When the task matches, read the skill:
 
 - [create-subapp](.agents/skills/create-subapp/SKILL.md) — new `apps/<app>/<subapp>/`
-- [sqlmodel-backend](.agents/skills/sqlmodel-backend/SKILL.md) — `models.py`, `schemas.py`, `repositories.py`
-- [fastapi-backend](.agents/skills/fastapi-backend/SKILL.md) — `routers/v1.py`, `deps.py`, `services.py`
-- [celery-backend](.agents/skills/celery-backend/SKILL.md) — `tasks.py`, worker `include`
-- [alembic-backend](.agents/skills/alembic-backend/SKILL.md) — `core/db/__init__.py` + migrations
-- [write-subapp-tests](.agents/skills/write-subapp-tests/SKILL.md) — `tests/test_v1.py`
+- [sqlmodel](.agents/skills/sqlmodel/SKILL.md) — `models.py`, `schemas.py`, `repositories.py`
+- [fastapi](.agents/skills/fastapi/SKILL.md) — `routers/v1.py`, `deps.py`, `services.py`
+- [celery](.agents/skills/celery/SKILL.md) — `tasks.py`, worker `include`
+- [alembic](.agents/skills/alembic/SKILL.md) — `core/db/__init__.py` + migrations
+- [write-tests](.agents/skills/write-tests/SKILL.md) — `tests/test_v1.py`
+- [locust](.agents/skills/locust/SKILL.md) — load tests in `locust/`
 
 Human setup and extra-skill CLI notes: [Coding Agents](docs/ai-coding-guide.md).
 
@@ -44,7 +45,7 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 
 - Table name: `{app}_{resource}` (`blog_post`, `system_users`).
 - Imports at the top of each Python file, in three blocks with a blank line between them: `# Built-in Dependencies`, `# Third-Party Dependencies`, `# Local Dependencies`.
-- Models: small `*Base` classes composed into one `table=True` class with `UUIDMixin`, `TimestampMixin`, `SoftDeleteMixin` as needed (`src.core.common.models`). List those bases in **reverse** of the desired column order (Alembic `--autogenerate` inverts them). Columns with `foreign_key=` go in a separate `*RelationshipBase`, never mixed into domain `*Base` classes. Details: [sqlmodel-backend](.agents/skills/sqlmodel-backend/SKILL.md).
+- Models: small `*Base` classes composed into one `table=True` class with `UUIDMixin`, `TimestampMixin`, `SoftDeleteMixin` as needed (`src.core.common.models`). List those bases in **reverse** of the desired column order (Alembic `--autogenerate` inverts them). Columns with `foreign_key=` go in a separate `*RelationshipBase`, never mixed into domain `*Base` classes. Details: [sqlmodel](.agents/skills/sqlmodel/SKILL.md).
 - Schemas reuse those `*Base` classes. Typical set: `XRead`, `XCreate` (`extra="forbid"`), `XCreateInternal`, `XUpdate` with `@optional()` from `src._overrides.pydantic.optional`, `XUpdateInternal`, `XDelete`.
 - Endpoints: `write_*`, `read_*`, `patch_*`, `erase_*` (soft delete), `erase_db_*` (hard delete, superuser, path suffix `/db`).
 - Deps: `get_<entity>_service`, `<entity>_filters`, `<entity>_sort_order`.

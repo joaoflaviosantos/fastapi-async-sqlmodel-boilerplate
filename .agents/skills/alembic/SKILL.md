@@ -1,5 +1,5 @@
 ---
-name: alembic-backend
+name: alembic
 description: Register SQLModel tables for autogenerate and run Alembic from backend/. Use when adding or changing table=True models, creating revisions, or applying upgrade/downgrade. Single migration tree.
 ---
 
