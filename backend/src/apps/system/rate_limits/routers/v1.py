@@ -8,7 +8,7 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.apps.auth.deps import get_current_superuser
+from src.apps.system.auth.deps import get_current_superuser
 from src.apps.system.rate_limits.deps import (
     get_rate_limit_service,
     rate_limit_filters,

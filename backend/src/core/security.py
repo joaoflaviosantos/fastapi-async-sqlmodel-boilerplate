@@ -10,8 +10,8 @@ from jose import jwt, JWTError
 import bcrypt
 
 # Local Dependencies
-from src.apps.auth.schemas import TokenData, TokenBlacklistCreate
-from src.apps.auth.repositories import token_blacklist_repository
+from src.apps.system.auth.schemas import TokenData, TokenBlacklistCreate
+from src.apps.system.auth.repositories import token_blacklist_repository
 from src.apps.system.users.repositories import user_repository
 from src.core.config import settings
 from src.core.utils import cache

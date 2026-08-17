@@ -30,8 +30,6 @@ backend/src/apps/<app>/<subapp>/
   _management/commands/       # only if a seed is needed
 ```
 
-`auth` is a top-level app without a subfolder (`backend/src/apps/auth/`). Routes still live under `/api/v1/system/auth/...`.
-
 Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixins, `RepositoryBase`, API mount). Domain code stays in `apps/`.
 
 ## Layers
@@ -51,7 +49,7 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 - Endpoints: `write_*`, `read_*`, `patch_*`, `erase_*` (soft delete), `erase_db_*` (hard delete, superuser, path suffix `/db`).
 - Deps: `get_<entity>_service`, `<entity>_filters`, `<entity>_sort_order`.
 - Singletons: `user_repository`, `user_service` (module-level).
-- Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` from `src.apps.auth.deps`. DB session: `async_get_db`.
+- Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` from `src.apps.system.auth.deps`. DB session: `async_get_db`.
 - OpenAPI tags: `"System - Users"`, `"Blog - Posts"`, `"Authentication"`.
 - Paths include the app prefix on the route itself (`/blog/posts/...`), not on the subapp `APIRouter`.
 

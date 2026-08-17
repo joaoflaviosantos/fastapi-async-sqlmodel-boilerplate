@@ -17,8 +17,6 @@ For layer details use: `sqlmodel-backend`, `fastapi-backend`, `celery-backend`, 
 - Import path: `src.apps.<app>.<subapp>.<module>`
 - OpenAPI tag: `"Blog - Comments"`
 
-`auth` is the exception: top-level app, no extra subfolder.
-
 ## 2. Create files
 
 ```

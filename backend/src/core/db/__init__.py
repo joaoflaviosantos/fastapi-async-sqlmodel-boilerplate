@@ -1,5 +1,5 @@
 # All Models to be imported here (used in migrations)
-from src.apps.auth.models import TokenBlacklist
+from src.apps.system.auth.models import TokenBlacklist
 from src.apps.system.users.models import User
 from src.apps.system.tasks.models import Task, TaskSet
 from src.apps.system.tiers.models import Tier

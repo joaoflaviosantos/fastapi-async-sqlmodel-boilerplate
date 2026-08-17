@@ -407,7 +407,7 @@ if choice == "1":
     print("2 - Start Celery worker")
     print("3 - Start Celery beat")
     print("4 - Start Flower")
-    print("5 - Run unit tests")
+    print("5 - Run unit and integration tests")
     print("6 - Run linting and formatting checks")
     print("7 - Commit and Push Changes")
     print("8 - Exit")
@@ -504,10 +504,10 @@ if choice == "1":
         subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "flower", "--loglevel=info"])
         print_color("RED", "\n-> Finished running the Celery Flower...\n")
     elif additional_action == "5":
-        print_color("RED", "\n-> Running unit tests...\n")
-        # Step 1.5.1: Run unit tests
+        print_color("RED", "\n-> Running unit and integration tests...\n")
+        # Step 1.5.1: Run unit and integration tests
         subprocess.run(["poetry", "run", "python", "-m", "pytest", "-vv", "./tests"])
-        print_color("RED", "\n-> Finished running unit tests...\n")
+        print_color("RED", "\n-> Finished running unit and integration tests...\n")
     elif additional_action == "6":
         print_color("RED", "\n-> Running linting and formatting checks...\n")
         # Step 1.6.1: Run linting and formatting checks

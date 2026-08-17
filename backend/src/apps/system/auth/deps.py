@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.apps.auth.services import AuthService, auth_service
+from src.apps.system.auth.services import AuthService, auth_service
 from src.apps.system.users.repositories import user_repository
 from src.core.db.session import async_get_db
 from src.core.exceptions.http_exceptions import UnauthorizedException, ForbiddenException

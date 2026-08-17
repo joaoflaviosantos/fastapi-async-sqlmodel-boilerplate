@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.apps.auth.deps import get_current_superuser
+from src.apps.system.auth.deps import get_current_superuser
 from src.core.db.session import async_get_db
 from src.apps.system.rate_limits.deps import rate_limiter
 from src.apps.system.tasks.deps import get_task_service, task_filters, task_sort_order

@@ -5,7 +5,7 @@ from src.core.logger import logger_api_test
 logger = logger_api_test
 
 # Integration tests imports (V1 routes)
-from src.apps.auth.tests.test_v1 import *
+from src.apps.system.auth.tests.test_v1 import *
 from src.apps.system.tiers.tests.test_v1 import *
 from src.apps.system.rate_limits.tests.test_v1 import *
 from src.apps.system.users.tests.test_v1 import *

@@ -14,7 +14,7 @@ import anyio
 
 # Local Dependencies
 from src.core.middlewares.client_cache_middleware import ClientCacheMiddleware
-from src.apps.auth.deps import get_current_superuser
+from src.apps.system.auth.deps import get_current_superuser
 from src.core.db.session import async_engine as engine
 from src.core.utils.alembic import get_latest_migration_version
 from src.core.utils.log import log_system_info

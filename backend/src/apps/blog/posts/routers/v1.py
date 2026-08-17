@@ -8,7 +8,7 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.apps.auth.deps import get_current_user, get_current_superuser
+from src.apps.system.auth.deps import get_current_user, get_current_superuser
 from src.apps.blog.posts.deps import get_post_service, post_filters, post_sort_order
 from src.apps.system.users.schemas import UserRead
 from src.apps.blog.posts.services import PostService

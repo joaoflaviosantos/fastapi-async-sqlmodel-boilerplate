@@ -6,7 +6,7 @@ from fastapi import Depends, Query, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # Local Dependencies
-from src.apps.auth.deps import get_optional_user
+from src.apps.system.auth.deps import get_optional_user
 from src.apps.system.rate_limits.repositories import rate_limit_repository
 from src.apps.system.rate_limits.schemas import sanitize_path
 from src.apps.system.rate_limits.services import RateLimitService, rate_limit_service

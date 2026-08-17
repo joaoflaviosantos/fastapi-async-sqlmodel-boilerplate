@@ -2,7 +2,7 @@
 from pydantic import BaseModel, ConfigDict
 
 # Local Dependencies
-from src.apps.auth.models import TokenBlacklistBase
+from src.apps.system.auth.models import TokenBlacklistBase
 from src._overrides.pydantic.optional import optional
 
 

@@ -8,11 +8,11 @@ from fastapi import Response, Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.apps.auth.schemas import Token
+from src.apps.system.auth.schemas import Token
 from src.core.db.session import async_get_db
 from src.core.security import oauth2_scheme
-from src.apps.auth.services import AuthService
-from src.apps.auth.deps import get_auth_service
+from src.apps.system.auth.services import AuthService
+from src.apps.system.auth.deps import get_auth_service
 
 router = fastapi.APIRouter(tags=["Authentication"])
 

@@ -5,7 +5,7 @@ description: Create or change routers/v1.py, deps.py, and services.py. Use when 
 
 # Routers, deps, services
 
-Reference: `backend/src/apps/blog/posts/routers/v1.py`, `deps.py`, `services.py`. Auth: `src.apps.auth.deps`. Session: `src.core.db.session.async_get_db`.
+Reference: `backend/src/apps/blog/posts/routers/v1.py`, `deps.py`, `services.py`. Auth: `src.apps.system.auth.deps`. Session: `src.core.db.session.async_get_db`.
 
 ## Service
 

@@ -8,7 +8,7 @@ from fastapi import Request, Depends
 import fastapi
 
 # Local Dependencies
-from src.apps.auth.deps import get_current_user, get_current_superuser
+from src.apps.system.auth.deps import get_current_user, get_current_superuser
 from src.apps.system.tiers.deps import get_tier_service, tier_filters, tier_sort_order
 from src.apps.system.tiers.services import TierService
 from src.core.db.session import async_get_db
