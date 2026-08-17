@@ -5,6 +5,8 @@ description: Create or change models.py, schemas.py, and repositories.py for a s
 
 # SQLModel, schemas, repositories
 
+Follow `AGENTS.md`. This skill is the recipe for `models.py`, `schemas.py`, and `repositories.py`.
+
 Reference: `backend/src/apps/blog/posts/models.py`, `schemas.py`, `repositories.py`. Mixins: `backend/src/core/common/models.py`. Base repo: `backend/src/core/common/repository.py`.
 
 ## Models
@@ -55,6 +57,7 @@ class Post(
     table=True,
 ):
     __tablename__ = "blog_post"
+    __table_args__ = ({"comment": "Blog post information"},)
 ```
 
 After adding a table class, import it in `backend/src/core/db/__init__.py` and run Alembic (`.agents/skills/alembic/SKILL.md`).

@@ -5,6 +5,8 @@ description: Create or change routers/v1.py, deps.py, and services.py. Use when 
 
 # Routers, deps, services
 
+Follow `AGENTS.md`. This skill is the recipe for `routers/v1.py`, `deps.py`, and `services.py`.
+
 Reference: `backend/src/apps/blog/posts/routers/v1.py`, `deps.py`, `services.py`. Auth: `src.apps.system.auth.deps`. Session: `src.core.db.session.async_get_db`.
 
 ## Service
@@ -44,7 +46,7 @@ def post_sort_order(sort_by: Optional[List[str]] = Query(None)) -> List[Tuple[st
 - Inject `Depends(get_current_user)` or `dependencies=[Depends(get_current_superuser)]`.
 - Inject `db: Annotated[AsyncSession, Depends(async_get_db)]` and `Depends(get_*_service)`.
 - Soft delete on `DELETE ...`; hard delete on `DELETE .../db` for superuser only.
-- Optional `@cache(...)` from `src.core.utils.cache` (see posts). Invalidate on write.
+- Optional `@cache(...)` from `src.core.utils.cache`. On PATCH/DELETE, copy posts: `pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"]` in `backend/src/apps/blog/posts/routers/v1.py`. Do not invent cache prefixes.
 
 ```python
 @router.post("/blog/posts/user/{user_id}", response_model=PostRead, status_code=201)

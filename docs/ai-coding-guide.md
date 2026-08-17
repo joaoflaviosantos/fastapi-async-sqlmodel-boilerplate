@@ -2,6 +2,10 @@
 
 This repository ships a small harness so coding agents follow the same backend layout as the rest of the project.
 
+The harness is **intentionally universal**. It uses one always-on contract ([AGENTS.md](../AGENTS.md)) and one skill directory ([.agents/skills/](../.agents/skills/)), instead of per-tool trees (`.cursor/`, `.claude/`, `.opencode/`). That is the [Agent Skills](https://agentskills.io/) layout, so the same repo works in Cursor, OpenCode, Google Antigravity, Codex, Gemini CLI, Amp, and similar tools that read `AGENTS.md` and/or `.agents/skills/`.
+
+Do not duplicate first-party skills into `.cursor/skills/`, `.claude/skills/`, or `.opencode/skills/`.
+
 ## What is already in the repo
 
 | Path                                  | Role                                                                                                      |
@@ -13,15 +17,17 @@ Do not add `crud.py`. Do not flatten the tree into `app/api/v1/endpoints/`. Copy
 
 ## Instruction filename
 
-`AGENTS.md` at the repository root is the instruction file. If a tool does not load that name, add whatever instruction file it expects at the root, with a single include line:
+`AGENTS.md` at the repository root is the instruction file. Keep extra, tool-specific notes out of it.
+
+This repo does **not** commit tool adapters (no `CLAUDE.md`, no `.cursor/rules` copies of the same contract). That is deliberate: the maintainer does not use Claude Code, and adapters would lock the harness to one product.
+
+If your tool does not load `AGENTS.md`, create **locally** (do not commit unless your team agrees) whatever file that tool expects, with a single include line:
 
 ```markdown
 @AGENTS.md
 ```
 
-Claude Code loads `CLAUDE.md` at the root, not `AGENTS.md`. Create `CLAUDE.md` there with that one line. Do not copy conventions into `CLAUDE.md`; keep extra, tool-specific notes only in that adapter file.
-
-Keep extra, tool-specific notes out of `AGENTS.md`.
+Example: Claude Code reads `CLAUDE.md` at the root, not `AGENTS.md`, and does not scan `.agents/skills/` on its own. If you use Claude Code, create `CLAUDE.md` yourself with that one line. Do not copy conventions into the adapter. After the include, the agent follows `AGENTS.md`, including the paths to `.agents/skills/<name>/SKILL.md`.
 
 ## Extra skills
 

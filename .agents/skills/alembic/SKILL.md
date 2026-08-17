@@ -5,6 +5,8 @@ description: Register SQLModel tables for autogenerate and run Alembic from back
 
 # Alembic
 
+Follow `AGENTS.md`. This skill is the recipe for registering `table=True` models and running migrations.
+
 Guide: `docs/database-migration-guide.md`. Env loads models via `from src.core.db import *`.
 
 ## 1. Register the model

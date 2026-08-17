@@ -5,6 +5,8 @@ description: Create or change Locust load-test TaskSets under locust/. Use when 
 
 # Locust load tests
 
+Follow `AGENTS.md`. This skill is the recipe for Locust TaskSets under `locust/`.
+
 Reference: `locust/tasks/posts.py`, `locust/locustfile.py`, `locust/helpers.py`. Guide: `docs/locust-guide.md`.
 
 The suite lives in `locust/` with its **own** Poetry env. Do not add Locust to `backend/`. Copy an existing TaskSet instead of inventing a new layout.
@@ -30,6 +32,7 @@ locust/
 ```python
 class CommentsTasks(TaskSet):
     access_token: str = ""
+    comment_id: str = ""
 
     def on_start(self) -> None:
         self.access_token = login(self.client)
@@ -41,6 +44,17 @@ class CommentsTasks(TaskSet):
             headers=auth_headers(self.access_token),
             name="/blog/comments [list]",
         )
+
+    @task(3)
+    def get_comment(self) -> None:
+        with self.client.get(
+            f"{API_V1_PREFIX}/blog/comments/{self.comment_id}",
+            headers=auth_headers(self.access_token),
+            name="/blog/comments/{id} [get]",
+            catch_response=True,
+        ) as response:
+            if response.status_code == 404:
+                response.success()  # Expected: deleted during concurrent CRUD
 ```
 
 Treat expected 404 during concurrent CRUD as success (`catch_response=True`), same as `posts.py`.

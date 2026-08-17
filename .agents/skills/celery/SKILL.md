@@ -5,6 +5,8 @@ description: Create or change Celery tasks.py, register modules on the worker, a
 
 # Celery tasks
 
+Follow `AGENTS.md`. This skill is the recipe for `tasks.py` and worker registration.
+
 Reference: `backend/src/apps/system/users/tasks.py`, `backend/src/worker.py`. Decorator: `src._overrides.celery.async_task.async_task`. Session: `src.core.db.session.local_session`.
 
 ## Where tasks live
@@ -20,10 +22,9 @@ from src.worker import app
 
 @async_task(app, name="send_welcome_email", bind=True, max_retries=3)
 async def send_welcome_email(self, email: str, username: str) -> dict:
-    async with local_session() as session:
-        ...
     try:
-        ...
+        async with local_session() as session:
+            ...
         return {"status": "success"}
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60)

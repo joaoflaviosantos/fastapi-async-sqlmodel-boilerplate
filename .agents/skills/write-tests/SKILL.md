@@ -5,6 +5,8 @@ description: Write colocated async API tests in apps/<app>/<subapp>/tests/test_v
 
 # Subapp API tests
 
+Follow `AGENTS.md`. This skill is the recipe for colocated `tests/test_v1.py`.
+
 Reference: `backend/src/apps/blog/posts/tests/test_v1.py`. Fixtures: `backend/tests/conftest.py` (`client`). Helpers: `backend/tests/helper.py`. Guide: `docs/testing-guide.md`.
 
 ## Location
@@ -35,6 +37,8 @@ async def test_create_post(client: AsyncClient) -> None:
     )
     assert response.status_code == 201
 ```
+
+Prefer independent tests (each test creates what it needs). The posts `test_v1.py` uses module-level `global`s (`test_post_user_id`, `test_post_id`) and depends on file order — keep that pattern only when copying that file.
 
 ## Constraints
 
