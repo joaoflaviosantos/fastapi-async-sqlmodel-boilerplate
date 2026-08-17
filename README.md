@@ -66,8 +66,7 @@ This project seeks to provide a **strong foundation for API development**, incor
 - 👮 **Secure FastAPI Docs:** Restrict FastAPI docs behind authentication and hide based on the environment.
 - 🦾 **Easily Extendable:** Extend and customize the project effortlessly.
 - 🤸‍♂️ **Flexible:** Adapt the boilerplate to suit your specific needs.
-- 🚚 **Docker Compose:** Easily run the project with Docker Compose.
-- ⚖️ **NGINX Reverse Proxy and Load Balancing:** Enhance scalability with NGINX reverse proxy and load balancing.
+- 🚚 **Docker Compose:** Infra-only, full-stack, or production stacks — same Compose workflow.
 - 🦗 **Load Testing with Locust:** Independent load testing suite with its own virtual environment, pre-configured task sets covering auth, users, posts, tiers, and background tasks.
 
 ## 🎯 Project Goals
@@ -78,9 +77,10 @@ This project seeks to provide a **strong foundation for API development**, incor
 - [x] Utilize Celery for handling background tasks asynchronously with full async/await support.
 - [x] Implement a robust logging system to track and manage application events efficiently.
 - [x] Manage database migrations seamlessly using Alembic.
-- [x] Develop comprehensive and fully asynchronous tests for API endpoints using `pytest-asyncio` and `testcontainers` for isolated PostgreSQL instances.
+- [x] Develop comprehensive and fully asynchronous tests for API endpoints using `pytest-asyncio` and `testcontainers` for isolated PostgreSQL and Redis instances.
 - [x] Implement using SQLModel to streamline the interaction between the database and the API.
 - [x] Adopt Repository and Service patterns for clean separation of concerns and enhanced testability.
+- [x] Ship `AGENTS.md` and first-party skills so coding agents follow the same app/subapp layout.
 - [x] Write isolated unit tests for services (with mocked repositories) and integration tests for repositories.
 - [x] Provide a fully containerized development environment with Docker Compose (PostgreSQL, Redis).
 - [x] Ensure cross-platform compatibility for local development on both **Linux** and **Windows** (including Celery worker concurrency and async event loop handling).
@@ -191,6 +191,7 @@ For more details about load testing setup and usage, please refer to the [Locust
 | [Testing Guide](docs/testing-guide.md)                       | Running the test suite with pytest                             |
 | [Uvicorn Guide](docs/uvicorn-guide.md)                       | Uvicorn configuration options                                  |
 | [Locust Guide](docs/locust-guide.md)                         | Load testing with Locust                                       |
+| [Coding Agents](docs/ai-coding-guide.md)                     | `AGENTS.md` and first-party skills for this backend            |
 
 ## 🌐 Reference Projects
 
