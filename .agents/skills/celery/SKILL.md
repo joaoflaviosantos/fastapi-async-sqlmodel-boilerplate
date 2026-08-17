@@ -7,25 +7,29 @@ description: Create or change Celery tasks.py, register modules on the worker, a
 
 Follow `AGENTS.md`. This skill is the recipe for `tasks.py` and worker registration.
 
-Reference: `backend/src/apps/system/users/tasks.py`, `backend/src/worker.py`. Decorator: `src._overrides.celery.async_task.async_task`. Session: `src.core.db.session.local_session`.
+Copy-target: `.agents/examples/subapp/tasks.py`. Worker registration (live): `backend/src/worker.py`. Decorator: `src._overrides.celery.async_task.async_task`. Session: `src.core.db.session.local_session`.
+
+Do not copy `backend/src/apps/system/users/tasks.py` for a new resource (that is the welcome-email product task). Do not add `.agents/examples/subapp/tasks` to `include`.
 
 ## Where tasks live
 
-Colocate `tasks.py` in the subapp that owns the work (`src.apps.system.users.tasks`). Shared samples: `src.apps.system.tasks.tasks`, `src.core.common.tasks`.
+Colocate `tasks.py` in the subapp that owns the work (`src.apps.<app>.<subapp>.tasks`). Shared samples already on the worker: `src.apps.system.tasks.tasks`, `src.core.common.tasks`.
 
 ## Define a task
 
 ```python
+from uuid import UUID
+
 from src._overrides.celery.async_task import async_task
 from src.core.db.session import local_session
 from src.worker import app
 
-@async_task(app, name="send_welcome_email", bind=True, max_retries=3)
-async def send_welcome_email(self, email: str, username: str) -> dict:
+@async_task(app, name="notify_item_created", bind=True, max_retries=3)
+async def notify_item_created(self, item_id: UUID) -> dict:
     try:
         async with local_session() as session:
             ...
-        return {"status": "success"}
+        return {"status": "success", "item_id": str(item_id)}
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60)
 ```
@@ -37,7 +41,7 @@ async def send_welcome_email(self, email: str, username: str) -> dict:
 
 ## Register
 
-Add the module to `include=[...]` in `backend/src/worker.py`:
+After copying into `apps/`, add the **apps** module to `include=[...]` in `backend/src/worker.py`:
 
 ```python
 include=[

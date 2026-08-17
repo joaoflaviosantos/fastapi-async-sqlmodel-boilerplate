@@ -7,7 +7,7 @@ description: Create or change routers/v1.py, deps.py, and services.py. Use when 
 
 Follow `AGENTS.md`. This skill is the recipe for `routers/v1.py`, `deps.py`, and `services.py`.
 
-Reference: `backend/src/apps/blog/posts/routers/v1.py`, `deps.py`, `services.py`. Auth: `src.apps.system.auth.deps`. Session: `src.core.db.session.async_get_db`.
+CRUD template: `.agents/examples/subapp/routers/v1.py`, `deps.py`, `services.py`. Live auth/users: `backend/src/apps/system/users/routers/v1.py`, `src.apps.system.auth.deps`. Session: `src.core.db.session.async_get_db`.
 
 ## Service
 
@@ -17,44 +17,44 @@ Reference: `backend/src/apps/blog/posts/routers/v1.py`, `deps.py`, `services.py`
 - Pagination: `compute_offset` + `paginated_response` from `src.core.utils.api_params`.
 
 ```python
-class PostService:
-    def __init__(self, post_repo: PostRepository, user_repo: UserRepository):
-        self.post_repo = post_repo
+class ItemService:
+    def __init__(self, item_repo: ItemRepository, user_repo: UserRepository):
+        self.item_repo = item_repo
         self.user_repo = user_repo
 
-post_service = PostService(post_repository, user_repository)
+item_service = ItemService(item_repository, user_repository)
 ```
 
 ## Deps
 
 ```python
-async def get_post_service() -> PostService:
-    return post_service
+async def get_item_service() -> ItemService:
+    return item_service
 
-def post_filters(...) -> dict:
+def item_filters(...) -> dict:
     # Query params → dict, drop Nones
 
-def post_sort_order(sort_by: Optional[List[str]] = Query(None)) -> List[Tuple[str, str]] | None:
+def item_sort_order(sort_by: Optional[List[str]] = Query(None)) -> List[Tuple[str, str]] | None:
     return parse_sort_order(sort_by=sort_by, allowed_sort_fields=[...]) or None
 ```
 
 ## Router
 
-- `APIRouter(tags=["Blog - Posts"])` — no path prefix on the router.
-- Put the app prefix on each path: `/blog/posts/...`.
+- `APIRouter(tags=["Example - Items"])` — no path prefix on the router.
+- Put the app prefix on each path: `/example/items/...` (rename to `/billing/invoices/...`).
 - Names: `write_*`, `read_*`, `patch_*`, `erase_*`, `erase_db_*`.
 - Inject `Depends(get_current_user)` or `dependencies=[Depends(get_current_superuser)]`.
 - Inject `db: Annotated[AsyncSession, Depends(async_get_db)]` and `Depends(get_*_service)`.
 - Soft delete on `DELETE ...`; hard delete on `DELETE .../db` for superuser only.
-- Optional `@cache(...)` from `src.core.utils.cache`. On PATCH/DELETE, copy posts: `pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"]` in `backend/src/apps/blog/posts/routers/v1.py`. Do not invent cache prefixes.
+- Optional `@cache(...)` from `src.core.utils.cache`. On PATCH/DELETE copy the example: `pattern_to_invalidate_extra=["example:items:user:{user_id}:*"]`. Do not invent prefixes.
 
 ```python
-@router.post("/blog/posts/user/{user_id}", response_model=PostRead, status_code=201)
-async def write_post(..., post_service: PostService = Depends(get_post_service)) -> PostRead:
-    return await post_service.create_post(...)
+@router.post("/example/items/user/{user_id}", response_model=ItemRead, status_code=201)
+async def write_item(..., item_service: ItemService = Depends(get_item_service)) -> ItemRead:
+    return await item_service.create_item(...)
 ```
 
-Register the router in `backend/src/core/api/v1.py`.
+Register the router in `backend/src/core/api/v1.py`. Do not register the example tree itself.
 
 ## Do not
 

@@ -2,7 +2,7 @@
 
 This is a FastAPI + SQLModel async backend. Apps are Django-inspired. Layers are strict: **router → service → repository**. There is no `crud.py`.
 
-Canonical examples: `backend/src/apps/blog/posts/` (full CRUD) and `backend/src/apps/system/users/` (users + Celery). Copy those instead of inventing a new layout.
+CRUD copy-target (harness, not a running app): `.agents/examples/subapp/` (includes optional `tasks.py`). Copy it to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Live runtime for users, auth, and hashing: `backend/src/apps/system/users/`. Sample apps such as `blog` may be absent in this clone — do not use them as a source.
 
 When the task matches, read the skill:
 
@@ -43,7 +43,7 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 
 ## Conventions
 
-- Table name: `{app}_{resource}` (`blog_post`, `system_users`).
+- Table name: `{app}_{resource}` (`example_item`, `system_users`).
 - Imports at the top of each Python file, in three blocks with a blank line between them: `# Built-in Dependencies`, `# Third-Party Dependencies`, `# Local Dependencies`.
 - Models: small `*Base` classes composed into one `table=True` class with `UUIDMixin`, `TimestampMixin`, `SoftDeleteMixin` as needed (`src.core.common.models`). List those bases in **reverse** of the desired column order (Alembic `--autogenerate` inverts them). Columns with `foreign_key=` go in a separate `*RelationshipBase`, never mixed into domain `*Base` classes. Details: [sqlmodel](.agents/skills/sqlmodel/SKILL.md).
 - Schemas reuse those `*Base` classes. Typical set: `XRead`, `XCreate` (`extra="forbid"`), `XCreateInternal`, `XUpdate` with `@optional()` from `src._overrides.pydantic.optional`, `XUpdateInternal`, `XDelete`.
@@ -51,8 +51,8 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 - Deps: `get_<entity>_service`, `<entity>_filters`, `<entity>_sort_order`.
 - Singletons: `user_repository`, `user_service` (module-level).
 - Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` from `src.apps.system.auth.deps`. DB session: `async_get_db`.
-- OpenAPI tags: `"System - Users"`, `"Blog - Posts"`, `"Authentication"`.
-- Paths include the app prefix on the route itself (`/blog/posts/...`), not on the subapp `APIRouter`.
+- OpenAPI tags: `"System - Users"`, `"System - Auth"`, `"Example - Items"`.
+- Paths include the app prefix on the route itself (`/example/items/...`), not on the subapp `APIRouter`.
 
 ## Registration checklist (new resource)
 
@@ -62,6 +62,8 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 4. If seed: add a command under `_management/commands/` and hook it in `backend/src/apps/_management/commands/seed.py`.
 5. Generate and apply a migration from `backend/` ([Database Migration Guide](docs/database-migration-guide.md)).
 6. Add `tests/test_v1.py` next to the subapp.
+
+Do not register `.agents/examples/subapp/` itself.
 
 ## Commands (from `backend/`)
 

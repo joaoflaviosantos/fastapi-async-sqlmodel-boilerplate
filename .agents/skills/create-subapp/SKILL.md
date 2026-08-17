@@ -1,23 +1,23 @@
 ---
 name: create-subapp
-description: Scaffold a new Django-inspired subapp (models, schemas, repositories, services, deps, routers/v1, tests) and register it. Use when adding a resource such as blog/comments, billing/invoices, or a new apps/<app>/<subapp>/ folder.
+description: Scaffold a new Django-inspired subapp (models, schemas, repositories, services, deps, routers/v1, tests) and register it. Use when adding a resource such as billing/invoices, catalog/products, or a new apps/<app>/<subapp>/ folder.
 ---
 
 # Create a subapp
 
 Follow `AGENTS.md`. This skill is the recipe for scaffolding a new `apps/<app>/<subapp>/`.
 
-Copy `backend/src/apps/blog/posts/` (CRUD) or `backend/src/apps/system/users/` (users + Celery). Do not invent `crud.py` or `app/api/v1/endpoints/`.
+Copy `.agents/examples/subapp/` to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Do not invent `crud.py` or `app/api/v1/endpoints/`. Copy `backend/src/apps/system/users/` only when the resource is users-like (auth, hashing). For Celery, copy `tasks.py` from the example. Sample apps such as `blog` may be absent — do not use them as a source.
 
 **Before generating files**, read the sibling skills: `sqlmodel`, `fastapi`, `write-tests`. Also read `celery` if you need `tasks.py`, and `alembic` before the migration.
 
 ## 1. Choose names
 
-- App: `blog`, `system`, `billing`, …
-- Subapp (resource): `comments`, `invoices`, …
-- Table: `{app}_{resource}` → `blog_comment`
+- App: `system`, `billing`, `catalog`, …
+- Subapp (resource): `invoices`, `products`, …
+- Table: `{app}_{resource}` → `billing_invoice`
 - Import path: `src.apps.<app>.<subapp>.<module>`
-- OpenAPI tag: `"Blog - Comments"`
+- OpenAPI tag: `"Billing - Invoices"`
 
 ## 2. Create files
 
@@ -33,7 +33,7 @@ backend/src/apps/<app>/<subapp>/
   tests/test_v1.py
 ```
 
-Add `tasks.py` only if background work is required. Add `_management/commands/` only if a bootstrap seed is required.
+Add `tasks.py` only if background work is required (copy `.agents/examples/subapp/tasks.py`). Add `_management/commands/` only if a bootstrap seed is required.
 
 Python files use three import blocks: Built-in / Third-Party / Local.
 
@@ -44,7 +44,7 @@ Python files use three import blocks: Built-in / Third-Party / Local.
 3. `repositories.py` — `RepositoryBase[...]` + singleton.
 4. `services.py` — inject repos, raise HTTP exceptions, module-level singleton.
 5. `deps.py` — `get_*_service`, filters, sort.
-6. `routers/v1.py` — thin HTTP; `write_*` / `read_*` / `patch_*` / `erase_*`; path includes the app prefix (`/blog/comments/...`).
+6. `routers/v1.py` — thin HTTP; `write_*` / `read_*` / `patch_*` / `erase_*`; path includes the app prefix (`/billing/invoices/...`).
 
 ## 4. Register
 
@@ -55,9 +55,11 @@ Python files use three import blocks: Built-in / Third-Party / Local.
 5. From `backend/`: `poetry run alembic revision --autogenerate -m "..."` then `poetry run alembic upgrade head`.
 6. Tests in `tests/test_v1.py` using fixture `client`.
 
+Do not register `.agents/examples/subapp/` itself.
+
 ## 5. Optional seed
 
-Only if bootstrap data is required. Copy `backend/src/apps/blog/posts/_management/commands/create_first_post.py`.
+Only if bootstrap data is required. Copy `.agents/examples/subapp/_management/commands/create_first_item.py`.
 
 - Command lives under `backend/src/apps/<app>/<subapp>/_management/commands/`.
 - Open the DB with `local_session()`, never `async_get_db`.
@@ -72,4 +74,5 @@ Verify before considering the subapp finished:
 - Model imported in `core/db/__init__.py` so autogenerate sees the table.
 - Review the new Alembic revision, then `poetry run alembic upgrade head` from `backend/`.
 - From `backend/`: `poetry run pytest src/apps/<app>/<subapp>/tests/test_v1.py -v`
-- `GET/POST/PATCH/DELETE` match the posts/users style, including soft delete vs `/db` hard delete when applicable.
+- `GET/POST/PATCH/DELETE` match `.agents/examples/subapp/`, including soft delete vs `/db` hard delete when applicable.
+- If Celery: `tasks.py` copied from the example and the module string is in `worker.py` `include`.

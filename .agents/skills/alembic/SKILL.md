@@ -14,10 +14,10 @@ Guide: `docs/database-migration-guide.md`. Env loads models via `from src.core.d
 Every `table=True` class must be imported in `backend/src/core/db/__init__.py`:
 
 ```python
-from src.apps.blog.posts.models import Post
+from src.apps.system.users.models import User
 ```
 
-If this import is missing, `alembic revision --autogenerate` will not see the table.
+If this import is missing, `alembic revision --autogenerate` will not see the table. Do not import `.agents/examples/subapp/` — copy the model into `apps/` first.
 
 There is **one** migration tree (`backend/src/migrations/`). No separate shared/tenant trees.
 
@@ -25,7 +25,7 @@ There is **one** migration tree (`backend/src/migrations/`). No separate shared/
 
 ```bash
 cd backend
-poetry run alembic revision --autogenerate -m "add blog_comment"
+poetry run alembic revision --autogenerate -m "add billing_invoice"
 poetry run alembic upgrade head
 ```
 

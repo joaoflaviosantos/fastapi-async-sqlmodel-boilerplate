@@ -14,7 +14,7 @@ from src.core.security import oauth2_scheme
 from src.apps.system.auth.services import AuthService
 from src.apps.system.auth.deps import get_auth_service
 
-router = fastapi.APIRouter(tags=["Authentication"])
+router = fastapi.APIRouter(tags=["System - Auth"])
 
 
 @router.post("/system/auth/login", response_model=Token)
