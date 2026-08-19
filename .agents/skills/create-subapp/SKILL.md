@@ -7,7 +7,9 @@ description: Scaffold a new Django-inspired subapp (models, schemas, repositorie
 
 Follow `AGENTS.md`. This skill is the recipe for scaffolding a new `apps/<app>/<subapp>/`.
 
-Copy `.agents/examples/subapp/` to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Do not invent `crud.py` or `app/api/v1/endpoints/`. Copy `backend/src/apps/system/users/` only when the resource is users-like (auth, hashing). For Celery, copy `tasks.py` from the example. Sample apps such as `blog` may be absent — do not use them as a source.
+Copy `.agents/examples/subapp/` to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Rename or drop `ItemRelationshipBase` (`relation_example_id` → `example_relation.id` is a placeholder). Do not invent `crud.py` or `app/api/v1/endpoints/`. Copy `backend/src/apps/system/users/` only when the resource is users-like (auth, hashing). For Celery, copy `tasks.py` from the example. Sample apps such as `blog` may be absent — do not use them as a source.
+
+If the resource does not need user tracking, subtract it after the copy: `.agents/examples/README.md` (Resource without user tracking).
 
 **Before generating files**, read the sibling skills: `sqlmodel`, `fastapi`, `write-tests`. Also read `celery` if you need `tasks.py`, and `alembic` before the migration.
 
@@ -37,11 +39,26 @@ Add `tasks.py` only if background work is required (copy `.agents/examples/subap
 
 Python files use three import blocks: Built-in / Third-Party / Local.
 
+### Association subapp (`_assoc`)
+
+Many-to-many tables are their own subapp named `<a>_<b>_assoc`. Slim tree only:
+
+```
+backend/src/apps/<app>/<a>_<b>_assoc/
+  __init__.py
+  models.py
+  schemas.py
+  repositories.py
+  services.py
+```
+
+No `routers/`, `deps.py`, or `tests/`. Register the `table=True` model in `core/db/__init__.py`. Do not include a router. Other services and tasks call this repository. Schema/model pattern: [sqlmodel](../sqlmodel/SKILL.md) (Many-to-many).
+
 ## 3. Implement in order
 
 1. `models.py` — `*Base` field groups + `table=True` class with mixins.
 2. `schemas.py` — `XRead`, `XCreate`, `XCreateInternal`, `XUpdate` (`@optional()`), `XUpdateInternal`, `XDelete`.
-3. `repositories.py` — `RepositoryBase[...]` + singleton.
+3. `repositories.py` — thin `RepositoryBase[...]` alias, or a subclass with `get_single_with_main_relations` / `get_multi_with_main_relations` when the GET payload includes related data.
 4. `services.py` — inject repos, raise HTTP exceptions, module-level singleton.
 5. `deps.py` — `get_*_service`, filters, sort.
 6. `routers/v1.py` — thin HTTP; `write_*` / `read_*` / `patch_*` / `erase_*`; path includes the app prefix (`/billing/invoices/...`).
@@ -64,6 +81,7 @@ Only if bootstrap data is required. Copy `.agents/examples/subapp/_management/co
 - Command lives under `backend/src/apps/<app>/<subapp>/_management/commands/`.
 - Open the DB with `local_session()`, never `async_get_db`.
 - Be idempotent: `one_or_none()` and skip if the row exists.
+- Tracking IDs on bootstrap rows use `settings.USER_SYSTEM_ID` (system actor), not the first admin.
 - Hook `await create_*.main()` in `backend/src/apps/_management/commands/seed.py`.
 
 ## 6. Done when

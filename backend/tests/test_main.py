@@ -4,6 +4,9 @@ from src.core.logger import logger_api_test
 # Logger instance for the current module
 logger = logger_api_test
 
+# Unit tests imports
+from src.apps.system.auth.tests.test_user_context_db import *
+
 # Integration tests imports (V1 routes)
 from src.apps.system.auth.tests.test_v1 import *
 from src.apps.system.tiers.tests.test_v1 import *

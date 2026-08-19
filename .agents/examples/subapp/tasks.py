@@ -29,9 +29,7 @@ async def notify_item_created(self, item_id: UUID) -> dict:
                 logger_worker.warning(f"[notify_item_created] Item {item_id} not found")
                 return {"status": "skipped", "item_id": str(item_id)}
 
-            logger_worker.info(
-                f"[notify_item_created] Item {item_id} title={item.title!r}"
-            )
+            logger_worker.info(f"[notify_item_created] Item {item_id} title={item.title!r}")
             return {"status": "success", "item_id": str(item_id)}
 
     except Exception as exc:

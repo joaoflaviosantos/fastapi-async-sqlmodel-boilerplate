@@ -1,12 +1,7 @@
 # Built-in Dependencies
 from typing import (
     Any,
-    Dict,
     Generic,
-    List,
-    Optional,
-    Tuple,
-    Type,
     TypeVar,
     Union,
     get_origin,
@@ -15,12 +10,11 @@ from typing import (
 from datetime import datetime, UTC
 
 # Third-Party Dependencies
-from sqlmodel import select, update, delete, func, and_, or_, inspect
+from sqlmodel import SQLModel, select, update, delete, func, and_, or_, inspect
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import asc, desc, Select, Column
 from sqlalchemy.engine.row import Row
 from sqlalchemy.sql import Join
-from sqlmodel import SQLModel
 
 # Local Dependencies
 from src.core.utils.repository import (
@@ -31,12 +25,16 @@ from src.core.utils.repository import (
 )
 from src.core.common.models import Base
 from src.core.config import settings
+from src.core.logger import logger_postgres
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=SQLModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=SQLModel)
 UpdateSchemaInternalType = TypeVar("UpdateSchemaInternalType", bound=SQLModel)
 DeleteSchemaType = TypeVar("DeleteSchemaType", bound=SQLModel)
+
+SchemaToSelect = type[SQLModel] | list[type[SQLModel]] | None
+SortBy = list[tuple[str, str]] | None
 
 
 class RepositoryBase(
@@ -53,21 +51,21 @@ class RepositoryBase(
 
     Parameters
     ----------
-    model : Type[ModelType]
+    model : type[ModelType]
         The SQLAlchemy model type.
     """
 
-    def __init__(self, model: Type[ModelType]) -> None:
+    def __init__(self, model: type[ModelType]) -> None:
         self._model = model
 
-    def apply_filtering(self, stmt, use_or: bool = False, **kwargs):
+    def apply_filtering(self, stmt: Select, use_or: bool = False, **kwargs: Any) -> Select:
         """
         Apply filtering to the SQL query based on the provided filters.
         Uses 'ilike' for string fields and equality for other types.
 
         Parameters
         ----------
-        stmt : select
+        stmt : Select
             The SQLAlchemy select statement to apply filtering on.
         use_or : bool
             If True, combine filters using OR instead of AND.
@@ -76,7 +74,7 @@ class RepositoryBase(
 
         Returns
         -------
-        select
+        Select
             The SQLAlchemy select statement with filtering applied.
         """
         filters = []
@@ -102,63 +100,92 @@ class RepositoryBase(
         if filters:
             stmt = stmt.filter(or_(*filters)) if use_or else stmt.filter(and_(*filters))
 
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
+        return self.exclude_deleted(stmt)
 
+    def exclude_deleted(self, stmt: Select, include_deleted: bool = False) -> Select:
+        """
+        Exclude soft-deleted rows when the model has an ``is_deleted`` column.
+
+        No-op if the model has no ``is_deleted`` column (for example ``_assoc``
+        tables) or if ``include_deleted`` is True.
+
+        Parameters
+        ----------
+        stmt : Select
+            The SQLAlchemy select statement to apply the filter on.
+        include_deleted : bool
+            If True, leave the statement unchanged so soft-deleted rows can be
+            returned. Defaults to False.
+
+        Returns
+        -------
+        Select
+            The SQLAlchemy select statement, with ``is_deleted == False`` applied
+            when applicable.
+        """
+        if include_deleted:
+            return stmt
+        if "is_deleted" in self._model.__table__.columns:
+            return stmt.filter(self._model.is_deleted.is_(False))
         return stmt
 
     def apply_json_filters(
         self,
         stmt: Select,
         json_column: Column,
-        json_key: Optional[str] = None,
+        json_key: str | None = None,
         json_value: Any = None,
-        json_contains: Optional[dict] = None,
-        json_not_contains: Optional[dict] = None,
+        json_contains: dict | None = None,
+        json_not_contains: dict | None = None,
     ) -> Select:
         """
         Apply JSON filters to a SQLModel statement.
 
-        Args:
-            stmt: The SQLModel select statement
-            json_column: The JSON column to apply filters to
-            json_key: Key in JSON column to filter by
-            json_value: Value to match for the specified json_key
-            json_contains: Dict to check if it is contained in JSON column
-            json_not_contains: Dict to check if it is NOT contained in JSON column
+        Parameters
+        ----------
+        stmt : Select
+            The SQLAlchemy select statement to apply JSON filters on.
+        json_column : Column
+            The JSON column to apply filters to.
+        json_key : str, optional
+            Key in the JSON column to filter by.
+        json_value : Any, optional
+            Value to match for the specified ``json_key``.
+        json_contains : dict, optional
+            Dict to check if it is contained in the JSON column.
+        json_not_contains : dict, optional
+            Dict to check if it is NOT contained in the JSON column.
 
-        Returns:
-            The modified statement with JSON filters applied
+        Returns
+        -------
+        Select
+            The SQLAlchemy select statement with JSON filters applied.
         """
-        # Apply JSON filtering based on json_key and json_value
         if json_key and json_value is not None:
             stmt = stmt.filter(json_column[json_key].astext == str(json_value))
 
-        # Apply JSON filtering based on json_contains
         if json_contains:
             stmt = stmt.filter(json_column.contains(json_contains))
 
-        # Apply JSON filtering based on json_not_contains
         if json_not_contains:
             stmt = stmt.filter(~json_column.contains(json_not_contains))
 
         return stmt
 
-    def apply_sorting(self, stmt: select, sort_by: List[Tuple[str, str]]) -> select:
+    def apply_sorting(self, stmt: Select, sort_by: SortBy) -> Select:
         """
         Apply sorting to the SQL query based on the provided sorting criteria.
 
         Parameters
         ----------
-        stmt : select
+        stmt : Select
             The SQLAlchemy select statement to apply sorting on.
-        sort_by : List[Tuple[str, str]]
+        sort_by : list[tuple[str, str]] | None
             A list of tuples where each tuple contains a field name and the direction ('asc' or 'desc').
 
         Returns
         -------
-        select
+        Select
             The SQLAlchemy select statement with sorting applied.
         """
         if sort_by:
@@ -193,7 +220,7 @@ class RepositoryBase(
                         elif direction == "desc":
                             order_by_clauses.append(desc(column))
                 else:
-                    print(f"Warning: Column '{field_name}' not found in columns list.")
+                    logger_postgres.warning(f"Column '{field_name}' not found in columns list.")
 
             if order_by_clauses:
                 stmt = stmt.order_by(*order_by_clauses)
@@ -237,11 +264,11 @@ class RepositoryBase(
     async def get(
         self,
         db: AsyncSession,
-        schema_to_select: Union[Type[SQLModel], List, None] = None,
+        schema_to_select: SchemaToSelect = None,
         return_object: bool = False,
         return_is_deleted: bool = False,
         **kwargs: Any,
-    ) -> Dict | None | Row:
+    ) -> dict[str, Any] | Row | None:
         """
         Fetch a single record based on filters.
 
@@ -249,7 +276,7 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The SQLModel async session.
-        schema_to_select : Union[Type[SQLModel], List, None], optional
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns. Default is None to select all columns.
         return_object : bool, optional
             Flag indicating whether to return the database row object (`Row`) directly instead of a dictionary representation.
@@ -260,20 +287,17 @@ class RepositoryBase(
 
         Returns
         -------
-        dict | Row | None
+        dict[str, Any] | Row | None
             The fetched database row as a dictionary or `Row` object, or None if not found. Returns `Row` object if `return_object=True`.
         """
         to_select = _extract_matching_columns_from_schema(
             model=self._model, schema=schema_to_select
         )
         stmt = select(*to_select).filter_by(**kwargs)
-
-        # Always remove is_deleted filter if it exists
-        if return_is_deleted == False and "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
+        stmt = self.exclude_deleted(stmt, include_deleted=return_is_deleted)
 
         db_row = await db.exec(stmt)
-        result: Row = db_row.first()
+        result: Row | None = db_row.first()
 
         # Return the row
         if return_object:
@@ -281,7 +305,7 @@ class RepositoryBase(
 
         # Return the dictionary representation of the row
         if result is not None:
-            out: dict = dict(result._mapping)
+            out: dict[str, Any] = dict(result._mapping)
             return out
 
         # Return None if there are no result
@@ -319,10 +343,7 @@ class RepositoryBase(
         - Always returns ID as a string for consistent application-level handling
         """
         stmt = select(self._model.id).filter_by(**kwargs)
-
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
+        stmt = self.exclude_deleted(stmt)
 
         result = await db.scalar(stmt)
 
@@ -350,18 +371,14 @@ class RepositoryBase(
         """
         to_select = _extract_matching_columns_from_kwargs(model=self._model, kwargs=kwargs)
         stmt = select(*to_select)
-
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
-
+        stmt = self.exclude_deleted(stmt)
         stmt = stmt.filter_by(**kwargs).limit(1)
 
         result = await db.exec(stmt)
         return result.first() is not None
 
     async def total_count(
-        self, db: AsyncSession, stmt_without_pagination: Optional[select] = None
+        self, db: AsyncSession, stmt_without_pagination: Select | None = None
     ) -> int:
         """
         Retrieve the total number of records that match the applied filters.
@@ -373,7 +390,7 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The asynchronous database session.
-        stmt_without_pagination : Optional[select]
+        stmt_without_pagination : Select | None
             The SQLAlchemy select statement without offset and limit.
 
         Returns
@@ -390,11 +407,7 @@ class RepositoryBase(
         if stmt_without_pagination is None:
             stmt_without_pagination = select(self._model)
 
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt_without_pagination = stmt_without_pagination.filter(
-                self._model.is_deleted == False
-            )
+        stmt_without_pagination = self.exclude_deleted(stmt_without_pagination)
 
         # Create a count query using a subquery to count only filtered records
         count_query = select(func.count()).select_from(stmt_without_pagination.subquery())
@@ -405,11 +418,11 @@ class RepositoryBase(
     async def get_all(
         self,
         db: AsyncSession,
-        sort_by: List[Tuple[str, str]] = None,
-        schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
+        sort_by: SortBy = None,
+        schema_to_select: SchemaToSelect = None,
         return_object: bool = False,
         **kwargs: Any,
-    ) -> List[Dict[str, Any]] | List[Row]:
+    ) -> list[dict[str, Any]] | list[Row]:
         """
         Fetch all records based on filters.
 
@@ -417,9 +430,9 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The SQLModel async session.
-        sort_by : List[Tuple[str, str]]
+        sort_by : list[tuple[str, str]] | None
             A list of tuples where each tuple contains a field name and the direction ('asc' or 'desc').
-        schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns. Default is None to select all columns.
         return_object : bool, optional
             Flag indicating whether to return the database row object (`Row`) directly instead of a dictionary representation.
@@ -428,7 +441,7 @@ class RepositoryBase(
 
         Returns
         -------
-        List[Dict[str, Any]] / List[Row]
+        list[dict[str, Any]] | list[Row]
             List of dictionaries or objects containing the fetched rows.
         """
         # Extract matching columns from the schema or select all
@@ -436,11 +449,7 @@ class RepositoryBase(
             model=self._model, schema=schema_to_select
         )
         stmt = select(*to_select)
-
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
-
+        stmt = self.exclude_deleted(stmt)
         stmt = stmt.filter_by(**kwargs)
 
         # Apply sorting if provided
@@ -466,10 +475,10 @@ class RepositoryBase(
         db: AsyncSession,
         offset: int = 0,
         limit: int = 100,
-        sort_by: List[Tuple[str, str]] = None,
-        schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
+        sort_by: SortBy = None,
+        schema_to_select: SchemaToSelect = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Fetch multiple records based on filters.
 
@@ -481,16 +490,16 @@ class RepositoryBase(
             Number of rows to skip before fetching. Default is 0.
         limit : int, optional
             Maximum number of rows to fetch. Default is 100.
-        sort_by : List[Tuple[str, str]]
+        sort_by : list[tuple[str, str]] | None
             A list of tuples where each tuple contains a field name and the direction ('asc' or 'desc').
-        schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns. Default is None to select all columns.
         kwargs : dict
             Filters to apply to the query.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             Dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
         """
         to_select = _extract_matching_columns_from_schema(
@@ -520,35 +529,106 @@ class RepositoryBase(
 
         return {"data": data, "total_count": total_count}
 
+    def _select_joined(
+        self,
+        join_model: type[ModelType],
+        join_prefix: str | None = None,
+        join_on: Join | None = None,
+        schema_to_select: SchemaToSelect = None,
+        join_schema_to_select: SchemaToSelect = None,
+        join_type: str = "left",
+        **kwargs: Any,
+    ) -> Select:
+        """
+        Build a joined select statement without sorting or pagination.
+
+        Parameters
+        ----------
+        join_model : type[ModelType]
+            The model to join with.
+        join_prefix : str | None
+            Optional prefix to be added to all columns of the joined model. If None, no prefix is added.
+        join_on : Join | None
+            SQLAlchemy Join object for specifying the ON clause of the join. If None, the join condition is
+            auto-detected based on foreign keys.
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None
+            SQLModel (Pydantic) schema for selecting specific columns from the primary model.
+        join_schema_to_select : type[SQLModel] | list[type[SQLModel]] | None
+            SQLModel (Pydantic) schema for selecting specific columns from the joined model.
+        join_type : str
+            Specifies the type of join operation to perform. Can be "left" for a left outer join or "inner" for an inner join.
+        kwargs : dict
+            Filters to apply to the query.
+
+        Returns
+        -------
+        Select
+            The SQLAlchemy select statement with the join, filters, and soft-delete exclusion applied.
+        """
+        if join_on is None:
+            join_on = _auto_detect_join_condition(self._model, join_model)
+
+        primary_select = _extract_matching_columns_from_schema(
+            model=self._model, schema=schema_to_select
+        )
+        join_select = []
+
+        if join_schema_to_select:
+            columns = _extract_matching_columns_from_schema(
+                model=join_model, schema=join_schema_to_select
+            )
+        else:
+            columns = inspect(join_model).c
+
+        primary_column_names = [col.name for col in primary_select]
+        for column in columns:
+            labeled_column = _add_column_with_prefix(column, join_prefix)
+            labeled_name = f"{join_prefix}{column.name}" if join_prefix else column.name
+            if labeled_name not in primary_column_names:
+                join_select.append(labeled_column)
+
+        if join_type == "left":
+            stmt = select(*primary_select, *join_select).outerjoin(join_model, join_on)
+        elif join_type == "inner":
+            stmt = select(*primary_select, *join_select).join(join_model, join_on)
+        else:
+            raise ValueError(f"Invalid join type: {join_type}. Only 'left' or 'inner' are valid.")
+
+        for key, value in kwargs.items():
+            if hasattr(self._model, key):
+                stmt = stmt.where(getattr(self._model, key) == value)
+
+        return self.exclude_deleted(stmt)
+
     async def get_joined(
         self,
         db: AsyncSession,
-        join_model: Type[ModelType],
+        join_model: type[ModelType],
         join_prefix: str | None = None,
-        join_on: Union[Join, None] = None,
-        schema_to_select: Union[Type[SQLModel], List, None] = None,
-        join_schema_to_select: Union[Type[SQLModel], List, None] = None,
+        join_on: Join | None = None,
+        schema_to_select: SchemaToSelect = None,
+        join_schema_to_select: SchemaToSelect = None,
         join_type: str = "left",
         **kwargs: Any,
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """
-        Fetches a single record with a join on another model. If 'join_on' is not provided, the method attempts
+        Fetch a single record with a join on another model. If 'join_on' is not provided, the method attempts
         to automatically detect the join condition using foreign key relationships.
 
         Parameters
         ----------
         db : AsyncSession
             The SQLModel async session.
-        join_model : Type[ModelType]
+        join_model : type[ModelType]
             The model to join with.
-        join_prefix : Optional[str]
+        join_prefix : str | None
             Optional prefix to be added to all columns of the joined model. If None, no prefix is added.
-        join_on : Join, optional
+        join_on : Join | None
             SQLAlchemy Join object for specifying the ON clause of the join. If None, the join condition is
             auto-detected based on foreign keys.
-        schema_to_select : Union[Type[SQLModel], List, None], optional
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns from the primary model.
-        join_schema_to_select : Union[Type[SQLModel], List, None], optional
+        join_schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns from the joined model.
         join_type : str, default "left"
             Specifies the type of join operation to perform. Can be "left" for a left outer join or "inner" for an inner join.
@@ -556,101 +636,47 @@ class RepositoryBase(
             Filters to apply to the query.
 
         Returns
-        ----------
-        Dict | None
+        -------
+        dict[str, Any] | None
             The fetched database row or None if not found.
 
         Examples
-        ----------
-        Simple example: Joining User and Tier models without explicitly providing join_on
-        ```python
-        result = await crud_user.get_joined(
-            db=session,
-            join_model=Tier,
-            schema_to_select=UserSchema,
-            join_schema_to_select=TierSchema
-        )
-        ```
+        --------
+        Simple example: joining User and Tier without explicitly providing join_on::
 
-        Complex example: Joining with a custom join condition, additional filter parameters, and a prefix
-        ```python
-        from sqlalchemy import and_
-        result = await crud_user.get_joined(
-            db=session,
-            join_model=Tier,
-            join_prefix="tier_",
-            join_on=and_(SystemUser.tier_id == Tier.id, SystemUser.is_superuser == True),
-            schema_to_select=UserSchema,
-            join_schema_to_select=TierSchema,
-            username="john_doe"
-        )
-        ```
-
-        Return example: prefix added, no schema_to_select or join_schema_to_select
-        ```python
-        {
-            "name": "John Doe",
-            "username": "john_doe",
-            "email": "johndoe@example.com",
-            "hashed_password": "hashed_password_example",
-            "profile_image_url": "https://profileimageurl.com/default.jpg",
-            "id": "123e4567-e89b-12d3-a456-426614174000",
-            "created_at": "2023-01-01T12:00:00",
-            "updated_at": "2023-01-02T12:00:00",
-            "deleted_at": null,
-            "is_deleted": false,
-            "is_superuser": false,
-            "tier_id": "123b4566-e89b-12d3-a456-426614174111",
-            "tier_name": "Premium",
-            "tier_created_at": "2022-12-01T10:00:00",
-            "tier_updated_at": "2023-01-01T11:00:00"
-        }
-        ```
-        """
-        if join_on is None:
-            join_on = _auto_detect_join_condition(self._model, join_model)
-
-        # Extract columns to select from primary model based on schema
-        primary_select = _extract_matching_columns_from_schema(
-            model=self._model, schema=schema_to_select
-        )
-        join_select = []
-
-        # Extract columns to select from joined model based on schema or all columns if schema_to_select is not provided
-        if join_schema_to_select:
-            columns = _extract_matching_columns_from_schema(
-                model=join_model, schema=join_schema_to_select
+            result = await user_repository.get_joined(
+                db=session,
+                join_model=Tier,
+                schema_to_select=UserRead,
+                join_schema_to_select=TierRead,
             )
-        else:
-            columns = inspect(join_model).c
 
-        for column in columns:
-            labeled_column = _add_column_with_prefix(column, join_prefix)
-            if f"{join_prefix}{column.name}" not in [col.name for col in primary_select]:
-                join_select.append(labeled_column)
+        Custom join condition, extra filters, and a prefix::
 
-        # Build the select statement with the specified join type and join condition
-        if join_type == "left":
-            stmt = select(*primary_select, *join_select).outerjoin(join_model, join_on)
-        elif join_type == "inner":
-            stmt = select(*primary_select, *join_select).join(join_model, join_on)
-        else:
-            raise ValueError(f"Invalid join type: {join_type}. Only 'left' or 'inner' are valid.")
+            result = await user_repository.get_joined(
+                db=session,
+                join_model=Tier,
+                join_prefix="tier_",
+                join_on=and_(User.tier_id == Tier.id, User.is_superuser == True),
+                schema_to_select=UserRead,
+                join_schema_to_select=TierRead,
+                username="john_doe",
+            )
+        """
+        stmt = self._select_joined(
+            join_model=join_model,
+            join_prefix=join_prefix,
+            join_on=join_on,
+            schema_to_select=schema_to_select,
+            join_schema_to_select=join_schema_to_select,
+            join_type=join_type,
+            **kwargs,
+        )
 
-        # Apply additional filters based on kwargs
-        for key, value in kwargs.items():
-            if hasattr(self._model, key):
-                stmt = stmt.where(getattr(self._model, key) == value)
-
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
-
-        # Execute the statement and retrieve the result
         db_row = await db.exec(stmt)
-        result: Row = db_row.first()
+        result: Row | None = db_row.first()
         if result:
-            out: dict = dict(result._mapping)
+            out: dict[str, Any] = dict(result._mapping)
             return out
 
         return None
@@ -658,17 +684,17 @@ class RepositoryBase(
     async def get_multi_joined(
         self,
         db: AsyncSession,
-        join_model: Type[ModelType],
+        join_model: type[ModelType],
         join_prefix: str | None = None,
-        join_on: Union[Join, None] = None,
-        schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
-        join_schema_to_select: Union[Type[SQLModel], List[Type[SQLModel]], None] = None,
+        join_on: Join | None = None,
+        schema_to_select: SchemaToSelect = None,
+        join_schema_to_select: SchemaToSelect = None,
         join_type: str = "left",
         offset: int = 0,
         limit: int = 100,
-        sort_by: List[Tuple[str, str]] = None,
+        sort_by: SortBy = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Fetch multiple records with a join on another model, allowing for pagination.
 
@@ -676,16 +702,16 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The SQLModel async session.
-        join_model : Type[ModelType]
+        join_model : type[ModelType]
             The model to join with.
-        join_prefix : Optional[str]
+        join_prefix : str | None
             Optional prefix to be added to all columns of the joined model. If None, no prefix is added.
-        join_on : Join, optional
+        join_on : Join | None
             SQLAlchemy Join object for specifying the ON clause of the join. If None, the join condition is
             auto-detected based on foreign keys.
-        schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+        schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns from the primary model.
-        join_schema_to_select : Union[Type[SQLModel], List[Type[SQLModel]], None], optional
+        join_schema_to_select : type[SQLModel] | list[type[SQLModel]] | None, optional
             SQLModel (Pydantic) schema for selecting specific columns from the joined model.
         join_type : str, default "left"
             Specifies the type of join operation to perform. Can be "left" for a left outer join or "inner" for an inner join.
@@ -693,78 +719,49 @@ class RepositoryBase(
             The offset (number of records to skip) for pagination.
         limit : int, default 100
             The limit (maximum number of records to return) for pagination.
-        sort_by : List[Tuple[str, str]]
+        sort_by : list[tuple[str, str]] | None
             A list of tuples where each tuple contains a field name and the direction ('asc' or 'desc').
         kwargs : dict
             Filters to apply to the primary query.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             A dictionary containing the fetched rows under 'data' key and total count under 'total_count'.
 
         Examples
         --------
-        # Fetching multiple User records joined with Tier records, using left join
-        users = await crud_user.get_multi_joined(
-            db=session,
-            join_model=Tier,
-            join_prefix="tier_",
-            join_on=SystemUser.tier_id == Tier.id,
-            schema_to_select=UserSchema,
-            join_schema_to_select=TierSchema,
-            offset=0,
-            limit=10
-        )
-        """
-        if join_on is None:
-            join_on = _auto_detect_join_condition(self._model, join_model)
+        Fetching multiple User records joined with Tier, using a left join::
 
-        primary_select = _extract_matching_columns_from_schema(
-            model=self._model, schema=schema_to_select
-        )
-        join_select = []
-
-        if join_schema_to_select:
-            columns = _extract_matching_columns_from_schema(
-                model=join_model, schema=join_schema_to_select
+            users = await user_repository.get_multi_joined(
+                db=session,
+                join_model=Tier,
+                join_prefix="tier_",
+                join_on=User.tier_id == Tier.id,
+                schema_to_select=UserRead,
+                join_schema_to_select=TierRead,
+                offset=0,
+                limit=10,
             )
-        else:
-            columns = inspect(join_model).c
+        """
+        stmt = self._select_joined(
+            join_model=join_model,
+            join_prefix=join_prefix,
+            join_on=join_on,
+            schema_to_select=schema_to_select,
+            join_schema_to_select=join_schema_to_select,
+            join_type=join_type,
+            **kwargs,
+        )
 
-        for column in columns:
-            labeled_column = _add_column_with_prefix(column, join_prefix)
-            if f"{join_prefix}{column.name}" not in [col.name for col in primary_select]:
-                join_select.append(labeled_column)
-
-        if join_type == "left":
-            stmt = select(*primary_select, *join_select).outerjoin(join_model, join_on)
-        elif join_type == "inner":
-            stmt = select(*primary_select, *join_select).join(join_model, join_on)
-        else:
-            raise ValueError(f"Invalid join type: {join_type}. Only 'left' or 'inner' are valid.")
-
-        for key, value in kwargs.items():
-            if hasattr(self._model, key):
-                stmt = stmt.where(getattr(self._model, key) == value)
-
-        # Always remove is_deleted filter if it exists
-        if "is_deleted" in self._model.__table__.columns:
-            stmt = stmt.filter(self._model.is_deleted == False)
-
-        # Statement without pagination
         stmt_without_pagination = stmt
 
-        # Apply sorting if provided
         stmt = self.apply_sorting(stmt, sort_by)
-
-        # Add pagination
         stmt = stmt.offset(offset).limit(limit)
 
         db_rows = await db.exec(stmt)
         data = [dict(row._mapping) for row in db_rows]
 
-        # Get the total count of records matching the query
         total_count: int = await self.total_count(
             db=db, stmt_without_pagination=stmt_without_pagination
         )
@@ -774,7 +771,7 @@ class RepositoryBase(
     async def update(
         self,
         db: AsyncSession,
-        object: Union[UpdateSchemaType, Dict[str, Any]],
+        object: UpdateSchemaType | dict[str, Any],
         with_commit: bool = True,
         **kwargs: Any,
     ) -> None:
@@ -785,7 +782,7 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The SQLModel async session.
-        object : Union[UpdateSchemaType, Dict[str, Any]]
+        object : UpdateSchemaType | dict[str, Any]
             The SQLModel (Pydantic) schema or dictionary containing the data to be updated.
         with_commit : bool, optional
             Flag indicating whether to commit the changes to the database.
@@ -804,25 +801,21 @@ class RepositoryBase(
         else:
             update_data = object.model_dump(exclude_unset=True)
 
-        # TODO: Verify if this is needed, because we use 'sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}' on TimestampMixin
-        if "updated_at" in self._model.__table__.columns and "updated_at" in update_data.keys():
+        # Core ``update().values()`` does not fire ORM ``onupdate`` defaults
+        if "updated_at" in self._model.__table__.columns:
             update_data["updated_at"] = datetime.now(UTC)
 
-        # Use correct user id for 'updated_by_user_id' if it exists
         if "updated_by_user_id" in self._model.__table__.columns:
-            if "updated_by_user_id" in update_data.keys():
-                update_data["updated_by_user_id"] = update_data["updated_by_user_id"]
-            elif "id" in current_user.keys():
-                update_data["updated_by_user_id"] = current_user["id"]
-            else:
-                update_data["updated_by_user_id"] = settings.USER_SYSTEM_ID
+            if "updated_by_user_id" not in update_data:
+                if "id" in current_user:
+                    update_data["updated_by_user_id"] = current_user["id"]
+                else:
+                    update_data["updated_by_user_id"] = settings.USER_SYSTEM_ID
 
-        # Update the record
         stmt = update(self._model).filter_by(**kwargs).values(update_data)
 
         await db.exec(stmt)
 
-        # Commit or flush the changes
         if not with_commit:
             await db.flush()
         else:
@@ -849,13 +842,18 @@ class RepositoryBase(
 
         await db.exec(stmt)
 
-        # Commit or flush the changes
         if not with_commit:
             await db.flush()
         else:
             await db.commit()
 
-    async def delete(self, db: AsyncSession, db_row: Row | None = None, **kwargs: Any) -> None:
+    async def delete(
+        self,
+        db: AsyncSession,
+        db_row: Any | None = None,
+        with_commit: bool = True,
+        **kwargs: Any,
+    ) -> None:
         """
         Soft delete a record if it has "is_deleted" attribute, otherwise perform a hard delete.
 
@@ -863,8 +861,11 @@ class RepositoryBase(
         ----------
         db : AsyncSession
             The SQLModel async session.
-        db_row : Row | None, optional
-            Existing database row to delete. If None, it will be fetched based on `kwargs`. Default is None.
+        db_row : Any | None, optional
+            Existing database row (typically the dict returned by ``get``). If None, existence is
+            checked via ``exists`` using ``kwargs``. Default is None.
+        with_commit : bool, optional
+            Flag indicating whether to commit the changes to the database.
         kwargs : dict
             Filters for fetching the database row if not provided.
 
@@ -872,32 +873,30 @@ class RepositoryBase(
         -------
         None
         """
-        # Extract the current user
         current_user = getattr(db, "current_user", {})
 
-        db_row = db_row or await self.exists(db=db, **kwargs)
-        if db_row:
-            if "is_deleted" in self._model.__table__.columns:
-                # Soft delete
-                object_dict = {
-                    "is_deleted": True,
-                    "deleted_at": datetime.now(UTC),
-                }
+        if db_row is None and not await self.exists(db=db, **kwargs):
+            return
 
-                # Use correct user id for 'updated_by_user_id'
-                if "updated_by_user_id" in self._model.__table__.columns:
-                    if "id" in current_user.keys():
-                        object_dict["updated_by_user_id"] = current_user["id"]
-                    else:
-                        object_dict["updated_by_user_id"] = settings.USER_SYSTEM_ID
+        if "is_deleted" in self._model.__table__.columns:
+            object_dict = {
+                "is_deleted": True,
+                "deleted_at": datetime.now(UTC),
+            }
 
-                # Update the record
-                stmt = update(self._model).filter_by(**kwargs).values(object_dict)
+            if "updated_by_user_id" in self._model.__table__.columns:
+                if "id" in current_user:
+                    object_dict["updated_by_user_id"] = current_user["id"]
+                else:
+                    object_dict["updated_by_user_id"] = settings.USER_SYSTEM_ID
 
-                await db.exec(stmt)
-                await db.commit()
+            stmt = update(self._model).filter_by(**kwargs).values(object_dict)
+        else:
+            stmt = delete(self._model).filter_by(**kwargs)
 
-            else:
-                stmt = delete(self._model).filter_by(**kwargs)
-                await db.exec(stmt)
-                await db.commit()
+        await db.exec(stmt)
+
+        if not with_commit:
+            await db.flush()
+        else:
+            await db.commit()

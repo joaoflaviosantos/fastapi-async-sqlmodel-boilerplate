@@ -18,11 +18,18 @@ async def get_auth_service() -> AuthService:
     return auth_service
 
 
-# Function to get the current user based on the provided authentication token
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> Union[dict[str, Any], None]:
+    """
+    Require a valid bearer token and return the authenticated user dict.
+
+    Use when the handler needs the user but not a session that stamps
+    ``updated_by_user_id`` (for example ``GET /system/users/me/``). For
+    authenticated writes, use ``async_get_user_context_db`` instead of
+    injecting this alongside ``db``.
+    """
     token_data = await verify_token(token, db)
     if token_data is None:
         raise UnauthorizedException(detail="User not authenticated.")
@@ -45,10 +52,16 @@ async def get_current_user(
     raise UnauthorizedException(detail="User not authenticated.")
 
 
-# Function to get the optional user based on the provided request
 async def get_optional_user(
     request: Request, db: AsyncSession = Depends(async_get_db)
 ) -> dict | None:
+    """
+    Return the authenticated user if a bearer token is present, else None.
+
+    Use on public routes that change behavior when someone is logged in
+    (rate limits, optional personalization). A missing or invalid token
+    returns ``None``; it does not raise 401.
+    """
     token = request.headers.get("Authorization")
     if not token:
         return None
@@ -80,9 +93,34 @@ async def get_optional_user(
         return None
 
 
-# Function to get the current superuser based on the provided current user information
 async def get_current_superuser(current_user: Annotated[dict, Depends(get_current_user)]) -> dict:
+    """
+    Require the current user to be a superuser.
+
+    Use as ``dependencies=[Depends(get_current_superuser)]`` on privileged
+    routes (hard delete ``/db``, admin-only lists). Raises 403 otherwise.
+    """
     if not current_user["is_superuser"]:
         raise ForbiddenException(detail="You do not have enough privileges.")
 
     return current_user
+
+
+async def async_get_user_context_db(
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    current_user: Annotated[dict, Depends(get_current_user)],
+) -> AsyncSession:
+    """
+    Return the DB session with ``current_user`` attached.
+
+    Use as the **sole** auth and session dependency on authenticated writes
+    (``write_*``, ``patch_*``, ``erase_*``) so ``RepositoryBase.update`` /
+    ``.delete`` stamp ``updated_by_user_id``. Do not also inject
+    ``Depends(get_current_user)`` on the same handler.
+
+    Read the user in the handler with::
+
+        current_user = getattr(db, "current_user", {})
+    """
+    setattr(db, "current_user", current_user)
+    return db

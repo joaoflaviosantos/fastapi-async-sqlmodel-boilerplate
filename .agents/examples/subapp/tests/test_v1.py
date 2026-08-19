@@ -8,8 +8,8 @@ from tests.helper import _get_token
 
 ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
 ADMIN_PASSWORD = settings.USER_FIRST_ADMIN_PASSWORD
+ADMIN_NAME = settings.USER_FIRST_ADMIN_NAME
 
-test_item_user_id = None
 test_item_id = None
 test_item = {
     "title": "This is my test item",
@@ -19,35 +19,14 @@ test_item = {
 
 
 @pytest.mark.asyncio
-async def test_get_item_user_data(client: AsyncClient) -> None:
-    global test_item_user_id
-    assert test_item_user_id is None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    response = await client.get(
-        url="/api/v1/system/users/me/",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
-
-    test_item_user_id = response.json()["id"]
-
-    assert response.status_code == 200
-    assert test_item_user_id is not None
-    assert response.json()["username"] == ADMIN_USERNAME
-
-
-@pytest.mark.asyncio
 async def test_create_item(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.post(
-        url=f"/api/v1/example/items/user/{test_item_user_id}",
+        url="/api/v1/example/items",
         json=test_item,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -61,14 +40,12 @@ async def test_create_item(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_get_created_item(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is not None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.get(
-        url=f"/api/v1/example/items/{test_item_id}/user/{test_item_user_id}",
+        url=f"/api/v1/example/items/{test_item_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -78,17 +55,18 @@ async def test_get_created_item(client: AsyncClient) -> None:
     assert item["title"] == test_item["title"]
     assert item["text"] == test_item["text"]
     assert item["media_url"] == test_item["media_url"]
+    assert item["updated_by_user_name"] == ADMIN_NAME
 
 
 @pytest.mark.asyncio
-async def test_get_multiple_user_items(client: AsyncClient) -> None:
-    global test_item_user_id
-    assert test_item_user_id is not None
+async def test_get_multiple_items(client: AsyncClient) -> None:
+    global test_item_id
+    assert test_item_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.get(
-        url=f"/api/v1/example/items/user/{test_item_user_id}",
+        url="/api/v1/example/items",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -102,18 +80,19 @@ async def test_get_multiple_user_items(client: AsyncClient) -> None:
     assert "page" in result
     assert "items_per_page" in result
 
+    item = next(row for row in result["data"] if row["id"] == test_item_id)
+    assert item["updated_by_user_name"] == ADMIN_NAME
+
 
 @pytest.mark.asyncio
 async def test_update_item(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is not None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.patch(
-        url=f"/api/v1/example/items/{test_item_id}/user/{test_item_user_id}",
+        url=f"/api/v1/example/items/{test_item_id}",
         json=test_item,
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
@@ -125,14 +104,12 @@ async def test_update_item(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_delete_item(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is not None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.delete(
-        url=f"/api/v1/example/items/{test_item_id}/user/{test_item_user_id}",
+        url=f"/api/v1/example/items/{test_item_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -143,14 +120,12 @@ async def test_delete_item(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_delete_already_deleted_item_as_admin(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is not None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.delete(
-        url=f"/api/v1/example/items/{test_item_id}/user/{test_item_user_id}",
+        url=f"/api/v1/example/items/{test_item_id}",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 
@@ -161,14 +136,12 @@ async def test_delete_already_deleted_item_as_admin(client: AsyncClient) -> None
 @pytest.mark.asyncio
 async def test_delete_db_item(client: AsyncClient) -> None:
     global test_item_id
-    global test_item_user_id
     assert test_item_id is not None
-    assert test_item_user_id is not None
 
     token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
     response = await client.delete(
-        url=f"/api/v1/example/items/{test_item_id}/user/{test_item_user_id}/db",
+        url=f"/api/v1/example/items/{test_item_id}/db",
         headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
     )
 

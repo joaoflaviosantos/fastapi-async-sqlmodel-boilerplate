@@ -5,7 +5,13 @@ from uuid import UUID
 from sqlmodel import Field
 
 # Local Dependencies
-from src.core.common.models import SoftDeleteMixin, TimestampMixin, UUIDMixin, Base
+from src.core.common.models import (
+    SoftDeleteMixin,
+    UserTrackingMixin,
+    TimestampMixin,
+    UUIDMixin,
+    Base,
+)
 
 
 class ItemContentBase(Base):
@@ -37,15 +43,17 @@ class ItemMediaBase(Base):
 
 
 class ItemRelationshipBase(Base):
-    user_id: UUID = Field(
-        description="User ID associated with the item",
-        foreign_key="system_users.id",
+    relation_example_id: UUID | None = Field(
+        default=None,
+        foreign_key="example_relation.id",
         index=True,
+        description="ID of the related record",
     )
 
 
 class Item(
     SoftDeleteMixin,
+    UserTrackingMixin,
     TimestampMixin,
     ItemRelationshipBase,
     ItemMediaBase,

@@ -2,7 +2,7 @@
 
 This is a FastAPI + SQLModel async backend. Apps are Django-inspired. Layers are strict: **router → service → repository**. There is no `crud.py`.
 
-CRUD copy-target (harness, not a running app): `.agents/examples/subapp/` (includes optional `tasks.py`). Copy it to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Live runtime for users, auth, and hashing: `backend/src/apps/system/users/`. Sample apps such as `blog` may be absent in this clone — do not use them as a source.
+CRUD copy-target (harness, not a running app): `.agents/examples/subapp/` (includes optional `tasks.py`). Copy it to `backend/src/apps/<app>/<subapp>/` and rename `example` / `items` / `Item`. Rename or drop the placeholder `ItemRelationshipBase`. Live runtime for users, auth, and hashing: `backend/src/apps/system/users/`. Sample apps such as `blog` may be absent in this clone — do not use them as a source.
 
 When the task matches, read the skill:
 
@@ -37,20 +37,22 @@ Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixin
 
 - **Router:** HTTP only. `Depends` + `await service.method(...)`. Never import repositories.
 - **Service:** business rules, authz, hashing, cache invalidation, Celery triggers, HTTP exceptions.
-- **Repository:** data access via `RepositoryBase[...]`. Keep it thin; add custom SQL only when `get` / `get_multi` / `create` / `update` / `delete` / `db_delete` are not enough.
+- **Repository:** data access via `RepositoryBase[...]`. Keep it thin; add custom SQL only when `get` / `get_multi` / `create` / `update` / `delete` / `db_delete` are not enough. Canonical custom queries for related data: `get_single_with_main_relations` / `get_multi_with_main_relations` (see `.agents/examples/subapp/repositories.py`).
 
 Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `DuplicateValueException`, … from `src.core.exceptions.http_exceptions`).
 
 ## Conventions
 
-- Table name: `{app}_{resource}` (`example_item`, `system_users`).
+- Table name: `{app}_{resource}` (`example_item`, `system_users`). One `table=True` class per `models.py`; a second table means a second subapp.
+- Many-to-many: subapp `<a>_<b>_assoc`, table `{app}_{a}_{b}_assoc`. Composed PK in a `*RelationshipBase`. No `UUIDMixin` / `TimestampMixin` / `SoftDeleteMixin` / `UserTrackingMixin`. No HTTP surface (`models.py`, `schemas.py`, `repositories.py`, `services.py` only).
 - Imports at the top of each Python file, in three blocks with a blank line between them: `# Built-in Dependencies`, `# Third-Party Dependencies`, `# Local Dependencies`.
-- Models: small `*Base` classes composed into one `table=True` class with `UUIDMixin`, `TimestampMixin`, `SoftDeleteMixin` as needed (`src.core.common.models`). List those bases in **reverse** of the desired column order (Alembic `--autogenerate` inverts them). Columns with `foreign_key=` go in a separate `*RelationshipBase`, never mixed into domain `*Base` classes. Details: [sqlmodel](.agents/skills/sqlmodel/SKILL.md).
+- Models: small `*Base` classes composed into one `table=True` class with `UUIDMixin`, `TimestampMixin`, `SoftDeleteMixin`, `UserTrackingMixin` as needed (`src.core.common.models`). List those bases in **reverse** of the desired column order (Alembic `--autogenerate` inverts them). Columns with `foreign_key=` go in a separate `*RelationshipBase`, never mixed into domain `*Base` classes. Exception: `UserTrackingMixin` carries `foreign_key=` itself. Details: [sqlmodel](.agents/skills/sqlmodel/SKILL.md).
+- The CRUD example includes tracking. To copy a resource without it, follow [.agents/examples/README.md](.agents/examples/README.md) (Resource without user tracking).
 - Schemas reuse those `*Base` classes. Typical set: `XRead`, `XCreate` (`extra="forbid"`), `XCreateInternal`, `XUpdate` with `@optional()` from `src._overrides.pydantic.optional`, `XUpdateInternal`, `XDelete`.
 - Endpoints: `write_*`, `read_*`, `patch_*`, `erase_*` (soft delete), `erase_db_*` (hard delete, superuser, path suffix `/db`).
 - Deps: `get_<entity>_service`, `<entity>_filters`, `<entity>_sort_order`.
 - Singletons: `user_repository`, `user_service` (module-level).
-- Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` from `src.apps.system.auth.deps`. DB session: `async_get_db`.
+- Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` / `async_get_user_context_db` from `src.apps.system.auth.deps`. DB session: `async_get_db` (public GETs, hard delete) or `async_get_user_context_db` (authenticated writes that stamp `updated_by_user_id`). `async_get_user_context_db` already authenticates — do not also inject `Depends(get_current_user)` on the same handler; read `getattr(db, "current_user", {})`.
 - OpenAPI tags: `"System - Users"`, `"System - Auth"`, `"Example - Items"`.
 - Paths include the app prefix on the route itself (`/example/items/...`), not on the subapp `APIRouter`.
 

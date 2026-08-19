@@ -26,7 +26,7 @@ locust/
 
 1. Copy `.agents/examples/locust_taskset.py` to `locust/tasks/<resource>.py` — `TaskSet`, `@task` weights, three import blocks.
 2. Login in `on_start` via `login(self.client)`; send `auth_headers(self.access_token)`.
-3. Paths use `API_V1_PREFIX` (`/api/v1`) plus the real route (`/example/items/...` in the template). Set `name=` so Locust groups by template, not by UUID.
+3. Paths use `API_V1_PREFIX` (`/api/v1`) plus the real route (`/example/items` and `/example/items/{item_id}` in the template). Set `name=` so Locust groups by template, not by UUID.
 4. Export in `locust/tasks/__init__.py` and add a weight on `APIUser.tasks` in `locustfile.py`.
 
 Treat expected 404 during concurrent CRUD as success (`catch_response=True`), same as the template.
