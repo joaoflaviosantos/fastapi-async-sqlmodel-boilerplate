@@ -11,9 +11,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml">
-      <img src="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml/badge.svg" alt="Tests">
-  </a>
   <a href="https://www.python.org">
       <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   </a>
@@ -37,6 +34,12 @@
   </a>
   <a href="https://docs.docker.com/compose/">
       <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=for-the-badge" alt="Docker">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml">
+      <img src="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml/badge.svg" alt="Tests">
   </a>
 </p>
 

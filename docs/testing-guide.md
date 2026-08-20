@@ -76,7 +76,7 @@ poetry run mypy src
 - **checks** (no Docker): `ruff format --check .`, `ruff check src`, `mypy src`, `pytest -m unit -v`
 - **test** (Testcontainers): `pytest -v --cov --cov-report=term-missing --cov-fail-under=80`
 
-Dummy `SECRET_KEY` and broker settings come from the pytest plugin — CI does not need repository secrets. Dependabot updates pip (`/backend`) and GitHub Actions weekly.
+Dummy `SECRET_KEY` and broker settings come from the pytest plugin — CI does not need repository secrets. Dependabot updates pip (`/backend`) and GitHub Actions weekly; those PRs squash-merge when jobs `checks` and `test` pass (repo must allow auto-merge and require those checks on `main`).
 
 ---
 
