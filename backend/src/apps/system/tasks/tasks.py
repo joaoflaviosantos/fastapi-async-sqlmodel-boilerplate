@@ -26,7 +26,8 @@ async def sample_background_task(name: str) -> str:
 @async_task(app, name="check_application_health", bind=True, max_retries=1)
 async def check_application_health(self: Any) -> dict:
     """
-    Scheduled health check task that verifies connectivity to PostgreSQL, Redis, and API.
+    Scheduled health check that verifies worker connectivity to PostgreSQL and Redis,
+    plus the API liveness (`GET /health`) and readiness (`GET /ready`) probes.
     Runs every 30 seconds via Celery Beat.
 
     Returns
@@ -39,6 +40,7 @@ async def check_application_health(self: Any) -> dict:
         "database": "unknown",
         "redis": "unknown",
         "api": "unknown",
+        "ready": "unknown",
     }
 
     # Check PostgreSQL connectivity
@@ -73,25 +75,39 @@ async def check_application_health(self: Any) -> dict:
         health_status["redis"] = "unhealthy"
         logger_worker.error(f"[health_check] Redis failed: {exc}")
 
-    # Check API connectivity
+    # Check API liveness (`GET /health`)
     try:
-        api_url = f"{settings.API_BASE_URL}/api/v1/system/tasks/queue-health"
         response = await make_get_request(
-            url=api_url,
-            params={"queue_name": "default"},
+            url=f"{settings.API_BASE_URL}/health",
             timeout=httpx.Timeout(10.0),
         )
-        # Any response from API means it's healthy
         health_status["api"] = "healthy"
-        logger_worker.info(f"[health_check] API is healthy (status {response.status_code}).")
+        logger_worker.info(
+            f"[health_check] API liveness is healthy (status {response.status_code})."
+        )
     except Exception as exc:
         health_status["api"] = "unhealthy"
-        logger_worker.error(f"[health_check] API failed: {exc}")
+        logger_worker.error(f"[health_check] API liveness failed: {exc}")
+
+    # Check API readiness (`GET /ready`)
+    try:
+        response = await make_get_request(
+            url=f"{settings.API_BASE_URL}/ready",
+            timeout=httpx.Timeout(10.0),
+        )
+        health_status["ready"] = "healthy"
+        logger_worker.info(
+            f"[health_check] API readiness is healthy (status {response.status_code})."
+        )
+    except Exception as exc:
+        health_status["ready"] = "unhealthy"
+        logger_worker.error(f"[health_check] API readiness failed: {exc}")
 
     # Summary log
     logger_worker.info(
         f"[health_check] Summary: database={health_status['database']}, "
-        f"redis={health_status['redis']}, api={health_status['api']}"
+        f"redis={health_status['redis']}, api={health_status['api']}, "
+        f"ready={health_status['ready']}"
     )
 
     return health_status

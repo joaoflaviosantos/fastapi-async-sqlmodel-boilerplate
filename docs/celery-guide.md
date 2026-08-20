@@ -125,11 +125,11 @@ The `async_task` decorator (in `src/_overrides/celery/async_task.py`) uses `asgi
 
 ## Registered Tasks
 
-| Task Name                  | Module                        | Type       | Description                                                     |
-| -------------------------- | ----------------------------- | ---------- | --------------------------------------------------------------- |
-| `send_welcome_email`       | `src.apps.system.users.tasks` | On-demand  | Sends welcome email when a new user is created (log simulation) |
-| `sample_background_task`   | `src.apps.system.tasks.tasks` | On-demand  | Sample long-running job used by the tasks HTTP API              |
-| `check_application_health` | `src.apps.system.tasks.tasks` | Beat (30s) | Periodic check of PostgreSQL, Redis, and the tasks HTTP API     |
+| Task Name                  | Module                        | Type       | Description                                                              |
+| -------------------------- | ----------------------------- | ---------- | ------------------------------------------------------------------------ |
+| `send_welcome_email`       | `src.apps.system.users.tasks` | On-demand  | Sends welcome email when a new user is created (log simulation)          |
+| `sample_background_task`   | `src.apps.system.tasks.tasks` | On-demand  | Sample long-running job used by the tasks HTTP API                       |
+| `check_application_health` | `src.apps.system.tasks.tasks` | Beat (30s) | Periodic check of PostgreSQL, Redis, and `GET /health` plus `GET /ready` |
 
 ## Calling Tasks
 
