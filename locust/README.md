@@ -49,7 +49,7 @@ From the **repository root**:
 python3 setup.py
 ```
 
-Select option **3 - Load Testing (Locust)**. The CLI installs dependencies and starts Locust for you.
+Select option **3 - Load Testing (Locust)** (or `python setup.py locust`). The CLI installs dependencies and starts Locust for you.
 
 ### Manual setup (Web UI)
 

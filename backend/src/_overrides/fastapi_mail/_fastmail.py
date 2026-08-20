@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from collections.abc import Iterator
 from email.message import EmailMessage, Message
 from typing import Any, Dict, Optional, Union
 
@@ -15,7 +16,7 @@ from fastapi_mail.schemas import MessageSchema
 
 class _MailMixin:
     @contextmanager
-    def record_messages(self):
+    def record_messages(self) -> Iterator[list[Any]]:
         """Records all messages. Use in unit tests for example::
             with mail.record_messages() as outbox:
                 response = app.test_client.get("/email-sending-view/")
@@ -30,7 +31,7 @@ class _MailMixin:
 
         outbox = []
 
-        def _record(message):
+        def _record(message: Any) -> None:
             outbox.append(message)
 
         email_dispatched.connect(_record)

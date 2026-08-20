@@ -1,8 +1,8 @@
-"""empty message
+"""create initial tables
 
-Revision ID: e7417594926f
+Revision ID: cb1ed2c5a177
 Revises:
-Create Date: 2026-06-08 20:28:49.987127
+Create Date: 2026-08-20 02:42:26.065128
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 import sqlmodel
 
 # revision identifiers, used by Alembic.
-revision: str = "e7417594926f"
+revision: str = "cb1ed2c5a177"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -94,19 +94,20 @@ def upgrade() -> None:
     op.create_table(
         "system_rate_limit",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
         sa.Column("limit", sa.Integer(), nullable=False),
         sa.Column("period", sa.Integer(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
+        sa.Column("tier_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("tier_id", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(
             ["tier_id"],
             ["system_tier.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
+        sa.UniqueConstraint("tier_id", "name", name="uq_system_rate_limit_tier_id_name"),
+        sa.UniqueConstraint("tier_id", "path", name="uq_system_rate_limit_tier_id_path"),
         comment="Rate limit configuration",
     )
     op.create_index(op.f("ix_system_rate_limit_id"), "system_rate_limit", ["id"], unique=False)
@@ -120,14 +121,14 @@ def upgrade() -> None:
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(length=20), nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
         sa.Column("profile_image_url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("hashed_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("is_superuser", sa.Boolean(), server_default=sa.text("false"), nullable=False),
-        sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("hashed_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("tier_id", sa.Uuid(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("tier_id", sa.Uuid(), nullable=True),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["tier_id"],
             ["system_tier.id"],
@@ -143,16 +144,30 @@ def upgrade() -> None:
     op.create_index(op.f("ix_system_users_tier_id"), "system_users", ["tier_id"], unique=False)
     op.create_index(op.f("ix_system_users_username"), "system_users", ["username"], unique=True)
     op.create_table(
+        "blog_tag",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+        comment="Blog tag information",
+    )
+    op.create_index(op.f("ix_blog_tag_id"), "blog_tag", ["id"], unique=False)
+    op.create_index(op.f("ix_blog_tag_is_deleted"), "blog_tag", ["is_deleted"], unique=False)
+    op.create_table(
         "blog_post",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("title", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
         sa.Column("text", sqlmodel.sql.sqltypes.AutoString(length=63206), nullable=False),
         sa.Column("media_url", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
-        sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["system_users.id"],
@@ -163,11 +178,31 @@ def upgrade() -> None:
     op.create_index(op.f("ix_blog_post_id"), "blog_post", ["id"], unique=False)
     op.create_index(op.f("ix_blog_post_is_deleted"), "blog_post", ["is_deleted"], unique=False)
     op.create_index(op.f("ix_blog_post_user_id"), "blog_post", ["user_id"], unique=False)
+    op.create_table(
+        "blog_post_tag_assoc",
+        sa.Column("post_id", sa.Uuid(), nullable=False),
+        sa.Column("tag_id", sa.Uuid(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["post_id"],
+            ["blog_post.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["tag_id"],
+            ["blog_tag.id"],
+        ),
+        sa.PrimaryKeyConstraint("post_id", "tag_id"),
+        comment="Association between blog posts and tags",
+    )
+    op.create_index(
+        op.f("ix_blog_post_tag_assoc_tag_id"), "blog_post_tag_assoc", ["tag_id"], unique=False
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f("ix_blog_post_tag_assoc_tag_id"), table_name="blog_post_tag_assoc")
+    op.drop_table("blog_post_tag_assoc")
     op.drop_index(op.f("ix_blog_post_user_id"), table_name="blog_post")
     op.drop_index(op.f("ix_blog_post_is_deleted"), table_name="blog_post")
     op.drop_index(op.f("ix_blog_post_id"), table_name="blog_post")
@@ -188,7 +223,11 @@ def downgrade() -> None:
     op.drop_table("system_tier")
     op.drop_table("system_taskset_meta")
     op.drop_table("system_task_meta")
+    op.drop_index(op.f("ix_blog_tag_is_deleted"), table_name="blog_tag")
+    op.drop_index(op.f("ix_blog_tag_id"), table_name="blog_tag")
+    op.drop_table("blog_tag")
     # ### end Alembic commands ###
 
+    # Drop sequences
     op.execute("DROP SEQUENCE IF EXISTS task_id_sequence")
     op.execute("DROP SEQUENCE IF EXISTS taskset_id_sequence")

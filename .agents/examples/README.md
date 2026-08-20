@@ -25,3 +25,10 @@ The example ships with `UserTrackingMixin` and join queries. To copy a resource 
 3. `repositories.py` — delete the `ItemRepository` class body and restore the alias `ItemRepository = RepositoryBase[Item, ItemCreateInternal, ItemUpdate, ItemUpdateInternal, ItemDelete]`.
 4. `services.py` — replace `get_multi_with_main_relations` / `get_single_with_main_relations` with `get_multi` / `get` using `schema_to_select=ItemRead`. Remove the two lines that set `created_by_user_id` / `updated_by_user_id` in `create_item`.
 5. `routers/v1.py` — switch `write_item`, `patch_item`, and `erase_item` from `async_get_user_context_db` back to `async_get_db`.
+
+## Seeds
+
+Do not hook these into `backend/src/apps/_management/commands/seed.py` until you have copied them into `apps/`.
+
+- **One row:** [subapp/_management/commands/create_first_item.py](subapp/_management/commands/create_first_item.py) — `one_or_none()` on a unique payload, add if missing.
+- **Catalog / N rows:** [subapp/_management/commands/create_example_items.py](subapp/_management/commands/create_example_items.py) — one `SELECT` of titles, add only missing rows, one `commit`. Do not query per item in a loop.

@@ -3,8 +3,6 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel import Field, text
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
 
 # Local Dependencies
 from src.core.common.models import (
@@ -13,7 +11,6 @@ from src.core.common.models import (
     UUIDMixin,
     Base,
 )
-from typing import Any
 
 
 class UserPersonalInfoBase(Base):

@@ -5,7 +5,7 @@ Use this when you want to **run only the databases in Docker** while running the
 ## What's included
 
 | Service    | Description                       |
-|------------|-----------------------------------|
+| ---------- | --------------------------------- |
 | `postgres` | pgvector/pgvector (PostgreSQL 17) |
 | `redis`    | Redis Alpine                      |
 
@@ -28,6 +28,8 @@ docker compose --env-file backend/.env -f development/compose/infra-only/docker-
 python3 setup.py
 ```
 
+Choose **1 – Local Development** (or `python setup.py local`). Setup runs only if `backend/.env` is missing required values.
+
 **Option B — Manual (from `backend/`):**
 
 ```bash
@@ -48,6 +50,5 @@ poetry run celery -A src.worker beat --loglevel=info
 
 ## Notes
 
-- Postgres is exposed on the host at `localhost:5432` (or `$POSTGRES_PORT` if set in your shell).
-- Redis is exposed on the host at `localhost:6379` with the password set in `REDIS_CACHE_PASSWORD` from your `backend/.env`.
-- Make sure your `backend/.env` has `POSTGRES_SERVER=localhost` and `REDIS_*_HOST=localhost`.
+- Published ports bind to IPv4 loopback (`127.0.0.1`), not `localhost` / IPv6. Postgres is `127.0.0.1:5432` (or `$POSTGRES_PORT`); Redis is `127.0.0.1:6379` (or `$REDIS_CACHE_PORT`) with `REDIS_CACHE_PASSWORD` from `backend/.env`.
+- Make sure your `backend/.env` has `POSTGRES_SERVER=127.0.0.1` and `REDIS_CACHE_HOST=127.0.0.1`.

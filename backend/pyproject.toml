@@ -22,8 +22,8 @@ pgvector = "^0.4.2"
 psutil = "^7.2.2"
 psycopg2-binary = "^2.9.9"
 pydantic-settings = "^2.14.1"
+PyJWT = "^2.10.1"
 python = "^3.11"
-python-jose = "^3.5.0"
 redis = "^7.0.1"
 SQLAlchemy = "^2.0.50"
 sqlmodel = "^0.0.38"
@@ -32,17 +32,56 @@ uvicorn = "^0.49.0"
 uvloop = { version = "^0.22.1", markers = "sys_platform == 'linux'" }
 
 [tool.poetry.group.dev.dependencies]
-black = "^26.5.1"
 mypy = "^2.1.0"
 pre-commit = "^4.6.0"
 pytest = "^9.0.3"
-types-redis = "^4.6.0.20241004"
 pytest-asyncio = "^1.4.0"
+pytest-cov = "^7.1.0"
+ruff = "^0.14.0"
 testcontainers = {extras = ["postgres"], version = "^4.14.2"}
-asgi-lifespan = "^2.1.0"
+types-redis = "^4.6.0.20241004"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
+target-version = "py311"
+src = ["src"]
+extend-exclude = ["src/migrations"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["E", "F", "B"]
+ignore = [
+    "E501", # ruff format owns line length
+    "E712", # SQLAlchemy filters use `Column == True`, not Python truthiness
+    "B008", # FastAPI Depends() / Query() in defaults is the framework pattern
+    "B009", # getattr(db, "current_user") is the documented session API
+    "B010", # setattr(db, "current_user", ...) stamps the session
+    "B904", # Services remap IntegrityError to HTTP exceptions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/_overrides/**" = ["F811"]
+"src/core/db/__init__.py" = ["F401"]
+"src/apps/system/tasks/schemas.py" = ["F811"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "src/conftest.py",
+    "src/migrations/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Ruff format
+        run: poetry run ruff format --check .
+      - name: Ruff
+        run: poetry run ruff check src
+      - name: Mypy
+        run: poetry run mypy src
+      - name: Unit tests
+        run: poetry run pytest -m unit -v
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Full suite with coverage
+        run: poetry run pytest -v --cov --cov-report=term-missing --cov-fail-under=80

@@ -4,9 +4,9 @@ Use this when you want to run the local development stack inside Docker with hot
 
 By default, this stack starts only the main development environment:
 
-* PostgreSQL
-* Redis
-* FastAPI API with hot reload
+- PostgreSQL
+- Redis
+- FastAPI API with hot reload
 
 Background services, migrations, scheduler and observability tools are available through Docker Compose `profiles`.
 
@@ -24,9 +24,9 @@ Background services, migrations, scheduler and observability tools are available
 
 ## Requirements
 
-* Docker and Docker Compose installed
-* `backend/.env` file configured. See `backend/.env.example`
-* `FLOWER_BASIC_AUTH=user:password` set in `backend/.env` only if you want to run Flower
+- Docker and Docker Compose installed
+- `backend/.env` file configured. See `backend/.env.example`
+- `FLOWER_BASIC_AUTH=user:password` set in `backend/.env` only if you want to run Flower
 
 ## How to run
 
@@ -116,8 +116,9 @@ docker compose --env-file backend/.env \
 
 ## Notes
 
-* The `backend/` directory is mounted as a volume into all app containers, so code changes are reflected immediately without rebuilding.
-* Connection variables such as `POSTGRES_SERVER`, `REDIS_*_HOST` and `REDIS_*_PASSWORD` are overridden automatically inside this Compose file so they point to the Docker service names.
-* Background tasks, scheduler, Flower and migrations do not start by default. Use `--profile` flags to start them explicitly.
-* The Celery Worker may be configured with conservative concurrency, such as `--concurrency=1`, to keep local development lightweight on small machines.
-* Flower requires `FLOWER_BASIC_AUTH=user:password` in `backend/.env`.
+- The `backend/` directory is mounted as a volume into all app containers, so code changes are reflected immediately without rebuilding.
+- Connection variables such as `POSTGRES_SERVER`, `REDIS_*_HOST` and `REDIS_*_PASSWORD` are overridden automatically inside this Compose file so they point to the Docker service names.
+- Host-published ports bind to IPv4 loopback: API `http://127.0.0.1:8000`, Flower `http://127.0.0.1:5555`, Postgres `127.0.0.1:5432`, Redis `127.0.0.1:6379`. Prefer `127.0.0.1` over `localhost` (Windows often resolves `localhost` to IPv6).
+- Background tasks, scheduler, Flower and migrations do not start by default. Use `--profile` flags to start them explicitly.
+- The Celery Worker may be configured with conservative concurrency, such as `--concurrency=1`, to keep local development lightweight on small machines.
+- Flower requires `FLOWER_BASIC_AUTH=user:password` in `backend/.env`.

@@ -4,6 +4,8 @@ After completing the requirements outlined in the **📋 Prerequisites** section
 
 > For a higher-level overview of all development modes (Docker, infra-only, native), see the [Development Guide](../docs/development-guide.md).
 > For deployment options, see the [Deployment Guide](../docs/deploy-guide.md).
+> For the opt-in Redis rate limiter and `TRUST_PROXY_HEADERS`, see the [Rate Limit Guide](../docs/rate-limit-guide.md).
+> From the repository root, `python setup.py` is the project CLI (local run, Alembic/tests/Black/mypy, Locust). Deploy stays in the Deployment Guide.
 
 
 ## 🛠️ Installation
@@ -103,22 +105,26 @@ For more details on running the Celery worker, refer to the [Celery Guide](../do
 
 ## 🧪 Running Tests
 
-Run tests using pytest:
+Run tests using pytest (from `backend/`):
 
 ```bash
-poetry run python -m pytest -vv ./tests
+poetry run pytest -v
+poetry run pytest -m unit -v
+poetry run pytest -m integration -v
+poetry run pytest -v --cov --cov-report=term-missing --cov-fail-under=80
+poetry run mypy src
+poetry run ruff format --check .
+poetry run ruff check src
 ```
+
+From the repository root, the same checks are available via `python setup.py tools`.
+
+Pre-commit runs `pytest -m unit` (no Docker, no coverage). Integration tests and the coverage gate need Docker Desktop/Engine running. GitHub Actions job `checks` runs Ruff format, Ruff lint, mypy, and unit tests; job `test` runs the full suite with `--cov-fail-under=80`.
 
 For detailed guidance on running tests and confirming the application's behavior, refer to the [Testing Guide](../docs/testing-guide.md) in the project's documentation.
 
-## 🚧 Pre-Commit Instructions
+## 🚧 Pre-Commit
 
-Before committing changes, ensure that you've activated the virtual environment in 'backend/.venv' at the root of the project. This step is crucial for the successful execution of pre-commit hooks. Activate the virtual environment using the following command in the root folder of your project:
+Install once (`cd backend && poetry install && poetry run pre-commit install`). After that, `git commit` runs Ruff format, Ruff lint, and `pytest -m unit` (no Docker, no coverage, no mypy).
 
-```bash
-source backend/.venv/bin/activate
-```
-
-After activating the virtual environment, pre-commit hooks will check your commits before they are committed.
-
-Explore comprehensive instructions for setting up pre-commit steps and understanding their benefits in the [Pre-Commit Guide](../docs/pre-commit-instructions.md) located within the project's documentation.
+Setup, Windows notes, and how this differs from CI: [Pre-Commit Guide](../docs/pre-commit-instructions.md).

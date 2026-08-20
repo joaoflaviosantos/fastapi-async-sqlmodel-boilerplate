@@ -35,7 +35,7 @@ async def create_default_tier(session: AsyncSession) -> None:
         await session.commit()
 
 
-async def main():
+async def main() -> None:
     async with local_session() as session:
         await create_default_tier(session=session)
 

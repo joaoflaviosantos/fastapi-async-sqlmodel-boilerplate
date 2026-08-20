@@ -3,7 +3,7 @@ from typing import Any, Optional
 from datetime import datetime
 
 # Third-Party Dependencies
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 from celery import states
 
 # Local Dependencies

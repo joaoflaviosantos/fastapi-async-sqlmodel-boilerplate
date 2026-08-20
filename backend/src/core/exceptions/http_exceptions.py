@@ -18,123 +18,97 @@ class CustomException(HTTPException):
         associated with the specified status code.
     """
 
+    code: str = "error"
+
     def __init__(
         self,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail: str | None = None,
     ):
         if not detail:
-            detail = HTTPStatus(status_code).description
+            try:
+                detail = HTTPStatus(status_code).description
+            except ValueError:
+                detail = "Error"
         super().__init__(status_code=status_code, detail=detail)
 
 
 class InternalErrorException(CustomException):
-    """
-    Exception for internal server errors (HTTP 500 Bad Request).
+    """Exception for internal server errors (HTTP 500)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "internal_error"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
 
 
 class BadRequestException(CustomException):
-    """
-    Exception for bad client requests (HTTP 400 Bad Request).
+    """Exception for bad client requests (HTTP 400)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "bad_request"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 
 class NotFoundException(CustomException):
-    """
-    Exception for not found resources (HTTP 404 Not Found).
+    """Exception for not found resources (HTTP 404)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "not_found"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
 
 class ForbiddenException(CustomException):
-    """
-    Exception for forbidden access (HTTP 403 Forbidden).
+    """Exception for forbidden access (HTTP 403)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "forbidden"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
 class UnauthorizedException(CustomException):
-    """
-    Exception for unauthorized access (HTTP 401 Unauthorized).
+    """Exception for unauthorized access (HTTP 401)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "unauthorized"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
 
 
 class UnprocessableEntityException(CustomException):
-    """
-    Exception for unprocessable entities (HTTP 422 Unprocessable Entity).
+    """Exception for unprocessable entities (HTTP 422)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "unprocessable_entity"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail)
 
 
 class DuplicateValueException(CustomException):
-    """
-    Exception for duplicate values (HTTP 422 Unprocessable Entity).
+    """Exception for duplicate values (HTTP 422)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "duplicate_value"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail)
 
 
 class RateLimitException(CustomException):
-    """
-    Exception for rate limit exceeded (HTTP 429 Too Many Requests).
+    """Exception for rate limit exceeded (HTTP 429)."""
 
-    Parameters
-    ----------
-    detail : str, optional
-        A detailed message providing information about the exception.
-    """
+    code = "rate_limit_exceeded"
 
     def __init__(self, detail: str | None = None):
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
+
+
+class ServiceUnavailableException(CustomException):
+    """Exception for unavailable dependencies (HTTP 503)."""
+
+    code = "service_unavailable"
+
+    def __init__(self, detail: str | None = None):
+        super().__init__(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=detail)

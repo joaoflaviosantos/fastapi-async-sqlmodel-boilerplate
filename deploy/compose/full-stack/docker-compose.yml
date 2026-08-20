@@ -131,6 +131,8 @@ services:
       REDIS_BROKER_PASSWORD: ${REDIS_CACHE_PASSWORD}
       REDIS_PUBSUB_HOST: redis
       REDIS_PUBSUB_PASSWORD: ${REDIS_CACHE_PASSWORD}
+      # Caddy sits in front of the API; trust the first X-Forwarded-For hop.
+      TRUST_PROXY_HEADERS: "True"
     command: >
       uvicorn src.main:app
       --host 0.0.0.0
@@ -141,6 +143,12 @@ services:
       - "8000"
     networks:
       - fastapi_async_sqlmodel_boilerplate_network_prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
       postgres:
         condition: service_healthy

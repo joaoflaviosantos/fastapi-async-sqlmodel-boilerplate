@@ -3,6 +3,7 @@ from uuid import UUID
 
 # Third-Party Dependencies
 from sqlmodel import Field
+from sqlalchemy import UniqueConstraint
 
 # Local Dependencies
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
@@ -14,7 +15,7 @@ class RateLimitConfigBase(Base):
         max_length=255,
         nullable=False,
         description="API path for rate limit",
-        schema_extra={"examples": ["users"]},
+        schema_extra={"examples": ["/api/v1/system/tasks"]},
     )
     limit: int = Field(
         ge=0,
@@ -22,7 +23,7 @@ class RateLimitConfigBase(Base):
         schema_extra={"examples": [5]},
     )
     period: int = Field(
-        ge=0,
+        ge=1,
         description="Time period (in seconds) during which the limit applies",
         schema_extra={"examples": [60]},
     )
@@ -33,7 +34,6 @@ class RateLimitNameBase(Base):
         min_length=2,
         max_length=100,
         nullable=False,
-        unique=True,
         description="Rate limit name",
         schema_extra={"examples": ["users:5:60"]},
     )
@@ -56,4 +56,8 @@ class RateLimit(
     table=True,
 ):
     __tablename__ = "system_rate_limit"
-    __table_args__ = ({"comment": "Rate limit configuration"},)
+    __table_args__ = (
+        UniqueConstraint("tier_id", "path", name="uq_system_rate_limit_tier_id_path"),
+        UniqueConstraint("tier_id", "name", name="uq_system_rate_limit_tier_id_name"),
+        {"comment": "Rate limit configuration"},
+    )

@@ -15,11 +15,9 @@
 ## How to Execute Migrations with Alembic
 
 1. **Auto-generating Revisions:**
-
    - When starting a new feature or making changes to the data model, you can use the command `poetry run alembic revision --autogenerate` to auto-generate a new revision. This creates a new migration script based on changes detected in the data model.
 
 2. **Applying Migrations:**
-
    - After auto-generating a revision, you can apply it to the database using the command `poetry run alembic upgrade head`. This effectively applies all pending migrations.
 
 3. **Reverting Migrations (Optional):**
@@ -33,7 +31,7 @@
 
 - **Ensure Proper Operation:** Some changes to the data model may be essential for the proper operation of the application. Running migrations ensures that the database is configured as expected.
 
-**Note:** Ensure these commands are executed within the 'backend' folder of your project.
+**Note:** Ensure these commands are executed within the 'backend' folder of the project. From the repository root you can also use **Project Tools**: `python setup.py tools` (Alembic upgrade / revision / current).
 
 Encourage users to run migrations whenever there are significant changes to the data model to ensure a cohesive and functional database environment.
 

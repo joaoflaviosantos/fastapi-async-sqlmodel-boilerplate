@@ -49,10 +49,10 @@ class Task(Base, table=True):
     retries: Optional[int] = Field(default=None)
     queue: Optional[str] = Field(default=None, max_length=155)
 
-    def __init__(self, task_id: str):
+    def __init__(self, task_id: str) -> None:
         self.task_id = task_id
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "task_id": self.task_id,
             "status": self.status,
@@ -67,11 +67,11 @@ class Task(Base, table=True):
             "queue": self.queue,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Task {self.task_id} state: {self.status}>"
 
     @classmethod
-    def configure(cls, schema: Optional[str] = None, name: Optional[str] = None):
+    def configure(cls, schema: Optional[str] = None, name: Optional[str] = None) -> None:
         cls.__table__.schema = schema
         cls.id.default.schema = schema
         cls.__table__.name = name or cls.__tablename__
@@ -98,22 +98,22 @@ class TaskSet(Base, table=True):
     result: Optional[Any] = Field(sa_column=Column(PickleType, nullable=True))
     date_done: Optional[datetime] = Field(default=datetime.now(timezone.utc), nullable=True)
 
-    def __init__(self, taskset_id: str, result: Optional[Any] = None):
+    def __init__(self, taskset_id: str, result: Optional[Any] = None) -> None:
         self.taskset_id = taskset_id
         self.result = result
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "taskset_id": self.taskset_id,
             "result": self.result,
             "date_done": self.date_done,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<TaskSet: {self.taskset_id}>"
 
     @classmethod
-    def configure(cls, schema: Optional[str] = None, name: Optional[str] = None):
+    def configure(cls, schema: Optional[str] = None, name: Optional[str] = None) -> None:
         cls.__table__.schema = schema
         cls.id.default.schema = schema
         cls.__table__.name = name or cls.__tablename__

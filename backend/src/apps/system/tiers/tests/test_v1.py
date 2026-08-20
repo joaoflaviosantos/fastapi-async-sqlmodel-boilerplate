@@ -1,73 +1,65 @@
+# Built-in Dependencies
+from uuid import uuid4
+
 # Third-Party Dependencies
 import pytest
 from httpx import AsyncClient
 
 # Local Dependencies
-from src.core.config import settings
-from tests.helper import _ensure_test_user_exists, _get_token
+from src.core.exceptions.problem import problem_body
+from tests.helper import _create_regular_user
 
-# Test data: admin/superuser 'test' credentials
-ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
-ADMIN_PASSWORD = settings.USER_FIRST_ADMIN_PASSWORD
-
-# Test global variables
-test_default_tier_id = None
-test_tier_id = None
-test_tier = {"name": "Test Tier"}
+pytestmark = pytest.mark.integration
 
 
-@pytest.mark.asyncio
-async def test_get_default_tier(client: AsyncClient) -> None:
-    global test_default_tier_id
-    assert test_default_tier_id is None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    response = await client.get(
-        url="/api/v1/system/tiers",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
-
-    tiers_data = response.json()["data"]
-
-    # Create a dictionary to map tier names to IDs
-    tiers_map = dict((tier["name"], tier["id"]) for tier in tiers_data)
-
-    # Get the ID of the related tier using the mapping
-    test_default_tier_id = tiers_map.get(settings.TIER_NAME_DEFAULT)
-
+async def _default_tier_id(client: AsyncClient, admin_headers: dict[str, str], settings) -> str:
+    response = await client.get("/api/v1/system/tiers", headers=admin_headers)
     assert response.status_code == 200
-    assert test_default_tier_id is not None
+    tiers_map = {tier["name"]: tier["id"] for tier in response.json()["data"]}
+    default_id = tiers_map.get(settings.TIER_NAME_DEFAULT)
+    assert default_id is not None
+    return default_id
 
 
-@pytest.mark.asyncio
-async def test_post_tier(client: AsyncClient) -> None:
-    global test_tier_id
-    assert test_tier_id is None
+async def _create_tier(client: AsyncClient, admin_headers: dict[str, str]) -> dict:
+    payload = {"name": f"tier-{uuid4().hex[:12]}"}
+    response = await client.post("/api/v1/system/tiers", json=payload, headers=admin_headers)
+    assert response.status_code == 201, response.text
+    return {"id": response.json()["id"], "payload": payload}
 
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
 
+async def test_get_default_tier(
+    client: AsyncClient, admin_headers: dict[str, str], settings
+) -> None:
+    default_id = await _default_tier_id(client, admin_headers, settings)
+    assert default_id
+
+
+async def test_post_tier(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    created = await _create_tier(client, admin_headers)
+    assert created["id"]
+
+
+async def test_post_tier_unauthorized(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/system/tiers", json={"name": f"tier-{uuid4().hex[:12]}"})
+    assert response.status_code == 401
+
+
+async def test_post_tier_forbidden_for_regular_user(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    _, regular_headers = await _create_regular_user(client, admin_headers)
     response = await client.post(
         "/api/v1/system/tiers",
-        json=test_tier,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        json={"name": f"tier-{uuid4().hex[:12]}"},
+        headers=regular_headers,
     )
-
-    test_tier_id = response.json()["id"]
-
-    assert response.status_code == 201
-    assert test_tier_id is not None
+    assert response.status_code == 403
+    assert response.json() == problem_body("You do not have enough privileges.", 403, "forbidden")
 
 
-@pytest.mark.asyncio
-async def test_get_multiple_tiers(client: AsyncClient) -> None:
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    response = await client.get(
-        url="/api/v1/system/tiers",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
-
+async def test_get_multiple_tiers(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    response = await client.get("/api/v1/system/tiers", headers=admin_headers)
     assert response.status_code == 200
     result = response.json()
     assert "data" in result
@@ -79,124 +71,94 @@ async def test_get_multiple_tiers(client: AsyncClient) -> None:
     assert "items_per_page" in result
 
 
-@pytest.mark.asyncio
-async def test_get_tier(client: AsyncClient) -> None:
-    global test_tier_id
-    assert test_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_get_tier(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    created = await _create_tier(client, admin_headers)
     response = await client.get(
-        url=f"/api/v1/system/tiers/{test_tier_id}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/tiers/{created['id']}",
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
-    assert response.json()["name"] == test_tier["name"]
+    assert response.json()["name"] == created["payload"]["name"]
 
 
-@pytest.mark.asyncio
-async def test_update_tier(client: AsyncClient) -> None:
-    global test_tier_id
-    assert test_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    updated_tier_name = "Updated Test Tier"
-
+async def test_update_tier(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    created = await _create_tier(client, admin_headers)
     response = await client.patch(
-        url=f"/api/v1/system/tiers/{test_tier_id}",
-        json={"name": updated_tier_name},
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/tiers/{created['id']}",
+        json={"name": f"updated-{uuid4().hex[:12]}"},
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
     assert response.json() == {"message": "Tier updated"}
 
 
-@pytest.mark.asyncio
-async def test_update_tier_to_default(client: AsyncClient) -> None:
-    global test_tier_id
-    assert test_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_update_tier_to_default(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    created = await _create_tier(client, admin_headers)
     response = await client.patch(
-        url=f"/api/v1/system/tiers/{test_tier_id}",
+        f"/api/v1/system/tiers/{created['id']}",
         json={"default": True},
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        headers=admin_headers,
     )
-
     assert response.status_code == 422
-    assert response.json()["detail"][0]["msg"] == "Extra inputs are not permitted"
+    body = response.json()
+    assert body["code"] == "validation_error"
+    assert body["status"] == 422
+    assert body["detail"] == "Request validation failed."
+    assert any("Extra inputs are not permitted" in err.get("msg", "") for err in body["errors"])
 
 
-@pytest.mark.asyncio
-async def test_update_default_tier(client: AsyncClient) -> None:
-    global test_default_tier_id
-    assert test_default_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    updated_default_tier_name = "Updated Default Tier"
-
+async def test_update_default_tier(
+    client: AsyncClient, admin_headers: dict[str, str], settings
+) -> None:
+    default_id = await _default_tier_id(client, admin_headers, settings)
     response = await client.patch(
-        url=f"/api/v1/system/tiers/{test_default_tier_id}",
-        json={"name": updated_default_tier_name},
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/tiers/{default_id}",
+        json={"name": "Updated Default Tier"},
+        headers=admin_headers,
     )
-
     assert response.status_code == 403
-    assert response.json() == {"detail": "Default Tier cannot be updated"}
+    assert response.json() == problem_body("Default Tier cannot be updated", 403, "forbidden")
 
 
-@pytest.mark.asyncio
-async def test_delete_db_tier(client: AsyncClient) -> None:
-    global test_tier_id
-    assert test_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_delete_db_tier(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    created = await _create_tier(client, admin_headers)
     response = await client.delete(
-        url=f"/api/v1/system/tiers/{test_tier_id}/db",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/tiers/{created['id']}/db",
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
     assert response.json() == {"message": "Tier deleted from the database"}
 
 
-@pytest.mark.asyncio
-async def test_delete_default_tier(client: AsyncClient) -> None:
-    global test_default_tier_id
-    assert test_default_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_erase_db_tier_forbidden_for_regular_user(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    created = await _create_tier(client, admin_headers)
+    _, regular_headers = await _create_regular_user(client, admin_headers)
     response = await client.delete(
-        url=f"/api/v1/system/tiers/{test_default_tier_id}/db",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/tiers/{created['id']}/db",
+        headers=regular_headers,
     )
-
     assert response.status_code == 403
-    assert response.json() == {"detail": "Default Tier cannot be deleted"}
+    assert response.json() == problem_body("You do not have enough privileges.", 403, "forbidden")
 
 
-@pytest.mark.asyncio
-async def test_get_tiers_as_authenticated_regular_user(client: AsyncClient) -> None:
-    """Test that GET tier routes allow any authenticated user."""
-    await _ensure_test_user_exists(client=client)
-
-    token = await _get_token(
-        username=settings.USER_TEST_USERNAME,
-        password=settings.USER_TEST_PASSWORD,
-        client=client,
+async def test_delete_default_tier(
+    client: AsyncClient, admin_headers: dict[str, str], settings
+) -> None:
+    default_id = await _default_tier_id(client, admin_headers, settings)
+    response = await client.delete(
+        f"/api/v1/system/tiers/{default_id}/db",
+        headers=admin_headers,
     )
+    assert response.status_code == 403
+    assert response.json() == problem_body("Default Tier cannot be deleted", 403, "forbidden")
 
-    response = await client.get(
-        url="/api/v1/system/tiers",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
 
+async def test_get_tiers_as_authenticated_regular_user(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    _, regular_headers = await _create_regular_user(client, admin_headers)
+    response = await client.get("/api/v1/system/tiers", headers=regular_headers)
     assert response.status_code == 200
     assert "data" in response.json()

@@ -15,11 +15,13 @@ class PostsTasks(TaskSet):
     access_token: str = ""
     user_id: str = ""
     post_id: str = ""
+    tag_id: str = ""
 
     def on_start(self) -> None:
-        """Authenticate and fetch current user ID."""
+        """Authenticate, fetch current user ID, and ensure a tag exists."""
         self.access_token = login(self.client)
         self._get_current_user()
+        self._ensure_tag()
 
     def _get_current_user(self) -> None:
         """Fetch current user to get user_id for post operations."""
@@ -36,15 +38,42 @@ class PostsTasks(TaskSet):
         data = response.json()
         self.user_id = data["id"]
 
+    def _ensure_tag(self) -> None:
+        """Reuse an existing tag or create one for post payloads."""
+        list_response = self.client.get(
+            f"{API_V1_PREFIX}/blog/tags",
+            headers=auth_headers(self.access_token),
+            params={"page": 1, "items_per_page": 1},
+            name="/blog/tags [posts setup]",
+        )
+        if list_response.status_code == 200:
+            data = list_response.json().get("data") or []
+            if data:
+                self.tag_id = data[0]["id"]
+                return
+
+        create_response = self.client.post(
+            f"{API_V1_PREFIX}/blog/tags",
+            json={"name": f"lt-{uuid.uuid4().hex[:8]}"},
+            headers=auth_headers(self.access_token),
+            name="/blog/tags [posts setup create]",
+        )
+        if create_response.status_code == 201:
+            self.tag_id = create_response.json()["id"]
+            return
+        if create_response.status_code >= 400:
+            log_error(create_response, context="Posts Setup - Create Tag")
+
     @task(2)
     def create_post(self) -> None:
         """POST create a new blog post."""
-        if not self.user_id:
+        if not self.user_id or not self.tag_id:
             return
 
         payload = {
             "title": f"Load Test Post {uuid.uuid4().hex[:8]}",
             "text": "This is a post created during load testing. It can be safely deleted.",
+            "tag_ids": [self.tag_id],
         }
 
         response = self.client.post(

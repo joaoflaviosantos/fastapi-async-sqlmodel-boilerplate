@@ -1,46 +1,88 @@
-# Pre-Commit: Instructions and Benefits
+# Pre-Commit
 
-## Why Pre-Commit?
+Hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) run **before** `git commit`. They are local (`language: system`) and call Poetry inside `backend/`. Python 3.11.
 
-Pre-commit steps are a crucial part of the development process, designed to ensure consistency, quality, and integrity of the source code before being committed to the repository. They bring significant benefits to developers and the project as a whole.
+They catch format, lint, and unit-test failures on your machine so the GitHub Actions job `checks` is less of a surprise. They are **not** the full CI suite.
 
-## Benefits
+## What runs
 
-### 1. Code Consistency
+On every commit (including commits that only touch markdown):
 
-Pre-commit hooks help maintain a consistent code style throughout the project. This makes the code more readable for other developers and aids in long-term maintenance.
+| Hook        | Command                                        | Effect                           |
+| ----------- | ---------------------------------------------- | -------------------------------- |
+| ruff format | `cd ./backend && poetry run ruff format .`     | Rewrites Python files            |
+| ruff        | `cd ./backend && poetry run ruff check src`    | Reports issues; does not `--fix` |
+| pytest      | `cd ./backend && poetry run pytest -m unit -v` | Unit tests only                  |
 
-### 2. Early Issue Identification
+Pytest is `always_run: true` and `pass_filenames: false`: the whole unit suite runs, not only files in the commit.
 
-Running automated tests, linting, and other checks before committing allows for early identification of issues, reducing the likelihood of errors in the code and improving overall software quality.
+## What does not run
 
-### 3. Commit Message Standardization
+- `mypy src` — GitHub Actions job `checks` runs it; the hook does not
+- HTTP / integration tests, coverage, or Docker
+- Commit-message linting — there is no `commit-msg` hook
 
-Enforcing standards for commit messages ensures clear and consistent documentation of the change history, making code review and collaboration among developers more straightforward.
+Details: [Testing Guide](testing-guide.md).
 
-## Usage Instructions
+## Install (once)
 
-Before committing your changes to the repository, follow the steps below:
+From `backend/`, with Poetry 1.8+ or 2.x:
 
-1. Activate the virtual environment in the 'backend' directory (when in the root directory):
+```bash
+cd backend
+poetry install
+poetry run pre-commit install
+```
 
-   ```bash
-   source backend/.venv/bin/activate
-   ```
+`pre-commit` is a Poetry dependency. The config file lives at the **git root**; `poetry run pre-commit install` from `backend/` still finds it.
 
-2. Ensure you are in the root directory of the project.
+After that, a normal `git commit` is enough. You do not need to activate the virtualenv for every commit if the hook was installed with that environment.
 
-3. Execute the following command to ensure that pre-commit hooks are applied:
+If you want the `pre-commit` CLI on your PATH, activate the venv:
 
-   ```bash
-   pre-commit run --all-files
-   ```
+```powershell
+backend\.venv\Scripts\Activate.ps1
+```
 
-   This will automatically check and fix identified issues in modified files.
+```bash
+source backend/.venv/bin/activate
+```
 
-4. After successful execution, you can proceed to commit your changes as usual.
+## Requirements
 
-By following these instructions, you ensure a smoother workflow and contribute to the overall code quality in the project.
+- **Poetry** on `PATH` — hook `entry` lines use `poetry run`
+- **Git Bash** on Windows — hooks wrap commands in `bash -c '...'` (comes with [Git for Windows](https://git-scm.com/download/win))
+
+## Run manually
+
+From `backend/`:
+
+```bash
+cd backend
+poetry run pre-commit run --all-files
+```
+
+Same three hooks as a commit, against the whole tree.
+
+From the repo root, **Project Tools** (`python setup.py tools`) can run Ruff, mypy, and pytest without going through pre-commit.
+
+## When a hook fails
+
+1. **ruff format** rewrote files — `git add` the formatted files and commit again.
+2. **ruff check** or **pytest** failed — fix the reported issue, then commit again.
+3. Do not make `git commit --no-verify` a habit. Use it only for a conscious WIP commit when you know the hooks would fail.
+
+Unit tests must pass **without Docker** and without `--cov`. If pytest wants Testcontainers, the test is marked wrong (`integration` vs `unit`). See the [Testing Guide](testing-guide.md).
+
+## vs CI
+
+|                           | Pre-commit hook  | GitHub Actions `checks` | GitHub Actions `test`      |
+| ------------------------- | ---------------- | ----------------------- | -------------------------- |
+| Ruff format               | writes files     | `--check` only          | —                          |
+| Ruff lint                 | `ruff check src` | same                    | —                          |
+| mypy                      | no               | `mypy src`              | —                          |
+| Unit tests                | yes              | yes                     | included in the full suite |
+| HTTP tests + 80% coverage | no               | no                      | yes (needs Docker)         |
 
 ---
 

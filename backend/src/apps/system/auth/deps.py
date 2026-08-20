@@ -30,7 +30,7 @@ async def get_current_user(
     authenticated writes, use ``async_get_user_context_db`` instead of
     injecting this alongside ``db``.
     """
-    token_data = await verify_token(token, db)
+    token_data = await verify_token(token, db, expected_type="access")
     if token_data is None:
         raise UnauthorizedException(detail="User not authenticated.")
 
@@ -73,7 +73,7 @@ async def get_optional_user(
             # Return None if the token is not a bearer token
             return None
 
-        token_data = await verify_token(token_value, db)
+        token_data = await verify_token(token_value, db, expected_type="access")
         if token_data is None:
             # Return None if token verification fails
             return None

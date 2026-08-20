@@ -120,7 +120,7 @@ ItemRepository = RepositoryBase[
 item_repository = ItemRepository(Item)
 ```
 
-**Subclass** — related data (the example default). Implement `get_single_with_main_relations` and `get_multi_with_main_relations` with an explicit `select` + `outerjoin`. Copy `.agents/examples/subapp/repositories.py`. The `outerjoin` on `updated_by_user_id` is required: `UserTrackingMixin` leaves two FKs to `system_users`, and `RepositoryBase` autodetect would pick `created_by_user_id`.
+**Subclass** — related data (the example default). Implement `get_single_with_main_relations` and `get_multi_with_main_relations`. Put the `select` + `outerjoin` in `_stmt_with_main_relations`; the two getters reuse it. Copy `.agents/examples/subapp/repositories.py`. The `outerjoin` on `updated_by_user_id` is required: `UserTrackingMixin` leaves two FKs to `system_users`, and `RepositoryBase` autodetect would pick `created_by_user_id`.
 
 `RepositoryBase` already provides `get`, `get_multi`, `create`, `update`, `delete` (soft), `db_delete` (hard), filtering, and sorting. Use `get` / `get_multi` for existence checks; use `*_with_main_relations` for API responses. Custom SQL must call `self.exclude_deleted(stmt)` after joins unless the query needs soft-deleted rows.
 

@@ -159,9 +159,14 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# VSCode
 .vscode
 
+# Celery
 celerybeat-schedule.db
 celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir
+
+# Ruff
+.ruff_cache/

@@ -55,7 +55,7 @@ async def create_first_admin_user(session: AsyncSession) -> None:
         await session.commit()
 
 
-async def main():
+async def main() -> None:
     async with local_session() as session:
         await create_first_admin_user(session=session)
 

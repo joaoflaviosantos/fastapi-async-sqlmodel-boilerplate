@@ -1,5 +1,6 @@
 # Built-in Dependencies
 from typing import Optional, List, Tuple
+from uuid import UUID
 
 # Third-Party Dependencies
 from fastapi import Query
@@ -17,11 +18,13 @@ def post_filters(
     title: Optional[str] = Query(None, description="Post title"),
     text: Optional[str] = Query(None, description="Post text"),
     media_url: Optional[str] = Query(None, description="Post media URL"),
+    tag_id: Optional[UUID] = Query(None, description="Filter posts by tag ID"),
 ) -> dict:
     filters_dict = {
         "title": title,
         "text": text,
         "media_url": media_url,
+        "tag_id": tag_id,
     }
 
     return {key: value for key, value in filters_dict.items() if value is not None}

@@ -70,7 +70,10 @@ def log_error(response, context: str = "") -> None:
     """
     if response.status_code >= 400:
         try:
-            detail = response.json().get("detail", "No details available")
+            payload = response.json()
+            detail = payload.get("detail") or payload.get("title") or "No details available"
+            if payload.get("code"):
+                detail = f"{payload['code']}: {detail}"
         except Exception:
             detail = response.text or "No details available"
 

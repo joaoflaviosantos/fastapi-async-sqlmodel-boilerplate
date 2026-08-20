@@ -10,7 +10,6 @@ import psutil
 
 
 def log_system_info(logger: logging.Logger) -> None:
-
     # Obtain username and machine IP
     user_name = os.getenv("USER") or os.getenv("LOGNAME") or os.getenv("USERNAME")
     ip_address = socket.gethostbyname(socket.gethostname())
@@ -42,7 +41,7 @@ def log_system_info(logger: logging.Logger) -> None:
         # Log with detailed information, including relevant CPU details
         logger.info(
             f"API started on machine: system={platform.system()}, user={user_name}, IP={ip_address}, "
-            f"RAM_available={psutil.virtual_memory().available / (1024 ** 3):.2f} GB, "
+            f"RAM_available={psutil.virtual_memory().available / (1024**3):.2f} GB, "
             f"machine_model_name='{relevant_cpu_info.get('Model name', '')}', "
             f"threads_per_core={int(relevant_cpu_info.get('Thread(s) per core', 1))}, "
             f"cores_per_socket={int(relevant_cpu_info.get('Core(s) per socket', 1))}, "
@@ -59,7 +58,7 @@ def log_system_info(logger: logging.Logger) -> None:
         )
         logger.info(
             f"API started on machine: system={platform.system()}, user={user_name}, IP={ip_address}, "
-            f"RAM_available={psutil.virtual_memory().available / (1024 ** 3):.2f} GB, "
+            f"RAM_available={psutil.virtual_memory().available / (1024**3):.2f} GB, "
             f"{cpu_info_output}, "
             f"CPU_cores={psutil.cpu_count(logical=False)}, CPU_speed={psutil.cpu_freq().max:.2f} MHz"
         )

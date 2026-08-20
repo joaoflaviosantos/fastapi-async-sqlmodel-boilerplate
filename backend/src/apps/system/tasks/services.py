@@ -2,7 +2,6 @@
 from typing import Optional, List, Tuple
 
 # Third-Party Dependencies
-from fastapi import HTTPException, status
 from celery.result import AsyncResult
 from celery import states
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,6 +14,7 @@ from src.apps.system.tasks.repositories import TaskRepository, task_repository
 from src.apps.system.tasks.models import Task
 from src.apps.system.tasks.schemas import Job, TaskRead
 from src.worker import app as celery_app
+from src.core.exceptions.http_exceptions import NotFoundException
 from src.core.utils.api_params import compute_offset, paginated_response
 
 
@@ -102,8 +102,7 @@ class TaskService:
                     "consumer_count": consumer_count,
                 }
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+            raise NotFoundException(
                 detail=f"Queue with name '{queue_name}' not found on broker.",
             )
 

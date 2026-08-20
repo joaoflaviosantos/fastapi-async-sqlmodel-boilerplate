@@ -10,7 +10,9 @@ _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
 
-def async_task(app: Celery, *args: Any, **kwargs: Any):
+def async_task(
+    app: Celery, *args: Any, **kwargs: Any
+) -> Callable[[Callable[_P, Coroutine[Any, Any, _R]]], Task]:
     """
     Decorator that turns an async function into a synchronous Celery task.
 
