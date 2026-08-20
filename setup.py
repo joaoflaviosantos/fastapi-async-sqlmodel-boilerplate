@@ -264,8 +264,6 @@ def ensure_poetry(
 ) -> bool:
     if run_command(["poetry", "env", "use", python_path], cwd=cwd, check=True) != 0:
         return False
-    if not force_install and (cwd / ".venv").is_dir():
-        return True
     return run_command(["poetry", "install"], cwd=cwd, check=True) == 0
 
 
