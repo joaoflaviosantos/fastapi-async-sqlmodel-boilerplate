@@ -26,7 +26,7 @@ Details: [Testing Guide](testing-guide.md).
 
 ## Install (once)
 
-From `backend/`, with Poetry 1.8+ or 2.x:
+From `backend/`, with Poetry 1.7.1:
 
 ```bash
 cd backend

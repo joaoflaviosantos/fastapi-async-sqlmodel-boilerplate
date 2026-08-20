@@ -4,7 +4,7 @@
 # =============================================================================
 FROM python:3.11-slim AS base
 
-ARG POETRY_VERSION=1.8.5
+ARG POETRY_VERSION=1.7.1
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

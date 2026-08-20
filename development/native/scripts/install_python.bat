@@ -4,7 +4,7 @@ REM Installs Python 3.11 via winget (Windows Package Manager) and Poetry.
 REM Run this script as Administrator or it will request elevation automatically.
 
 SET PYTHON_VERSION=3.11.9
-SET POETRY_VERSION=2.1.4
+SET POETRY_VERSION=1.7.1
 
 echo ==^> Checking for winget (Windows Package Manager)...
 where winget >nul 2>nul

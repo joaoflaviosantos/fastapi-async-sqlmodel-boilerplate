@@ -38,7 +38,7 @@ sudo apt install nginx supervisor python3-pip python3-venv
 cd /home/ubuntu/fastapi-async-sqlmodel-boilerplate/backend
 python3 -m venv .venv
 source .venv/bin/activate
-pip install poetry
+pip install poetry==1.7.1
 poetry install --no-root
 ```
 

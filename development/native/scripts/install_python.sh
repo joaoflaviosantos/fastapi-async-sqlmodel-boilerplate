@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PYTHON_VERSION="3.11.13"
-POETRY_VERSION="2.1.4"
+POETRY_VERSION="1.7.1"
 PREFIX="/usr/local"
 BUILD_DIR="/usr/src/python-build"
 NPROC="$(nproc)"

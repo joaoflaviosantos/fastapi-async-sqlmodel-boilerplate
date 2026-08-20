@@ -99,21 +99,33 @@ A **strong foundation for API development**, with a practical stack and a clear 
 Before you begin, ensure you have the following:
 
 - [Python](https://www.python.org) 3.11 or newer.
-- [Poetry](https://python-poetry.org) 1.8+ or 2.x for dependency management.
+- [Poetry](https://python-poetry.org) **1.7.1** for dependency management.
 - [Docker](https://www.docker.com) (Engine or Desktop): used for Compose (infra-only / full-stack) and for Testcontainers when you run the full pytest suite.
 
 PostgreSQL and Redis on the host are **optional**. Prefer Compose infra-only (or the CLI below) unless you explicitly want a native database install.
 
 ### Installing Poetry
 
-Install a current Poetry (1.8+ or 2.x). Do not pin `1.7.1`.
+Poetry is a dependency manager for Python. Follow the steps below to install Poetry **version 1.7.1** (required):
+
+1. Open a terminal.
+2. `pip install poetry==1.7.1`
+3. `poetry --version` must print `Poetry (version 1.7.1)`.
+4. If the version is anything else:
 
 ```bash
-pip install poetry
-poetry --version
+pip uninstall poetry
+pip install poetry==1.7.1
 ```
 
-Official installer: [python-poetry.org/docs](https://python-poetry.org/docs/#installation). Native helper scripts live under `development/native/scripts/` — see the [Development Guide](docs/development-guide.md).
+To refresh `backend/poetry.lock` on this version (does not bump resolved packages):
+
+```bash
+cd backend
+poetry lock --no-update
+```
+
+Do not run `poetry lock` without `--no-update` (Poetry 1.7.1 resolves/updates dependencies). Native helper scripts live under `development/native/scripts/` — see the [Development Guide](docs/development-guide.md).
 
 ### Using Docker Compose (recommended for databases)
 

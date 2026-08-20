@@ -1,14 +1,85 @@
 name: Dependabot auto-merge
 
-on: pull_request
+# pull_request_target: Dependabot pull_request events get a read-only
+# GITHUB_TOKEN. This workflow must push poetry.lock to the PR branch.
+# Gate on dependabot[bot] only. Checkout head.ref; do not run project code
+# (no poetry install, pytest, or PR scripts).
+on: pull_request_target
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
+  refresh-lock:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Set up Python
+        if: steps.metadata.outputs.package-ecosystem == 'pip'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        if: steps.metadata.outputs.package-ecosystem == 'pip'
+        run: pip install poetry==1.7.1
+
+      - name: Refresh poetry.lock
+        if: steps.metadata.outputs.package-ecosystem == 'pip'
+        working-directory: backend
+        env:
+          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          set -euo pipefail
+          # Prefer poetry lock --no-update so the rest of the graph stays put.
+          # If Dependabot raised a floor (e.g. ^0.141.1 -> ^0.142.0) and the
+          # lock still has 0.141.1, --no-update fails. Fall back to
+          # `poetry update <packages-from-this-PR> --lock` only then.
+          # Never run `poetry lock` without --no-update (Poetry 1.7.1 would
+          # re-resolve the entire graph).
+          if poetry lock --no-update; then
+            echo "poetry.lock refreshed with --no-update"
+          else
+            echo "poetry lock --no-update failed; updating PR packages only"
+            IFS=',' read -r -a deps <<< "$DEPENDENCY_NAMES"
+            poetry update "${deps[@]}" --lock
+          fi
+
+      - name: Commit and push poetry.lock
+        if: steps.metadata.outputs.package-ecosystem == 'pip'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/poetry.lock
+          if git diff --cached --quiet; then
+            echo "backend/poetry.lock unchanged; skipping commit"
+          else
+            git commit -m "chore: refresh backend/poetry.lock"
+            git push
+          fi
+
+      - name: Run Tests on PR head
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: gh workflow run tests.yml --ref "$HEAD_REF"
+
   auto-merge:
-    if: github.actor == 'dependabot[bot]'
+    needs: refresh-lock
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge

@@ -1,9 +1,17 @@
 version: 2
 updates:
+  # pip PRs bump backend/pyproject.toml. The GitHub Actions workflow then
+  # regenerates backend/poetry.lock with Poetry 1.7.1 and
+  # `poetry lock --no-update` (Dependabot's updater uses Poetry 2 and does not
+  # keep this repo's 1.7.1 lock in sync).
   - package-ecosystem: pip
     directory: /backend
     schedule:
       interval: weekly
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
