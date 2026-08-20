@@ -21,14 +21,14 @@ Celery is a distributed task queue system for Python, used in this project for h
 
 ```
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│   FastAPI    │──────▶│    Redis     │◀──────│   Celery    │
-│   (Producer) │       │   (Broker)   │       │  (Worker)   │
+│  FastAPI    │─────▶│    Redis     │◀─────│   Celery    │
+│  (Producer) │       │  (Broker)   │       │  (Worker)   │
 └─────────────┘       └─────────────┘       └──────┬──────┘
-                                                     │
-                                              ┌──────▼──────┐
-                                              │  PostgreSQL  │
-                                              │  (Results)   │
-                                              └─────────────┘
+                                                   │
+                                            ┌──────▼──────┐
+                                            │  PostgreSQL │
+                                            │  (Results)  │
+                                            └─────────────┘
 ```
 
 ## Configuration
@@ -43,13 +43,13 @@ The Celery application is configured in `src/worker.py`:
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `REDIS_BROKER_HOST` | (falls back to `REDIS_CACHE_HOST`) | Redis broker host |
-| `REDIS_BROKER_PORT` | `6379` | Redis broker port |
-| `REDIS_BROKER_USERNAME` | `` | Redis broker username |
-| `REDIS_BROKER_PASSWORD` | `` | Redis broker password |
-| `REDIS_BROKER_USE_SSL` | `False` | Enable SSL for broker connection |
+| Variable                | Default                            | Description                      |
+| ----------------------- | ---------------------------------- | -------------------------------- |
+| `REDIS_BROKER_HOST`     | (falls back to `REDIS_CACHE_HOST`) | Redis broker host                |
+| `REDIS_BROKER_PORT`     | `6379`                             | Redis broker port                |
+| `REDIS_BROKER_USERNAME` | ``                                 | Redis broker username            |
+| `REDIS_BROKER_PASSWORD` | ``                                 | Redis broker password            |
+| `REDIS_BROKER_USE_SSL`  | `False`                            | Enable SSL for broker connection |
 
 The `POSTGRES_CELERY_URI` is automatically derived from the existing PostgreSQL settings (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_SERVER`, `POSTGRES_PORT`, `POSTGRES_DB`).
 
@@ -58,11 +58,13 @@ The `POSTGRES_CELERY_URI` is automatically derived from the existing PostgreSQL 
 To start the Celery worker:
 
 **Linux / macOS:**
+
 ```bash
 poetry run celery -A src.worker:app worker --loglevel=info
 ```
 
 **Windows** (requires thread pool to prevent asyncio event loop deadlocks):
+
 ```bash
 poetry run celery -A src.worker:app worker --loglevel=info -P threads
 ```
@@ -83,11 +85,13 @@ poetry run celery -A src.worker:app beat --loglevel=info
 For development convenience, you can run both in a single process:
 
 **Linux / macOS:**
+
 ```bash
 poetry run celery -A src.worker:app worker --beat --loglevel=info
 ```
 
 **Windows:**
+
 ```bash
 poetry run celery -A src.worker:app worker --beat --loglevel=info -P threads
 ```
@@ -121,10 +125,11 @@ The `async_task` decorator (in `src/_overrides/celery/async_task.py`) uses `asgi
 
 ## Registered Tasks
 
-| Task Name | Module | Type | Description |
-|-----------|--------|------|-------------|
-| `send_welcome_email` | `src.apps.system.users.tasks` | On-demand | Sends welcome email when a new user is created (log simulation) |
-| `check_database_and_redis_health` | `src.core.common.tasks` | Beat (30s) | Periodic health check for PostgreSQL and Redis connectivity |
+| Task Name                  | Module                        | Type       | Description                                                     |
+| -------------------------- | ----------------------------- | ---------- | --------------------------------------------------------------- |
+| `send_welcome_email`       | `src.apps.system.users.tasks` | On-demand  | Sends welcome email when a new user is created (log simulation) |
+| `sample_background_task`   | `src.apps.system.tasks.tasks` | On-demand  | Sample long-running job used by the tasks HTTP API              |
+| `check_application_health` | `src.apps.system.tasks.tasks` | Beat (30s) | Periodic check of PostgreSQL, Redis, and the tasks HTTP API     |
 
 ## Calling Tasks
 

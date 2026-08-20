@@ -1,34 +1,13 @@
+# Built-in Dependencies
+from uuid import uuid4
+
 # Third-Party Dependencies
 from httpx import AsyncClient
-
-# Local Dependencies
-from src.core.config import settings
 
 
 async def _get_token(username: str, password: str, client: AsyncClient):
     """
-    Helper function to obtain an authentication token by making a login request to the authentication endpoint.
-
-    Parameters
-    ----------
-    username : str
-        The username for authentication.
-    password : str
-        The password for authentication.
-    client : AsyncClient
-        The HTTPX async client instance.
-
-    Returns
-    ----------
-    response
-        The response object containing the authentication token.
-
-    Example
-    ----------
-    Obtaining an authentication token:
-    ```python
-    token_response = await _get_token("example_user", "example_password", async_client_instance)
-    ```
+    Obtain an authentication token from the login endpoint.
     """
     return await client.post(
         "/api/v1/system/auth/login",
@@ -37,70 +16,55 @@ async def _get_token(username: str, password: str, client: AsyncClient):
     )
 
 
-async def _ensure_test_user_exists(client: AsyncClient) -> str:
+async def _auth_headers(client: AsyncClient, username: str, password: str) -> dict[str, str]:
+    token = await _get_token(username=username, password=password, client=client)
+    assert token.status_code == 200, token.text
+    return {"Authorization": f"Bearer {token.json()['access_token']}"}
+
+
+async def _create_user(
+    client: AsyncClient,
+    headers: dict[str, str],
+    *,
+    name: str,
+    username: str,
+    email: str,
+    password: str,
+) -> str:
     """
-    Helper function to ensure the test user exists and return their ID.
-    If the user doesn't exist, creates it.
-
-    Parameters
-    ----------
-    client : AsyncClient
-        The HTTPX async client instance.
-
-    Returns
-    ----------
-    str
-        The ID of the test user.
-
-    Example
-    ----------
-    Ensuring test user exists:
-    ```python
-    user_id = await _ensure_test_user_exists(async_client_instance)
-    ```
+    Create a disposable user and return its id.
     """
-    # Get admin token
-    admin_token = await _get_token(
-        username=settings.USER_FIRST_ADMIN_USERNAME,
-        password=settings.USER_FIRST_ADMIN_PASSWORD,
-        client=client,
-    )
-
-    if admin_token.status_code != 200:
-        raise Exception("Failed to get admin token")
-
-    admin_access_token = admin_token.json()["access_token"]
-
-    # Try to find the test user
-    response = await client.get(
-        "/api/v1/system/users",
-        headers={"Authorization": f"Bearer {admin_access_token}"},
-    )
-
-    if response.status_code == 200:
-        users = response.json().get("data", [])
-        existing_user = next((u for u in users if u["email"] == settings.USER_TEST_EMAIL), None)
-        if existing_user:
-            return existing_user["id"]
-
-    # User doesn't exist, try to create it
     response = await client.post(
         "/api/v1/system/users",
         json={
-            "name": settings.USER_TEST_NAME,
-            "username": settings.USER_TEST_USERNAME,
-            "email": settings.USER_TEST_EMAIL,
-            "password": settings.USER_TEST_PASSWORD,
+            "name": name,
+            "username": username,
+            "email": email,
+            "password": password,
         },
-        headers={"Authorization": f"Bearer {admin_access_token}"},
+        headers=headers,
     )
+    assert response.status_code == 201, response.text
+    return response.json()["id"]
 
-    if response.status_code == 201:
-        return response.json()["id"]
-    elif response.status_code == 422 and "already registered" in str(response.json()):
-        # User exists but is soft-deleted - we can't access it via API
-        # This is a limitation of the current test setup
-        # For now, we'll raise an exception to indicate this issue
-        raise Exception(f"Test user exists but is soft-deleted: {response.json()}")
-    else:
-        raise Exception(f"Failed to create test user: {response.json()}")
+
+async def _create_regular_user(
+    client: AsyncClient,
+    admin_headers: dict[str, str],
+) -> tuple[str, dict[str, str]]:
+    """
+    Create a unique non-admin user and return (user_id, auth headers).
+    """
+    suffix = uuid4().hex[:12]
+    username = f"u{suffix}"
+    password = "Str1ngst!"
+    user_id = await _create_user(
+        client,
+        admin_headers,
+        name="Regular User",
+        username=username,
+        email=f"{username}@tester.com",
+        password=password,
+    )
+    headers = await _auth_headers(client, username, password)
+    return user_id, headers

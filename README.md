@@ -11,6 +11,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml">
+      <img src="https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate/actions/workflows/tests.yml/badge.svg" alt="Tests">
+  </a>
   <a href="https://www.python.org">
       <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   </a>
@@ -35,163 +38,149 @@
   <a href="https://docs.docker.com/compose/">
       <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff&style=for-the-badge" alt="Docker">
   </a>
-  <a href="https://nginx.org/en/">
-      <img src="https://img.shields.io/badge/NGINX-009639?logo=nginx&logoColor=fff&style=for-the-badge" alt=NGINX>
-  </a>
 </p>
 
 ## 🔍 Project Overview
 
-This **FastAPI** boilerplate for high-performance APIs leverages async programming alongside libraries such as **SQLModel**, **Redis**, **Celery**, **Locust**, **NGINX**, and **Docker**. It follows a **Clean Architecture** utilizing the **Repository and Service Patterns** on top of a Django-inspired modular folder structure. Key areas like `system/tiers`, `system/users` and `blog/posts` showcase an optimal balance between **modularity, clarity, and separation of concerns**. The project also includes an independent **Locust** load testing suite (`locust/`) with its own virtual environment for performance and stress testing.
+This **FastAPI** boilerplate for high-performance APIs is fully async, with **SQLModel**, **Redis**, **Celery**, and **Docker**. It uses a Django-inspired folder layout and **Clean Architecture**: routers handle HTTP, services hold business rules, and repositories talk to the database.
 
-It aims to provide a **robust structure** while serving as an excellent tool for quick **POC** (Proof of Concept) validations and **MVP** (Minimum Viable Product) launches. Crafted to attract enthusiasts who appreciate how Django operates but demand the decoupling of modern architectural patterns, this project offers a **solid foundation** for API development, incorporating a blend of **cutting-edge technologies** and architectural best practices.
+Tests live next to each feature and run in GitHub Actions. Deploy the way that fits you: Compose, PaaS, or Nginx. An optional **Locust** suite is there for load testing.
+
+It is a **solid foundation** for API work and a fast path to a **POC** or **MVP** — especially if you like how Django is organized but want a clearer split of layers.
 
 ## 🌟 Key Features
 
-This project seeks to provide a **strong foundation for API development**, incorporating a blend of cutting-edge technologies and structural principles:
+A **strong foundation for API development**, with a practical stack and a clear structure:
 
-- 🏛️ **Clean Architecture:** Strict separation of concerns using the **Repository** and **Service** patterns. Routers handle HTTP, Services encapsulate business logic, and Repositories manage data access.
-- ⚡️ **Fully Async:** Leverage the power of asynchronous programming.
-- 🚀 **FastAPI:** Utilize FastAPI for rapid API development.
-- 🧰 **SQLModel:** Seamlessly integrates with SQLAlchemy 2.0 for versatile Python SQL operations, reducing the mapping between persistence and transport classes. Using Pydantic v2 can result in performance improvements from 5x to 50x compared to Pydantic v1.
-- 🔐 **JWT User Authentication:** Secure user authentication using JSON Web Tokens.
-- 🍪 **Cookie-based Refresh Token:** Implement a refresh token mechanism using cookies.
-- 🏬 **Easy Redis Caching:** Utilize Redis for simple and effective caching.
-- 👜 **Client-side Caching:** Facilitate easy client-side caching for improved performance.
-- 🚦 **Celery Integration:** Seamlessly integrate Celery for distributed task queue management with async task support, scheduled jobs via Celery Beat, and PostgreSQL result backend.
-- ⚙️ **Efficient Querying:** Optimize database queries by fetching only what's needed, with support for joins.
-- ⎘ **Pagination Support:** Out-of-the-box pagination support for enhanced data presentation.
-- 💌 **FastAPI-Mail Integration:** Send emails asynchronously with built-in support for templates and async task processing.
-- 🛑 **Rate Limiter Dependency:** Implement a rate limiter for controlled API access.
-- 👮 **Secure FastAPI Docs:** Restrict FastAPI docs behind authentication and hide based on the environment.
-- 🦾 **Easily Extendable:** Extend and customize the project effortlessly.
-- 🤸‍♂️ **Flexible:** Adapt the boilerplate to suit your specific needs.
-- 🚚 **Docker Compose:** Infra-only, full-stack, or production stacks — same Compose workflow.
-- 🦗 **Load Testing with Locust:** Independent load testing suite with its own virtual environment, pre-configured task sets covering auth, users, posts, tiers, and background tasks.
+- 🏛️ **Clean Architecture:** Routers handle HTTP, services hold business logic, and repositories manage data access.
+- ⚡️ **Fully Async:** The stack is asynchronous end to end.
+- 🚀 **FastAPI:** High-performance APIs with automatic OpenAPI docs.
+- 🧰 **SQLModel:** One model for the database and the API (SQLAlchemy 2.0 + Pydantic), instead of mapping persistence and transport separately.
+- 🔐 **JWT User Authentication:** Secure user authentication with JSON Web Tokens.
+- 🍪 **Cookie-based Refresh Token:** Refresh tokens stored in cookies.
+- 🏬 **Easy Redis Caching:** Simple, effective caching with Redis.
+- 👜 **Client-side Caching:** HTTP caching headers for faster clients.
+- 🚦 **Celery:** Async task queues, scheduled jobs (Beat), and a PostgreSQL result backend.
+- ⚙️ **Efficient Querying:** Fetch only what you need, including joins.
+- ⎘ **Pagination Support:** Built-in pagination for list endpoints.
+- 💌 **FastAPI-Mail:** Async email with templates, off the request path when needed.
+- 🛑 **Rate Limiter:** Redis-backed limiter for controlled API access.
+- 👮 **Secure FastAPI Docs:** Auth-gated docs, hidden outside development.
+- 🚚 **Deploy Menu:** Compose full-stack (Caddy HTTPS), app-only (PaaS / managed databases), or native (Nginx + Supervisor).
+- 🦗 **Load Testing with Locust:** Optional independent suite for performance and stress tests.
+- 🧪 **Tests next to the code:** HTTP and service tests live with each feature. Unit tests run without Docker; the full suite (and a coverage gate) runs in CI.
+- ✅ **CI:** GitHub Actions checks format, types, and tests on every push.
+- 🦾 **Easy to extend:** Add your own apps without fighting the layout.
 
 ## 🎯 Project Goals
 
-- [x] Leverage the power of FastAPI for building high-performance APIs.
-- [x] Implement asynchronous programming wherever applicable for optimal performance.
-- [x] Integrate Redis for caching, rate limiting, and improving data access speed.
-- [x] Utilize Celery for handling background tasks asynchronously with full async/await support.
-- [x] Implement a robust logging system to track and manage application events efficiently.
-- [x] Manage database migrations seamlessly using Alembic.
-- [x] Develop comprehensive and fully asynchronous tests for API endpoints using `pytest-asyncio` and `testcontainers` for isolated PostgreSQL and Redis instances.
-- [x] Implement using SQLModel to streamline the interaction between the database and the API.
-- [x] Adopt Repository and Service patterns for clean separation of concerns and enhanced testability.
-- [x] Ship `AGENTS.md` and first-party skills so coding agents follow the same app/subapp layout.
-- [x] Write isolated unit tests for services (with mocked repositories) and integration tests for repositories.
-- [x] Provide a fully containerized development environment with Docker Compose (PostgreSQL, Redis).
-- [x] Ensure cross-platform compatibility for local development on both **Linux** and **Windows** (including Celery worker concurrency and async event loop handling).
-- [ ] Provide a CLI tool for easy project execution and management (e.g., `setup.py` extension).
-- [ ] Provide diverse deployment options (e.g., Kubernetes, cloud-specific services) to ensure flexibility and accessibility.
+- [x] FastAPI for high-performance APIs.
+- [x] Async programming throughout.
+- [x] Redis for caching, rate limiting, and faster data access.
+- [x] Celery for background work, with async tasks.
+- [x] A solid logging setup.
+- [x] Database migrations with Alembic.
+- [x] Async HTTP tests against isolated PostgreSQL and Redis.
+- [x] Isolated service unit tests (no live database).
+- [x] CI with a coverage gate, type checks, and formatting on every push.
+- [x] SQLModel so the database and the API share one model.
+- [x] Repository and Service patterns for a clear split of concerns.
+- [x] `AGENTS.md` and first-party skills so coding agents follow the same app layout.
+- [x] Docker Compose for local PostgreSQL and Redis.
+- [x] Deploy options: Compose full-stack (Caddy), app-only (PaaS), and native (Nginx + Supervisor).
+- [x] Local development on both **Linux** and **Windows**.
+- [x] A CLI (`python setup.py`) to run and manage the project.
 
 ## 📋 Prerequisites
 
-Before you begin, ensure you have the following prerequisites installed and configured:
+Before you begin, ensure you have the following:
 
-- [PostgreSQL](https://www.postgresql.org): Set up a PostgreSQL database.
-- [Redis](https://redis.io): Install and configure a Redis server.
-- [Python](https://www.python.org): Make sure to have Python 3.11 or a newer version installed on your system.
-- [Poetry](https://python-poetry.org): Install Poetry for managing dependencies.
+- [Python](https://www.python.org) 3.11 or newer.
+- [Poetry](https://python-poetry.org) 1.8+ or 2.x for dependency management.
+- [Docker](https://www.docker.com) (Engine or Desktop): used for Compose (infra-only / full-stack) and for Testcontainers when you run the full pytest suite.
+
+PostgreSQL and Redis on the host are **optional**. Prefer Compose infra-only (or the CLI below) unless you explicitly want a native database install.
 
 ### Installing Poetry
 
-Poetry is a dependency manager for Python. Follow the steps below to install Poetry **version 1.7.1** (required):
+Install a current Poetry (1.8+ or 2.x). Do not pin `1.7.1`.
 
-1. Open a terminal.
+```bash
+pip install poetry
+poetry --version
+```
 
-2. Run the following command to install Poetry using pip:
+Official installer: [python-poetry.org/docs](https://python-poetry.org/docs/#installation). Native helper scripts live under `development/native/scripts/` — see the [Development Guide](docs/development-guide.md).
 
-   ```bash
-   pip install poetry==1.7.1
-   ```
+### Using Docker Compose (recommended for databases)
 
-3. Verify the installation by running:
+From the **root directory**, start PostgreSQL and Redis:
 
-   ```bash
-   poetry --version
-   ```
+```bash
+docker compose --env-file backend/.env -f development/compose/infra-only/docker-compose.yml \
+  --project-name fastapi-async-sqlmodel-boilerplate up -d
+```
 
-   This should display `Poetry (version 1.7.1)`. If you have a different version installed, please uninstall and reinstall the correct version:
+```bash
+docker compose --project-name fastapi-async-sqlmodel-boilerplate ps
+docker compose --project-name fastapi-async-sqlmodel-boilerplate down
+```
 
-   ```bash
-   pip uninstall poetry
-   pip install poetry==1.7.1
-   ```
+The command uses environment variables from `backend/.env`. Copy `backend/.env.example` first if needed (local defaults use `127.0.0.1`).
 
-### Using Docker Compose (Alternative Setup)
-
-If you prefer to use Docker containers for development, you can easily set up PostgreSQL and Redis using Docker Compose:
-
-1. Ensure you have [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/) installed on your system.
-
-2. From the **root directory** of the project, run the following command to start PostgreSQL and Redis containers:
-
-   ```bash
-   docker compose --env-file backend/.env -f development/compose/infra-only/docker-compose.yml \
-     --project-name fastapi-async-sqlmodel-boilerplate up -d
-   ```
-
-3. Verify the services are running:
-
-   ```bash
-   docker compose --project-name fastapi-async-sqlmodel-boilerplate ps
-   ```
-
-4. To stop the services:
-
-   ```bash
-   docker compose --project-name fastapi-async-sqlmodel-boilerplate down
-   ```
-
-**Note:** The command uses environment variables from `backend/.env`, so ensure that file is properly configured before running the containers.
-
-Now that the prerequisites are met, you can begin working on your project. Choose either the manual setup or Docker Compose based on your preference.
-
-For a complete overview of all development modes, see the [Development Guide](docs/development-guide.md).
+For full-stack Docker, native host, or other modes, see the [Development Guide](docs/development-guide.md).
 
 ## 🤖 Running the Project CLI
 
-To streamline the usage of this boilerplate, we've provided a convenient **CLI tool**. From the **root project directory**, execute the following steps:
-
-1. Clone the repository, running the following command:
-
-```bash
-git clone https://github.com/joaoflaviosantos/fastapi-async-sqlmodel-boilerplate.git
-```
-
-2. Navigate to the cloned repository:
-
-```bash
-cd fastapi-async-sqlmodel-boilerplate
-```
-
-3. Run the setup (**CLI tool**) command:
+From the **repository root**:
 
 ```bash
 python3 setup.py
 ```
 
-This command automates various **setup tasks**, making it easier to **get started** with the project.
+Or jump to a submenu: `python setup.py local`, `python setup.py tools`, `python setup.py locust`. `python setup.py --help` lists the commands.
 
-For more details for a manual setup, please refer to the [Backend README](backend/README.md) section.
+| Option                        | What it does                                                                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 – Local Development**     | Copies `.env.example` if needed, generates `SECRET_KEY`, starts FastAPI / Celery / Flower. Setup wizard appears only when `backend/.env` is missing required values (ENTER keeps defaults). |
+| **2 – Project Tools**         | Alembic (`upgrade`, `revision --autogenerate`, `current`), pytest (unit / integration / full / coverage), Ruff, mypy, and a CI-checks shortcut.                                             |
+| **3 – Load Testing (Locust)** | Installs the independent Locust env and starts the Web UI or a headless run.                                                                                                                |
+| **4 – Exit**                  | Leave the CLI.                                                                                                                                                                              |
 
-For more details about load testing setup and usage, please refer to the [Locust Guide](docs/locust-guide.md).
+Production deploy is **not** in this menu — use the [Deployment Guide](docs/deploy-guide.md).
+
+For a manual setup, see the [Backend README](backend/README.md). For load testing details, see the [Locust Guide](docs/locust-guide.md).
+
+## 🧪 Running Tests
+
+From `backend/`:
+
+```bash
+cd backend
+poetry run pytest -m unit -v
+poetry run pytest -v --cov --cov-report=term-missing --cov-fail-under=80
+poetry run mypy src
+```
+
+`pytest -m unit` needs no Docker (pre-commit and GitHub Actions job `checks`). The full suite and the 80% coverage gate need Docker so Testcontainers can start PostgreSQL and Redis.
+
+From the repository root you can run the same commands via **Project Tools**: `python setup.py tools`.
+
+Details: [Testing Guide](docs/testing-guide.md).
 
 ## 📚 Documentation
 
-| Guide                                                        | Description                                                    |
-| ------------------------------------------------------------ | -------------------------------------------------------------- |
-| [Development Guide](docs/development-guide.md)               | All local development modes (Docker, native, infra-only)       |
-| [Deployment Guide](docs/deploy-guide.md)                     | All production deployment modes (Docker Compose, PaaS, native) |
-| [Database Migration Guide](docs/database-migration-guide.md) | Alembic workflow for schema changes                            |
-| [Celery Guide](docs/celery-guide.md)                         | Celery worker setup and Windows-specific notes                 |
-| [Testing Guide](docs/testing-guide.md)                       | Running the test suite with pytest                             |
-| [Uvicorn Guide](docs/uvicorn-guide.md)                       | Uvicorn configuration options                                  |
-| [Locust Guide](docs/locust-guide.md)                         | Load testing with Locust                                       |
-| [Coding Agents](docs/ai-coding-guide.md)                     | `AGENTS.md` and first-party skills for this backend            |
+| Guide                                                        | Description                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| [Development Guide](docs/development-guide.md)               | All local development modes (Docker, native, infra-only)            |
+| [Deployment Guide](docs/deploy-guide.md)                     | Production modes: Caddy (Compose full-stack), PaaS, or Nginx native |
+| [Rate Limit Guide](docs/rate-limit-guide.md)                 | Opt-in Redis limiter, path matching, and `TRUST_PROXY_HEADERS`      |
+| [Testing Guide](docs/testing-guide.md)                       | Unit tests, HTTP tests, coverage gate, mypy, and CI                 |
+| [Database Migration Guide](docs/database-migration-guide.md) | Alembic workflow for schema changes                                 |
+| [Celery Guide](docs/celery-guide.md)                         | Celery worker setup and Windows-specific notes                      |
+| [Uvicorn Guide](docs/uvicorn-guide.md)                       | Local Uvicorn, Compose, and native Gunicorn workers                 |
+| [Locust Guide](docs/locust-guide.md)                         | Optional load testing with Locust                                   |
+| [Coding Agents](docs/ai-coding-guide.md)                     | `AGENTS.md` and first-party skills for this backend                 |
 
 ## 🌐 Reference Projects
 
@@ -199,4 +188,8 @@ For more details about load testing setup and usage, please refer to the [Locust
 - [FastAPI Alembic SQLModel Async by Jonathan Vargas](https://github.com/jonra1993/fastapi-alembic-sqlmodel-async)
 - [FastAPI do zero by Dunossauro](https://github.com/dunossauro/fastapi-do-zero)
 
-Feel free to use this boilerplate as a starting point for your own projects, and adapt it based on your specific requirements and use cases. Happy coding! 🌟
+## Source available
+
+This repository is a **personal starter** shared as a gift. Clone it, fork it, or copy it into **your** project and adapt it there — that is what the [MIT license](LICENSE) is for.
+
+It is not a community project. I am not looking for pull requests, feature requests, or a contributor community. If you want to change something, do it in your own copy. Happy coding! 🌟

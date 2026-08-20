@@ -6,7 +6,8 @@ from uuid import uuid4
 # Third-Party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import jwt
+from jwt import InvalidTokenError
 import bcrypt
 
 # Local Dependencies
@@ -21,6 +22,8 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+TOKEN_TYPE_ACCESS: Literal["access"] = "access"
+TOKEN_TYPE_REFRESH: Literal["refresh"] = "refresh"
 
 # OAuth2PasswordBearer instance for handling token retrieval from requests
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/system/auth/login")
@@ -62,8 +65,10 @@ async def create_access_token(data: dict[str, Any], expires_delta: timedelta | N
     if expires_delta:
         expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
     else:
-        expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=15)
-    to_encode.update({"exp": expire, "jti": str(uuid4())})
+        expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+    to_encode.update({"exp": expire, "jti": str(uuid4()), "typ": TOKEN_TYPE_ACCESS})
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -75,13 +80,17 @@ async def create_refresh_token(data: dict[str, Any], expires_delta: timedelta | 
         expire = datetime.now(UTC).replace(tzinfo=None) + expires_delta
     else:
         expire = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "jti": str(uuid4())})
+    to_encode.update({"exp": expire, "jti": str(uuid4()), "typ": TOKEN_TYPE_REFRESH})
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 # Function to verify the validity of a token and return TokenData if valid
-async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
+async def verify_token(
+    token: str,
+    db: AsyncSession,
+    expected_type: Literal["access", "refresh"],
+) -> TokenData | None:
     """
     Verify a JWT token and return TokenData if valid.
 
@@ -91,6 +100,9 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
         The JWT token to be verified.
     db: AsyncSession
         Database session for performing database operations.
+    expected_type: Literal["access", "refresh"]
+        Required payload ``typ`` claim. Access tokens must not be accepted
+        where a refresh token is required, and the reverse.
 
     Returns
     ----------
@@ -105,7 +117,10 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
     try:
         # Decode the token payload and extract the subject (username or email)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username_or_email: str = payload.get("sub")
+        if payload.get("typ") != expected_type:
+            return None
+
+        username_or_email: str | None = payload.get("sub")
         if username_or_email is None:
             return None
 
@@ -139,7 +154,7 @@ async def verify_token(token: str, db: AsyncSession) -> TokenData | None:
 
         return None
 
-    except JWTError:
+    except InvalidTokenError:
         return None
 
 

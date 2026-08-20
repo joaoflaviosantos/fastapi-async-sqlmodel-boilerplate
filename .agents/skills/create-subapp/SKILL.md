@@ -33,6 +33,7 @@ backend/src/apps/<app>/<subapp>/
   deps.py
   routers/v1.py
   tests/test_v1.py
+  tests/test_item_service.py
 ```
 
 Add `tasks.py` only if background work is required (copy `.agents/examples/subapp/tasks.py`). Add `_management/commands/` only if a bootstrap seed is required.
@@ -70,19 +71,16 @@ No `routers/`, `deps.py`, or `tests/`. Register the `table=True` model in `core/
 3. Celery (if `tasks.py`): string in `include=[...]` in `backend/src/worker.py`.
 4. Seed (if any): see below, then hook in `backend/src/apps/_management/commands/seed.py`.
 5. From `backend/`: `poetry run alembic revision --autogenerate -m "..."` then `poetry run alembic upgrade head`.
-6. Tests in `tests/test_v1.py` using fixture `client`.
+6. Tests: copy `.agents/examples/subapp/tests/test_v1.py` (HTTP, `pytestmark = integration`) and `tests/test_item_service.py` (service unit, `pytestmark = unit`). Rename `Item` / `item` to the resource. The service file must keep every `raise` plus a happy path per public method, not only the first `if`.
 
 Do not register `.agents/examples/subapp/` itself.
 
 ## 5. Optional seed
 
-Only if bootstrap data is required. Copy `.agents/examples/subapp/_management/commands/create_first_item.py`.
+Only if bootstrap data is required. Command lives under `backend/src/apps/<app>/<subapp>/_management/commands/`. Open the DB with `local_session()`, never `async_get_db`. Tracking IDs on bootstrap rows use `settings.USER_SYSTEM_ID` (system actor), not the first admin. Hook `await create_*.main()` in `backend/src/apps/_management/commands/seed.py`.
 
-- Command lives under `backend/src/apps/<app>/<subapp>/_management/commands/`.
-- Open the DB with `local_session()`, never `async_get_db`.
-- Be idempotent: `one_or_none()` and skip if the row exists.
-- Tracking IDs on bootstrap rows use `settings.USER_SYSTEM_ID` (system actor), not the first admin.
-- Hook `await create_*.main()` in `backend/src/apps/_management/commands/seed.py`.
+- **One row:** copy `.agents/examples/subapp/_management/commands/create_first_item.py`. Idempotent `one_or_none()` and skip if the row exists.
+- **Catalog / N rows:** copy `.agents/examples/subapp/_management/commands/create_example_items.py`. One `SELECT` of the identity column, set difference in memory, `session.add` only the missing rows, one `commit`. Do not `exists` / `one_or_none` per item.
 
 ## 6. Done when
 
@@ -91,6 +89,6 @@ Verify before considering the subapp finished:
 - Router never imports a repository.
 - Model imported in `core/db/__init__.py` so autogenerate sees the table.
 - Review the new Alembic revision, then `poetry run alembic upgrade head` from `backend/`.
-- From `backend/`: `poetry run pytest src/apps/<app>/<subapp>/tests/test_v1.py -v`
+- From `backend/`: `poetry run pytest src/apps/<app>/<subapp>/tests/ -v` (HTTP needs Docker; `pytest -m unit` does not). The suite collects `src/` (`testpaths = src`), not only `src/apps`.
 - `GET/POST/PATCH/DELETE` match `.agents/examples/subapp/`, including soft delete vs `/db` hard delete when applicable.
 - If Celery: `tasks.py` copied from the example and the module string is in `worker.py` `include`.

@@ -16,7 +16,6 @@ from src.apps.system.users.schemas import (
     UserUpdate,
     UserRead,
     UserTierUpdate,
-    User,
 )
 from src.apps.system.tiers.schemas import TierRead
 from src.apps.system.tiers.models import Tier
@@ -165,7 +164,7 @@ class UserService:
             await self.user_repo.db_delete(db=db, id=user_id)
         except IntegrityError:
             raise ForbiddenException(detail="User cannot be deleted")
-        except Exception as e:
+        except Exception:
             raise InternalErrorException(
                 detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
             )

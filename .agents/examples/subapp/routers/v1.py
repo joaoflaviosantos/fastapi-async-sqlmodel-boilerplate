@@ -20,6 +20,10 @@ router = fastapi.APIRouter(tags=["Example - Items"])
 
 
 @router.post("/example/items", response_model=ItemRead, status_code=201)
+@cache(
+    key_prefix="example:item",
+    pattern_to_invalidate_extra=["example:items:*"],
+)
 async def write_item(
     request: Request,
     item: ItemCreate,

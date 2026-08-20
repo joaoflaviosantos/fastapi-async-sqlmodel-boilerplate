@@ -204,7 +204,7 @@ class RepositoryBase(
                     column_to_model[column_name] = entity
 
             # Apply sorting
-            order_by_clauses = []
+            order_by_clauses: list[Any] = []
             for field_name, direction in sort_by:
                 if field_name in column_names:
                     # Retrieve the actual column from the model class

@@ -86,7 +86,7 @@ class TierService:
             await self.tier_repo.db_delete(db=db, id=tier_id)
         except IntegrityError:
             raise ForbiddenException(detail="Tier cannot be deleted")
-        except Exception as e:
+        except Exception:
             raise InternalErrorException(
                 detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
             )

@@ -1,34 +1,57 @@
 # Built-in Dependencies
-import subprocess
+from __future__ import annotations
+import argparse
 import platform
-import tempfile
-import os
-import re
+import secrets
+import shutil
+import subprocess
+import sys
+from collections.abc import Callable
+from datetime import datetime
+from pathlib import Path
 
-# Global variable to store the operating system type
+ROOT_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = ROOT_DIR / "backend"
+ENV_PATH = BACKEND_DIR / ".env"
+ENV_EXAMPLE_PATH = BACKEND_DIR / ".env.example"
+LOCUST_DIR = ROOT_DIR / "locust"
 OPERATING_SYSTEM = platform.system()
 
+REQUIRED_ENV_KEYS = (
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_SERVER",
+    "POSTGRES_PORT",
+    "POSTGRES_DB",
+    "REDIS_CACHE_HOST",
+    "REDIS_CACHE_PORT",
+    "REDIS_CACHE_PASSWORD",
+    "USER_FIRST_ADMIN_NAME",
+    "USER_FIRST_ADMIN_EMAIL",
+    "USER_FIRST_ADMIN_USERNAME",
+    "USER_FIRST_ADMIN_PASSWORD",
+)
 
-# Function to get the value of an environment variable
-def get_environment_value(environment_name: str) -> str | None:
-    with open(".env", "r") as f:
-        environment_value = None
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip()
-            if not line or "=" not in line:
-                continue  # Ignores empty lines or without the character '='
+WIZARD_KEYS = (
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_SERVER",
+    "POSTGRES_PORT",
+    "POSTGRES_DB",
+    "REDIS_CACHE_HOST",
+    "REDIS_CACHE_PORT",
+    "REDIS_CACHE_USERNAME",
+    "REDIS_CACHE_PASSWORD",
+    "USER_FIRST_ADMIN_NAME",
+    "USER_FIRST_ADMIN_EMAIL",
+    "USER_FIRST_ADMIN_USERNAME",
+    "USER_FIRST_ADMIN_PASSWORD",
+)
 
-            key, value = line.split("=", 1)  # Use split with 1 limit to avoid error
-            if key == environment_name:
-                environment_value = str(value).replace('"', "").replace("'", "")
-                break
-
-    return environment_value
+FLOWER_DEFAULT_AUTH = "admin:changeme"
 
 
-# Function to print colored text
-def print_color(color, text):
+def print_color(color: str, text: str) -> None:
     colors = {
         "RED": "\033[1;31m",
         "GREEN": "\033[0;32m",
@@ -39,24 +62,20 @@ def print_color(color, text):
     print(f"{colors[color]}{text}{colors['RESET']}")
 
 
-# Function to read user input with color
-def read_color(color, prompt):
-    return input(f"{color}{prompt}\033[0m")
+def read_color(prompt: str) -> str:
+    return input(f"\033[1;37m{prompt}\033[0m")
 
 
-# Function to display help menu
-def display_help():
-    print_color("BLUE", "Select an option:\n")
-    print("1 - Local Development Mode")
-    print("2 - Production Deployment Setup")
-    print("3 - Load Testing (Locust)")
-    print("4 - Exit")
+def print_banner() -> None:
+    print_color("YELLOW", "#########################################################################################################################")
+    print_color("YELLOW", "####################################### FastAPI Async SQLModel Boilerplate (Setup) ######################################")
+    print_color("YELLOW", "#########################################################################################################################")
+    print_color("GREEN", "Supercharge your FastAPI development. A backend for perfectionists with deadlines and lovers of asynchronous programming.")
 
 
-# Check if Python and Poetry are installed
-def check_dependencies():
+def check_dependencies() -> str:
+    python_path: str | None = None
     if OPERATING_SYSTEM == "Windows":
-        python_path = None
         python_version_check = (
             "import sys; "
             "print(sys.executable); "
@@ -66,29 +85,27 @@ def check_dependencies():
             ["py", "-3.11", "-c", python_version_check],
             ["python", "-c", python_version_check],
         ]
-
         for command in python_commands:
             try:
                 python_check = subprocess.run(command, capture_output=True, text=True)
             except FileNotFoundError:
                 continue
-
             if python_check.returncode == 0 and python_check.stdout.strip():
                 python_path = python_check.stdout.strip()
                 break
-
         python_installed = python_path is not None
     else:
         try:
             python_installed = (
                 subprocess.run(
-                    ["python3.11", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    ["python3.11", "-V"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
                 ).returncode
                 == 0
             )
         except FileNotFoundError:
             python_installed = False
-
         python_path = (
             subprocess.run(["which", "python3.11"], capture_output=True, text=True).stdout.strip()
             if python_installed
@@ -98,625 +115,526 @@ def check_dependencies():
     try:
         poetry_installed = (
             subprocess.run(
-                ["poetry", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                ["poetry", "--version"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             ).returncode
             == 0
         )
     except FileNotFoundError:
         poetry_installed = False
 
-    return python_installed, python_path, poetry_installed
-
-
-# Step 0: Check dependencies
-python_installed, python_path, poetry_installed = check_dependencies()
-if not python_installed or not poetry_installed:
-    missing_dependencies = []
-    if not python_installed:
-        missing_dependencies.append("Python 3.11")
+    missing: list[str] = []
+    if not python_installed or not python_path:
+        missing.append("Python 3.11")
     if not poetry_installed:
-        missing_dependencies.append("Poetry")
+        missing.append("Poetry")
+    if missing:
+        print_color(
+            "RED",
+            f"\nError: missing required dependencies: {', '.join(missing)}. "
+            "Please install them before running this setup.",
+        )
+        sys.exit(1)
+    return python_path
 
+
+def run_command(
+    args: list[str],
+    *,
+    cwd: Path,
+    check: bool = False,
+) -> int:
+    result = subprocess.run(args, cwd=str(cwd))
+    if check and result.returncode != 0:
+        print_color("RED", f"\nCommand failed with exit code {result.returncode}.\n")
+    return result.returncode
+
+
+def parse_env_file(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if not path.is_file():
+        return values
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def env_value(key: str) -> str:
+    return parse_env_file(ENV_PATH).get(key, "")
+
+
+def set_env_values(updates: dict[str, str]) -> None:
+    if ENV_PATH.is_file():
+        lines = ENV_PATH.read_text(encoding="utf-8").splitlines()
+    else:
+        lines = []
+    remaining = dict(updates)
+    new_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in stripped:
+            key = stripped.split("=", 1)[0].strip()
+            if key in remaining:
+                new_lines.append(_format_env_line(key, remaining.pop(key)))
+                continue
+        new_lines.append(line)
+    if remaining:
+        if new_lines and new_lines[-1] != "":
+            new_lines.append("")
+        for key, value in remaining.items():
+            new_lines.append(_format_env_line(key, value))
+    ENV_PATH.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def _format_env_line(key: str, value: str) -> str:
+    if (
+        value == ""
+        or value.lower() in {"true", "false"}
+        or value.replace(".", "", 1).replace("-", "", 1).isdigit()
+    ):
+        return f"{key}={value}"
+    escaped = value.replace('"', '\\"')
+    return f'{key}="{escaped}"'
+
+
+def env_needs_setup() -> bool:
+    if not ENV_PATH.is_file():
+        return True
+    values = parse_env_file(ENV_PATH)
+    return any(not values.get(key) for key in REQUIRED_ENV_KEYS)
+
+
+def ensure_env() -> None:
+    if not ENV_PATH.is_file():
+        if not ENV_EXAMPLE_PATH.is_file():
+            print_color("RED", f"\nMissing {ENV_EXAMPLE_PATH}. Cannot create .env.\n")
+            sys.exit(1)
+        shutil.copy2(ENV_EXAMPLE_PATH, ENV_PATH)
+        print_color("GREEN", "\nCopied 'backend/.env.example' to 'backend/.env'.")
+    if not env_value("SECRET_KEY"):
+        set_env_values({"SECRET_KEY": secrets.token_urlsafe(32)})
+        print_color("GREEN", "Generated SECRET_KEY in 'backend/.env'.")
+
+
+def ensure_flower_auth() -> None:
+    if not env_value("FLOWER_BASIC_AUTH"):
+        set_env_values({"FLOWER_BASIC_AUTH": FLOWER_DEFAULT_AUTH})
+        print_color(
+            "GREEN",
+            f"Set FLOWER_BASIC_AUTH={FLOWER_DEFAULT_AUTH} in 'backend/.env' (local default).",
+        )
+
+
+def prompt_with_default(name: str, current: str) -> str:
+    entered = read_color(f"{name} [{current}]: ").strip()
+    return entered if entered else current
+
+
+def run_env_wizard() -> None:
+    print_color(
+        "BLUE",
+        "\nConfirm local environment values. Press ENTER to keep the value in brackets.\n",
+    )
+    values = parse_env_file(ENV_PATH)
+    updates: dict[str, str] = {}
+    for key in WIZARD_KEYS:
+        updates[key] = prompt_with_default(key, values.get(key, ""))
+    cache_host = updates.get("REDIS_CACHE_HOST", values.get("REDIS_CACHE_HOST", ""))
+    cache_port = updates.get("REDIS_CACHE_PORT", values.get("REDIS_CACHE_PORT", "6379"))
+    cache_username = updates.get("REDIS_CACHE_USERNAME", values.get("REDIS_CACHE_USERNAME", ""))
+    cache_password = updates.get("REDIS_CACHE_PASSWORD", values.get("REDIS_CACHE_PASSWORD", ""))
+    cache_ssl = values.get("REDIS_CACHE_USE_SSL", "False")
+    for prefix in ("REDIS_BROKER", "REDIS_RATE_LIMIT"):
+        updates[f"{prefix}_HOST"] = cache_host
+        updates[f"{prefix}_PORT"] = cache_port
+        updates[f"{prefix}_USERNAME"] = cache_username
+        updates[f"{prefix}_PASSWORD"] = cache_password
+        updates[f"{prefix}_USE_SSL"] = cache_ssl
+    set_env_values(updates)
+    print_color("GREEN", "\nUpdated 'backend/.env'.")
+
+
+def ensure_poetry(
+    python_path: str, cwd: Path = BACKEND_DIR, *, force_install: bool = False
+) -> bool:
+    if run_command(["poetry", "env", "use", python_path], cwd=cwd, check=True) != 0:
+        return False
+    if not force_install and (cwd / ".venv").is_dir():
+        return True
+    return run_command(["poetry", "install"], cwd=cwd, check=True) == 0
+
+
+def poetry_run(args: list[str], *, cwd: Path = BACKEND_DIR, check: bool = False) -> int:
+    return run_command(["poetry", "run", *args], cwd=cwd, check=check)
+
+
+def alembic_upgrade() -> bool:
+    print_color("GREEN", "\nRunning Alembic migrations...\n")
+    return poetry_run(["alembic", "upgrade", "head"], check=True) == 0
+
+
+def prepare_backend(python_path: str, *, migrate: bool = True) -> bool:
+    if not ensure_poetry(python_path):
+        return False
+    ensure_env()
+    if env_needs_setup():
+        print_color(
+            "YELLOW",
+            "\nbackend/.env is missing required values. Use 'Setup environment' first.\n",
+        )
+        return False
+    if migrate and not alembic_upgrade():
+        return False
+    return True
+
+
+def setup_environment(python_path: str) -> None:
+    print_color("RED", "\n-> Setup environment...\n")
+    if not ensure_poetry(python_path, force_install=True):
+        return
+    ensure_env()
+    run_env_wizard()
+    if env_needs_setup():
+        print_color("YELLOW", "\nSome required values are still empty. Edit backend/.env.\n")
+        return
+    alembic_upgrade()
+    print_color("GREEN", "\n-> Environment setup complete.\n")
+
+
+def start_fastapi(python_path: str) -> None:
+    if not prepare_backend(python_path):
+        return
     print_color(
         "RED",
-        f"\nError: missing required dependencies: {', '.join(missing_dependencies)}. "
-        "Please install them before running this setup.",
+        f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting the FastAPI server...\n",
     )
-    exit(1)
-
-# Print boilerplate name and description
-print_color("YELLOW", "#########################################################################################################################")  # fmt: skip
-print_color("YELLOW", "####################################### FastAPI Async SQLModel Boilerplate (Setup) ######################################")  # fmt: skip
-print_color("YELLOW", "#########################################################################################################################\n")  # fmt: skip
-
-print_color("GREEN", "Supercharge your FastAPI development. A backend for perfectionists with deadlines and lovers of asynchronous programming.\n")  # fmt: skip
-
-
-# Display help menu initially
-display_help()
-
-# Step 0: Ask user for action
-choice = read_color("\033[1;37m", "\nEnter the number corresponding to your choice: ")
-
-# Process user choice
-if choice == "1":
-    print_color("RED", "\n-> You chose Local Development Mode...\n")
-
-    # Step 1.1: Navigate to the project directory
-    os.chdir("backend/")
-
-    # Step 1.2: Force Poetry to use Python 3.11
-    subprocess.run(["poetry", "env", "use", python_path])
-
-    # Step 1.3 Install dependencies
-    subprocess.run(["poetry", "install"])
-
-    # Step 1.4: Check if .env file exists before copying
-    if not os.path.isfile(".env"):
-        if OPERATING_SYSTEM == "Windows":
-            subprocess.run(["copy", ".env.example", ".env"], shell=True)
-        else:
-            subprocess.run(["cp", ".env.example", ".env"])
-        print_color("GREEN", "\nCopied '.env.example' to '.env'.")
-    else:
-        print_color("YELLOW", "\n'.env' file already exists. Skipping copy step.")
-
-    # Step 1.5: Check if SECRET_KEY is empty before generating
-    secret_key_generated = False
-    with open(".env", "r") as f:
-        lines = f.readlines()
-
-    with open(".env", "w") as f:
-        for line in lines:
-            if line.startswith("SECRET_KEY="):
-                current_secret_key = line.split("=")[1].strip('" \n')
-                if not current_secret_key:
-                    secret_key = subprocess.run(
-                        [
-                            "poetry",
-                            "run",
-                            "python",
-                            "-c",
-                            "from fastapi import FastAPI; import secrets; print(secrets.token_urlsafe(32))",
-                        ],
-                        capture_output=True,
-                        text=True,
-                    ).stdout.strip()
-                    f.write(f"SECRET_KEY={secret_key}\n")
-                    secret_key_generated = True
-                else:
-                    f.write(line)
-            else:
-                f.write(line)
-
-    # Inform the user about generating the SECRET_KEY
-    if secret_key_generated:
-        print_color("GREEN", "\nGenerated and set a secure secret key in '.env'.\n")
-    else:
-        print_color(
-            "YELLOW", "\n'SECRET_KEY' in '.env' is already set. Skipping generation step.\n"
+    web_concurrency = env_value("WEB_CONCURRENCY")
+    if not web_concurrency.isdigit() or int(web_concurrency) == 1:
+        poetry_run(
+            [
+                "uvicorn",
+                "src.main:app",
+                "--reload",
+                "--reload-delay",
+                "0.25",
+                "--reload-include",
+                "*.py",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+                "--timeout-keep-alive",
+                "5",
+            ]
         )
-
-    # Step 1.6: Inform the user to modify other environment variables in ".env"
-    print_color("BLUE", "Please modify other environment variables in 'backend/.env' as needed.")
-
-    # Step 1.7: Check if all required environment variables are defined
-    # Define a list of dictionaries for database environment variables
-    database_env_vars = [
-        {"name": "POSTGRES_USER", "type": "string", "min_length": 2},
-        {"name": "POSTGRES_PASSWORD", "type": "string", "min_length": 5},
-        {"name": "POSTGRES_SERVER", "type": "string", "min_length": 4},
-        {"name": "POSTGRES_PORT", "type": "numeric"},
-        {"name": "POSTGRES_DB", "type": "string", "min_length": 2},
-    ]
-
-    # Define a list of dictionaries for Redis for caching environment variables
-    redis_env_vars = [
-        {"name": "REDIS_CACHE_HOST", "type": "string", "min_length": 4},
-        {"name": "REDIS_CACHE_PORT", "type": "numeric"},
-        {"name": "REDIS_CACHE_DB", "type": "numeric"},
-        {"name": "REDIS_CACHE_USERNAME", "type": "string", "min_length": 0},
-        {"name": "REDIS_CACHE_PASSWORD", "type": "string", "min_length": 0},
-    ]
-
-    # Define a list of dictionaries for the first admin user environment variable
-    first_admin_user_env_vars = [
-        {"name": "USER_FIRST_ADMIN_NAME", "type": "string", "min_length": 4},
-        {"name": "USER_FIRST_ADMIN_EMAIL", "type": "email", "min_length": 5},
-        {"name": "USER_FIRST_ADMIN_USERNAME", "type": "string", "min_length": 2},
-        {"name": "USER_FIRST_ADMIN_PASSWORD", "type": "string", "min_length": 2},
-    ]
-
-    # Combine all sets of environment variables into a single list
-    all_env_vars = [database_env_vars, redis_env_vars, first_admin_user_env_vars]
-
-    # Loop through all environment variables to check if any variable is missing
-    for env_vars in all_env_vars:
-        any_var_missing = False
-
-        # Check if any environment variable is missing
-        for var in env_vars:
-            with open(".env", "r") as f:
-                lines = f.readlines()
-
-            # Check if the environment variable is defined in the .env file (exists as a line with VAR=)
-            # We only check if the line exists, not if it has a value
-            var_defined = any(line.startswith(f"{var['name']}=") for line in lines)
-
-            if not var_defined:
-                any_var_missing = True
-                break  # Stop checking if any variable is missing
-
-        # If any variable is missing, prompt the user for input
-        if any_var_missing:
-            print(
-                "\nSome environment variables are not defined. Please provide the following information:"
-            )
-        else:
-            # All variables are defined, check if they have valid values
-            has_invalid_values = False
-            for var in env_vars:
-                with open(".env", "r") as f:
-                    lines = f.readlines()
-
-                for line in lines:
-                    if line.startswith(f"{var['name']}="):
-                        # Get the value part after the equals sign
-                        if "=" in line:
-                            value_part = line.split("=", 1)[1].strip()
-                            # Remove surrounding quotes if present
-                            value = value_part.strip('"').strip("'")
-
-                            # Check if value is valid based on type and min_length
-                            if var["type"] == "numeric":
-                                # For numeric, check if it's a valid number
-                                if (
-                                    not value
-                                    or not value.replace(".", "").replace("-", "").isdigit()
-                                ):
-                                    has_invalid_values = True
-                                    break
-                            elif var["type"] == "email":
-                                # For email, check if it matches email pattern
-                                if not value or not re.match(
-                                    r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", value
-                                ):
-                                    has_invalid_values = True
-                                    break
-                            else:
-                                # For string, check min_length
-                                if len(value) < var["min_length"]:
-                                    has_invalid_values = True
-                                    break
-                if has_invalid_values:
-                    break
-
-            if has_invalid_values:
-                print(
-                    "\nSome environment variables have invalid values. Please provide the following information:"
-                )
-
-                # Loop through all environment variables to ask for user input
-                for var in env_vars:
-                    with open(".env", "r") as f:
-                        lines = f.readlines()
-
-                    with open(".env", "w") as f:
-                        for line in lines:
-                            if line.startswith(f"{var['name']}="):
-                                current_value = line.split("=")[1].strip('" \n')
-                                if current_value:
-                                    # Value exists, ask the user if they want to keep it
-                                    keep_value = read_color(
-                                        "\033[1;37m",
-                                        f"Do you want to keep the value '{current_value}' for {var['name']}? (y/n): ",
-                                    ).lower()
-                                    if keep_value in {"n", "no"}:
-                                        # User wants to change the value, ask for new value
-                                        new_value = read_color(
-                                            "\033[1;37m", f"Enter the new value for {var['name']}: "
-                                        )
-                                        if var["type"] == "string":
-                                            while not len(new_value) >= var["min_length"]:
-                                                print(
-                                                    f"Invalid value. Please enter a valid value for {var['name']}."
-                                                )
-                                                new_value = read_color(
-                                                    "\033[1;37m",
-                                                    f"Enter the value for {var['name']}: ",
-                                                )
-                                            f.write(f"{var['name']}=\"{new_value}\"\n")
-                                        else:
-                                            f.write(f"{var['name']}={new_value}\n")
-                                    else:
-                                        f.write(line)
-                                else:
-                                    # Value does not exist, ask the user for new value
-                                    if var["name"] == "REDIS_CACHE_PASSWORD":
-                                        has_redis_password = read_color(
-                                            "\033[1;37m",
-                                            f"Does your Redis server require a password? (y/n): ",
-                                        ).lower()
-                                        if has_redis_password in {"n", "no"}:
-                                            f.write(f"{var['name']}=\"nosecurity\"\n")
-                                        else:
-                                            new_value = read_color(
-                                                "\033[1;37m", f"Enter the value for {var['name']}: "
-                                            )
-                                            while not len(new_value) >= var["min_length"]:
-                                                print(
-                                                    f"Invalid value. Please enter a valid value for {var['name']}."
-                                                )
-                                                new_value = read_color(
-                                                    "\033[1;37m",
-                                                    f"Enter the value for {var['name']}: ",
-                                                )
-                                            f.write(f"{var['name']}=\"{new_value}\"\n")
-                                    else:
-                                        # Value does not exist, ask the user for new value
-                                        if var["type"] == "email":
-                                            # Special case for email, ensure it's a valid email address
-                                            # While loop to ensure a valid email address is provided
-                                            new_value = read_color(
-                                                "\033[1;37m",
-                                                f"Enter a valid email address for {var['name']}: ",
-                                            )
-                                            while not len(new_value) >= var[
-                                                "min_length"
-                                            ] or not re.match(
-                                                r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-                                                new_value,
-                                            ):
-                                                print(
-                                                    "Invalid email address. Please enter a valid email."
-                                                )
-                                                new_value = read_color(
-                                                    "\033[1;37m",
-                                                    f"Enter a valid email address for {var['name']}: ",
-                                                )
-                                            f.write(f"{var['name']}=\"{new_value}\"\n")
-                                        else:
-                                            new_value = read_color(
-                                                "\033[1;37m", f"Enter the value for {var['name']}: "
-                                            )
-                                            if var["type"] == "string":
-                                                while not len(new_value) >= var["min_length"]:
-                                                    print(
-                                                        f"Invalid value. Please enter a valid value for {var['name']}."
-                                                    )
-                                                    new_value = read_color(
-                                                        "\033[1;37m",
-                                                        f"Enter the value for {var['name']}: ",
-                                                    )
-                                                f.write(f"{var['name']}=\"{new_value}\"\n")
-                                            else:
-                                                f.write(f"{var['name']}={new_value}\n")
-                            else:
-                                f.write(line)
-
-    # Step 1.8: Run Alembic migrations
-    print_color("GREEN", "\nRunning Alembic migrations...\n")
-    subprocess.run(["poetry", "run", "alembic", "upgrade", "head"])
-
-    # Step 1.9: Display a success message for Local Development Mode
-    print_color("RED", "\n-> Setup complete for Local Development Mode...\n")
-
-    # Step 1.10: Ask the user if they want to perform additional actions
-    print_color("BLUE", "Do you want to perform any additional actions?\n")
-    print("1 - Start FastAPI server")
-    print("2 - Start Celery worker")
-    print("3 - Start Celery beat")
-    print("4 - Start Flower")
-    print("5 - Run unit and integration tests")
-    print("6 - Run linting and formatting checks")
-    print("7 - Commit and Push Changes")
-    print("8 - Exit")
-
-    # Step 1.11: Ask the user for additional action choice
-    additional_action = read_color(
-        "\033[1;37m", "\nEnter the number corresponding to your choice: "
-    )
-
-    # Process user's additional action choice
-    if additional_action == "1":
-        from datetime import datetime
-
-        print_color(
-            "RED",
-            f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting the FastAPI server...\n",
+    else:
+        poetry_run(
+            [
+                "uvicorn",
+                "src.main:app",
+                "--workers",
+                web_concurrency,
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+            ]
         )
-        # Step 1.1.1: Start the FastAPI server
-        web_concurrency = get_environment_value("WEB_CONCURRENCY")
-        if (
-            (web_concurrency is None)
-            or (not web_concurrency.isdigit())
-            or (int(web_concurrency) == 1)
-        ):
-            # Use --reload-delay to give time for file writes to complete
-            # Use --reload-include to only watch Python files (faster)
-            # Use --timeout-keep-alive to prevent hanging connections
-            subprocess.run(
-                [
-                    "poetry",
-                    "run",
-                    "uvicorn",
-                    "src.main:app",
-                    "--reload",
-                    "--reload-delay",
-                    "0.25",
-                    "--reload-include",
-                    "*.py",
-                    "--host",
-                    "0.0.0.0",
-                    "--port",
-                    "8000",
-                    "--timeout-keep-alive",
-                    "5",
-                ]
-            )
+    print_color("RED", "\n-> Stopping the FastAPI server...\n")
+
+
+def start_celery_worker(python_path: str) -> None:
+    if not prepare_backend(python_path):
+        return
+    print_color("RED", "\n-> Running the Celery worker...\n")
+    args = ["celery", "-A", "src.worker", "worker", "--loglevel=info"]
+    if OPERATING_SYSTEM == "Windows":
+        args.extend(["-P", "threads"])
+    poetry_run(args)
+    print_color("RED", "\n-> Finished running the Celery worker...\n")
+
+
+def start_celery_beat(python_path: str) -> None:
+    if not prepare_backend(python_path):
+        return
+    print_color("RED", "\n-> Running the Celery beat...\n")
+    poetry_run(["celery", "-A", "src.worker", "beat", "--loglevel=info"])
+    print_color("RED", "\n-> Finished running the Celery beat...\n")
+
+
+def start_flower(python_path: str) -> None:
+    if not prepare_backend(python_path, migrate=False):
+        return
+    ensure_flower_auth()
+    print_color("RED", "\n-> Running Celery Flower...\n")
+    poetry_run(["celery", "-A", "src.worker", "flower", "--loglevel=info"])
+    print_color("RED", "\n-> Finished running Celery Flower...\n")
+
+
+def prompt_choice(options: list[tuple[str, str]]) -> str:
+    print_color("BLUE", "Select an option:\n")
+    for key, label in options:
+        print(f"{key} - {label}")
+    return read_color("\nEnter the number corresponding to your choice: ").strip()
+
+
+def local_menu(python_path: str) -> None:
+    while True:
+        print_color("BLUE", "\nLocal Development\n")
+        options: list[tuple[str, str]] = []
+        actions: dict[str, Callable[[], None]] = {}
+        next_key = 1
+        if env_needs_setup():
+            options.append((str(next_key), "Setup environment"))
+            actions[str(next_key)] = lambda: setup_environment(python_path)
+            next_key += 1
+        start_items = [
+            ("Start FastAPI server", lambda: start_fastapi(python_path)),
+            ("Start Celery worker", lambda: start_celery_worker(python_path)),
+            ("Start Celery beat", lambda: start_celery_beat(python_path)),
+            ("Start Celery Flower", lambda: start_flower(python_path)),
+        ]
+        for label, func in start_items:
+            options.append((str(next_key), label))
+            actions[str(next_key)] = func
+            next_key += 1
+        back_key = str(next_key)
+        options.append((back_key, "Back"))
+        choice = prompt_choice(options)
+        if choice == back_key:
+            return
+        action = actions.get(choice)
+        if action is None:
+            print_color("YELLOW", "\nInvalid choice.\n")
+            continue
+        action()
+
+
+def alembic_revision() -> None:
+    message = read_color("Revision message: ").strip()
+    if not message:
+        print_color("YELLOW", "\nRevision message cannot be empty.\n")
+        return
+    poetry_run(["alembic", "revision", "--autogenerate", "-m", message], check=True)
+
+
+def migrations_menu(python_path: str) -> None:
+    while True:
+        print_color("BLUE", "\nDatabase migrations (from backend/)\n")
+        choice = prompt_choice(
+            [
+                ("1", "Alembic upgrade head"),
+                ("2", "Alembic revision --autogenerate"),
+                ("3", "Alembic current"),
+                ("4", "Back"),
+            ]
+        )
+        if choice == "4":
+            return
+        if not ensure_poetry(python_path):
+            continue
+        ensure_env()
+        if choice == "1":
+            alembic_upgrade()
+        elif choice == "2":
+            alembic_revision()
+        elif choice == "3":
+            poetry_run(["alembic", "current"], check=True)
         else:
-            subprocess.run(
-                [
-                    "poetry",
-                    "run",
-                    "uvicorn",
-                    "src.main:app",
-                    "--workers",
-                    f"{str(web_concurrency)}",
-                    "--host",
-                    "0.0.0.0",
-                    "--port",
-                    "8000",
-                ]
-            )
-        print_color("RED", "\n-> Stopping the FastAPI server...\n")
-    elif additional_action == "2":
-        print_color("RED", "\n-> Running the Celery worker...\n")
-        # Step 1.2.1: Start the Celery worker
-        if OPERATING_SYSTEM == "Windows":
-            subprocess.run(
-                [
-                    "poetry",
-                    "run",
-                    "celery",
-                    "-A",
-                    "src.worker",
-                    "worker",
-                    "--loglevel=info",
-                    "-P",
-                    "threads",
-                ]
-            )
+            print_color("YELLOW", "\nInvalid choice.\n")
+
+
+def tests_menu(python_path: str) -> None:
+    while True:
+        print_color("BLUE", "\nTests (from backend/)\n")
+        choice = prompt_choice(
+            [
+                ("1", "Unit tests (pytest -m unit)"),
+                ("2", "Integration tests (pytest -m integration)"),
+                ("3", "Full suite (pytest -v)"),
+                ("4", "Coverage gate (80%)"),
+                ("5", "Back"),
+            ]
+        )
+        if choice == "5":
+            return
+        if not ensure_poetry(python_path):
+            continue
+        commands = {
+            "1": ["pytest", "-m", "unit", "-v"],
+            "2": ["pytest", "-m", "integration", "-v"],
+            "3": ["pytest", "-v"],
+            "4": [
+                "pytest",
+                "-v",
+                "--cov",
+                "--cov-report=term-missing",
+                "--cov-fail-under=80",
+            ],
+        }
+        args = commands.get(choice)
+        if args is None:
+            print_color("YELLOW", "\nInvalid choice.\n")
+            continue
+        print_color("RED", "\n-> Running tests...\n")
+        poetry_run(args, check=True)
+        print_color("RED", "\n-> Finished running tests...\n")
+
+
+def run_ci_checks(python_path: str) -> None:
+    if not ensure_poetry(python_path):
+        return
+    print_color("RED", "\n-> Running CI checks (ruff format --check, ruff check src, mypy src, pytest -m unit)...\n")
+    if poetry_run(["ruff", "format", "--check", "."], check=True) != 0:
+        return
+    if poetry_run(["ruff", "check", "src"], check=True) != 0:
+        return
+    if poetry_run(["mypy", "src"], check=True) != 0:
+        return
+    poetry_run(["pytest", "-m", "unit", "-v"], check=True)
+    print_color("RED", "\n-> Finished CI checks...\n")
+
+
+def tools_menu(python_path: str) -> None:
+    while True:
+        print_color("BLUE", "\nProject Tools\n")
+        choice = prompt_choice(
+            [
+                ("1", "Database migrations"),
+                ("2", "Run tests"),
+                ("3", "CI checks (ruff format, ruff check, mypy, unit tests)"),
+                ("4", "Format code (ruff format)"),
+                ("5", "Type check (mypy src)"),
+                ("6", "Format check (ruff format --check)"),
+                ("7", "Back"),
+            ]
+        )
+        if choice == "7":
+            return
+        if choice == "1":
+            migrations_menu(python_path)
+        elif choice == "2":
+            tests_menu(python_path)
+        elif choice == "3":
+            run_ci_checks(python_path)
+        elif choice == "4":
+            if ensure_poetry(python_path):
+                print_color("RED", "\n-> Formatting with ruff...\n")
+                poetry_run(["ruff", "format", "."], check=True)
+                print_color("RED", "\n-> Finished formatting...\n")
+        elif choice == "5":
+            if ensure_poetry(python_path):
+                poetry_run(["mypy", "src"], check=True)
+        elif choice == "6":
+            if ensure_poetry(python_path):
+                poetry_run(["ruff", "format", "--check", "."], check=True)
         else:
-            # On Linux/macOS, use default prefork pool
-            subprocess.run(
-                ["poetry", "run", "celery", "-A", "src.worker", "worker", "--loglevel=info"]
-            )
-        print_color("RED", "\n-> Finished running the Celery worker...\n")
-    elif additional_action == "3":
-        print_color("RED", "\n-> Running the Celery beat...\n")
-        # Step 1.3.1: Start the Celery beat
-        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "beat", "--loglevel=info"])
-        print_color("RED", "\n-> Finished running the Celery beat...\n")
-    elif additional_action == "4":
-        print_color("RED", "\n-> Running the Celery Flower...\n")
-        # Step 1.4.1: Start the Celery Flower
-        subprocess.run(["poetry", "run", "celery", "-A", "src.worker", "flower", "--loglevel=info"])
-        print_color("RED", "\n-> Finished running the Celery Flower...\n")
-    elif additional_action == "5":
-        print_color("RED", "\n-> Running unit and integration tests...\n")
-        # Step 1.5.1: Run unit and integration tests
-        subprocess.run(["poetry", "run", "python", "-m", "pytest", "-vv", "./tests"])
-        print_color("RED", "\n-> Finished running unit and integration tests...\n")
-    elif additional_action == "6":
-        print_color("RED", "\n-> Running linting and formatting checks...\n")
-        # Step 1.6.1: Run linting and formatting checks
-        subprocess.run(["poetry", "run", "python", "-m", "black", "."])
-        print_color("RED", "\n-> Finished running linting and formatting checks...\n")
-    elif additional_action == "7":
-        print_color("RED", "\n-> Committing and pushing changes...\n")
+            print_color("YELLOW", "\nInvalid choice.\n")
 
-        # Step 1.7.1: Return to the root directory
-        os.chdir("..")
 
-        # Step 1.7.2: Ask the user which files they want to include in the commit
-        include_all_files = read_color(
-            "\033[1;37m", "Do you want to include all files in this commit? (y/n): "
-        ).lower()
-
-        if include_all_files in {"y", "yes"}:
-            # Include all files
-            subprocess.run(["git", "add", "."])
-        else:
-            # Ask the user to enter the files to include in the commit
-            files_to_commit = read_color(
-                "\033[1;37m", "Please enter the files to include in the commit (space-separated): "
-            )
-            # Include the specified files
-            subprocess.run(["git", "add"] + files_to_commit.split())
-
-        # Step 1.7.3: Clean the variables at the beginning
-        branch = ""
-        message = ""
-        description = ""
-
-        # Step 1.7.4: Get the current branch name
-        branch = subprocess.run(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True
-        ).stdout.strip()
-
-        # Step 1.7.5: Check if BRANCH is not empty
-        if not branch:
+def locust_menu(python_path: str) -> None:
+    print_color("RED", "\n-> Load Testing (Locust)...\n")
+    if not ensure_poetry(python_path, cwd=LOCUST_DIR):
+        return
+    print_color("GREEN", "\n-> Locust environment ready.\n")
+    print_color("BLUE", "Make sure the backend API is running before starting Locust.")
+    print_color("BLUE", "Locust reads credentials from 'backend/.env'.\n")
+    while True:
+        choice = prompt_choice(
+            [
+                ("1", "Start Locust (Web UI at http://127.0.0.1:8089)"),
+                ("2", "Start Locust (headless: 50 users, 10/s, 60s)"),
+                ("3", "Back"),
+            ]
+        )
+        if choice == "3":
+            return
+        if choice == "1":
             print_color(
                 "RED",
-                "\n-> Error: Unable to determine the current branch name. Please try again.\n",
+                f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (Web UI)...\n",
             )
-            exit(1)
-
-        # Step 1.7.6: Loop until MESSAGE is not empty
-        while not message:
-            # Get the commit message from the user
-            message = read_color("\033[1;37m", "Please enter the commit message: ")
-
-            # Remove double quotes from the 'MESSAGE' variable
-            message = message.replace('"', "")
-
-            # Check if MESSAGE is not empty
-            if not message:
-                print_color(
-                    "RED", "\n-> Error: Commit message cannot be empty. Please try again.\n"
-                )
-
-        # Step 1.7.7: Ask the user if they want to include an additional commit description (optional)
-        include_description = read_color(
-            "\033[1;37m", "Do you want to include an additional commit description? (y/n): "
-        ).lower()
-
-        # Check if the user wants to include an additional description
-        if include_description in {"y", "yes"}:
-            # Use a temporary file to capture the commit description
-            with tempfile.NamedTemporaryFile(suffix=".txt") as tmp_file:
-                # Open the temporary file in the appropriate text editor based on the operating system
-                if OPERATING_SYSTEM == "Windows":  # Windows
-                    while description == "":
-                        print(
-                            "Please enter the commit description (one line at a time). Press ENTER on a blank line when you're done."
-                        )
-                        description_lines = []
-                        # Capture the description lines until the user enters a blank line
-                        while True:
-                            line = input("> ")
-                            if not line:
-                                break
-                            description_lines.append(line)
-                        description = "\n".join(description_lines)
-                else:  # Linux or macOS
-                    editor = os.environ.get("EDITOR", "nano")
-                    subprocess.call([editor, tmp_file.name])
-
-                # Read the content of the temporary file
-                if OPERATING_SYSTEM == "Windows":
-                    description = description
-                else:
-                    with open(tmp_file.name, "r") as f:
-                        description = f.read().strip()
-
-            # Remove double quotes from the 'description' variable
-            description = description.replace('"', "")
-
-        # Step 1.7.8: Prepare virtual environment activation
-        print_color("RED", "\n-> Preparing virtual environment activation...\n")
-        if OPERATING_SYSTEM == "Windows":  # Windows
-            venv_folder = "Scripts"
-        else:  # Linux or macOS
-            venv_folder = "bin"
-
-        activate_script = os.path.join("backend", ".venv", venv_folder, "activate")
-        command = "cmd" if OPERATING_SYSTEM == "Windows" else "bash"
-        sub_command = "/c" if OPERATING_SYSTEM == "Windows" else "-c"
-
-        # Activate the virtual environment
-        activate_command = (
-            f"source {activate_script}" if OPERATING_SYSTEM != "Windows" else activate_script
-        )
-
-        # Step 1.7.9: Install pre-commit hooks
-        print_color("RED", "\n-> Installing pre-commit hooks...\n")
-        subprocess.run(
-            [f'{command} {sub_command} "{activate_command} && pre-commit install"'],
-            shell=True,
-            check=True,
-        )
-
-        # Step 1.7.10: Commit and push changes
-        print_color("RED", "\n-> Committing and pushing changes...\n")
-        if not description:
-            subprocess.run(
-                [
-                    f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" && git push origin {branch}"'
-                ],
-                shell=True,
-                check=True,
+            print_color("GREEN", "Open http://127.0.0.1:8089 in your browser.\n")
+            poetry_run(["locust"], cwd=LOCUST_DIR)
+            print_color("RED", "\n-> Stopping Locust...\n")
+        elif choice == "2":
+            print_color(
+                "RED",
+                f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (headless)...\n",
             )
+            poetry_run(
+                ["locust", "--headless", "-u", "50", "-r", "10", "--run-time", "60s"],
+                cwd=LOCUST_DIR,
+            )
+            print_color("RED", "\n-> Locust load test finished.\n")
         else:
-            subprocess.run(
-                [
-                    f'{command} {sub_command} "{activate_command} && git commit -m \\"{message}\\" -m \\"{description}\\" && git push origin {branch}"'
-                ],
-                shell=True,
-                check=True,
-            )
+            print_color("YELLOW", "\nInvalid choice.\n")
 
-        # Step 1.7.11: Inform the user that changes have been committed and pushed
+
+def main_menu(python_path: str) -> None:
+    while True:
+        print_color("BLUE", "\nProject CLI")
         print_color(
-            "RED", "\nChanges have been committed and pushed to the branch '{}'.\n".format(branch)
+            "YELLOW",
+            "Production deploy is documented in docs/deploy-guide.md (not this menu).\n",
         )
-    elif additional_action == "6":
-        print("\nExiting...\n")
-        exit(1)
+        choice = prompt_choice(
+            [
+                ("1", "Local Development"),
+                ("2", "Project Tools"),
+                ("3", "Load Testing (Locust)"),
+                ("4", "Exit"),
+            ]
+        )
+        if choice == "1":
+            local_menu(python_path)
+        elif choice == "2":
+            tools_menu(python_path)
+        elif choice == "3":
+            locust_menu(python_path)
+        elif choice == "4":
+            print("\nExiting...\n")
+            return
+        else:
+            print_color("YELLOW", "\nInvalid choice.\n")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Project CLI for local development, tests, migrations, and Locust.",
+    )
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("local", "tools", "locust"),
+        help="Skip the top menu and open this submenu (default: interactive main menu).",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    python_path = check_dependencies()
+    print_banner()
+    if args.command == "local":
+        local_menu(python_path)
+    elif args.command == "tools":
+        tools_menu(python_path)
+    elif args.command == "locust":
+        locust_menu(python_path)
     else:
-        print("\nInvalid choice. Exiting...\n")
-        exit(1)
-elif choice == "2":
-    print("\nYou chose Production Deployment Setup.\n")
-    # Add additional actions for Production Deployment Setup if needed
-elif choice == "3":
-    print_color("RED", "\n-> You chose Load Testing (Locust)...\n")
+        main_menu(python_path)
 
-    # Step 3.1: Navigate to the locust directory
-    os.chdir("locust/")
 
-    # Step 3.2: Force Poetry to use Python 3.11
-    subprocess.run(["poetry", "env", "use", python_path])
-
-    # Step 3.3: Install dependencies
-    print_color("GREEN", "Installing Locust dependencies...\n")
-    subprocess.run(["poetry", "install"])
-
-    # Step 3.4: Display a success message
-    print_color("RED", "\n-> Setup complete for Load Testing (Locust)...\n")
-    print_color("BLUE", "Make sure the backend API is running before starting Locust.\n")
-    print_color("BLUE", "Locust will read credentials from 'backend/.env'.\n")
-
-    # Step 3.5: Ask the user if they want to start Locust
-    print_color("BLUE", "Do you want to start Locust now?\n")
-    print("1 - Start Locust (Web UI at http://localhost:8089)")
-    print("2 - Start Locust (Headless mode - 50 users, 10/s spawn rate, 60s)")
-    print("3 - Exit")
-
-    locust_action = read_color("\033[1;37m", "\nEnter the number corresponding to your choice: ")
-
-    if locust_action == "1":
-        from datetime import datetime
-
-        print_color(
-            "RED",
-            f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (Web UI)...\n",
-        )
-        print_color("GREEN", "Open http://localhost:8089 in your browser.\n")
-        subprocess.run(["poetry", "run", "locust"])
-        print_color("RED", "\n-> Stopping Locust...\n")
-    elif locust_action == "2":
-        from datetime import datetime
-
-        print_color(
-            "RED",
-            f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Starting Locust (Headless mode)...\n",
-        )
-        subprocess.run(
-            ["poetry", "run", "locust", "--headless", "-u", "50", "-r", "10", "--run-time", "60s"]
-        )
-        print_color("RED", "\n-> Locust load test finished.\n")
-    elif locust_action == "3":
-        print("\nExiting...\n")
-        exit(0)
-    else:
-        print("\nInvalid choice. Exiting...\n")
-        exit(1)
-elif choice == "4":
-    print("\nExiting...\n")
-    exit(0)
-    # Add additional actions for production mode if needed
-else:
-    print("\nInvalid choice. Exiting...\n")
-    exit(1)
+if __name__ == "__main__":
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):
+        print()
+        print_color("YELLOW", "Exiting...")
+        sys.exit(130)

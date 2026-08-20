@@ -1,5 +1,6 @@
 # Built-in Dependencies
 from datetime import datetime, timezone
+from typing import Any
 
 # Third-Party Dependencies
 from sqlmodel import select
@@ -14,7 +15,7 @@ from src.worker import app
 
 
 @async_task(app, name="send_welcome_email", bind=True, max_retries=3)
-async def send_welcome_email(self, email: str, username: str) -> dict:
+async def send_welcome_email(self: Any, email: str, username: str) -> dict:
     """
     Task triggered when a new user is created.
     Simulates sending a welcome email by logging the action.

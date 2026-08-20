@@ -55,7 +55,7 @@ async def create_system_superuser(session: AsyncSession) -> None:
         await session.commit()
 
 
-async def main():
+async def main() -> None:
     async with local_session() as session:
         await create_system_superuser(session=session)
 

@@ -25,7 +25,7 @@ _DEFAULT_TIMEOUT = 50.0
 _thread_local = threading.local()
 
 
-def _reset_client_after_fork():
+def _reset_client_after_fork() -> None:
     if hasattr(_thread_local, "client"):
         _thread_local.client = None
 
@@ -49,7 +49,7 @@ async def close_global_client() -> None:
             _thread_local.client = None
 
 
-def _close_client_sync():
+def _close_client_sync() -> None:
     """Close the client synchronously for use with atexit"""
     if not hasattr(_thread_local, "client") or _thread_local.client is None:
         return

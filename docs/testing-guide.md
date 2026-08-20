@@ -2,53 +2,81 @@
 
 ## Overview
 
-Testing is a crucial aspect of software development, ensuring that the application functions as intended and that new changes do not introduce regressions. This guide provides instructions on how users can run tests to verify the correct functionality of the application.
+The suite is fully asynchronous (`pytest-asyncio`, `asyncio_mode = auto`). Pytest collects tests natively from `backend/src/` (`testpaths = src`, `--import-mode=importlib`): domain tests under `apps/<app>/<subapp>/tests/` and infra unit tests under `core/tests/`. Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). `src/conftest.py` is empty (no nested plugins). There is no aggregator file.
 
-Our test suite is **fully asynchronous** and uses **Testcontainers** to guarantee an isolated and clean database state for every test session. When you run the tests, a temporary PostgreSQL instance is automatically spun up using Docker, seeded with base data, and torn down once the tests finish.
+Classification is **explicit** on each test module:
+
+```python
+pytestmark = pytest.mark.integration  # HTTP; file must be named *_vN.py
+pytestmark = pytest.mark.unit         # isolated; no *_vN.py suffix
+```
+
+Markers come from `pytestmark`, not from folders. Do not create `tests/unit/` or `tests/integration/`. Do not put `test_*.py` in `backend/tests/` (that directory is only `conftest.py` and `helper.py`).
+
+HTTP tests use a session-scoped `httpx.AsyncClient` against Testcontainers PostgreSQL (pgvector) and Redis. Unit tests must not need Docker.
 
 ## Prerequisites
 
-- **Docker**: You must have Docker installed and running on your machine (e.g., Docker Desktop or Docker Engine) for `testcontainers` to successfully spin up the isolated PostgreSQL database.
+- **Poetry** and the backend virtualenv (`cd backend && poetry install`).
+- **Docker** only for integration (or a full `pytest -v` with no `-m`): Docker Desktop or Engine must be running so Testcontainers can start Postgres and Redis.
 
 ## Running Tests
 
-To run tests for the project, follow these steps:
+From the `backend` directory:
 
-1. Navigate to the `backend` directory:
+```bash
+poetry run pytest -v
+poetry run pytest -m unit -v
+poetry run pytest -m integration -v
+poetry run pytest -v --cov --cov-report=term-missing --cov-fail-under=80
+poetry run mypy src
+poetry run ruff format --check .
+poetry run ruff check src
+poetry run pytest src/apps/<app>/<subapp>/tests/ -v
+poetry run pytest src/apps/<app>/<subapp>/tests/test_v1.py -v
+poetry run pytest src/core/tests/ -v
+```
 
-   ```bash
-   cd backend
-   ```
+From the repository root, the same commands are available under **Project Tools**: `python setup.py tools` (or `python3 setup.py` → option 2).
 
-2. Execute the following command to run tests:
+`pytest -m unit` is what pre-commit runs. It must pass without Docker and without `--cov`.
 
-   ```bash
-   poetry run pytest tests/ -v
-   ```
+The coverage gate (`--cov-fail-under=80`) applies only to the **full** suite. Do not put `--cov` in `pytest.ini` `addopts`. Config lives in `[tool.coverage.*]` in `pyproject.toml` (`source = ["src"]`; tests, `src/conftest.py`, and Alembic revisions are omitted).
 
-   This command runs all the tests located in the `tests` directory with detailed output.
+Do not use `poetry run pytest tests/` as the full suite. That directory has no `test_*.py`.
 
-3. Review the test results in the terminal. Any failures or errors will be highlighted.
+Without Docker, requesting integration still **aborts** (`pytest.exit`). That is intentional: a green commit must not skip HTTP by accident.
 
 ## Writing Tests
 
-If you want to contribute or extend the test coverage, consider the following:
+- Domain tests live next to the subapp: `src/apps/<app>/<subapp>/tests/`. Infra unit tests live in `src/core/tests/` (always `pytestmark = unit`).
+- HTTP: `test_v1.py` (and `test_v2.py` when that API exists). Each test creates its own rows (`uuid4()` in unique fields). No module-level `global` IDs, no file-order coupling.
+- Service unit: `test_<resource>_service.py` with `AsyncMock` repositories (see `.agents/examples/subapp/tests/test_item_service.py`). Cover every domain `raise` and a happy path per public method — not only the first `if`.
+- Fixtures: `client` (session, HTTP only), `admin_headers` (function), `settings` (lazy import — do not import `src.core.config.settings` at the top of a test module).
+- Do not mutate `client.cookies`. The session cookie jar ignores `Set-Cookie` so login does not leak across tests. Do not `flushdb` the shared Redis.
+- Cover 401 (missing token) and 403 (`/db` as a non-superuser) in addition to the happy-path CRUD. HTTP errors are RFC 9457 Problem Details: assert `problem_body(...)` from `src.core.exceptions.problem` (not FastAPI's `{"detail": ...}`).
+- Tests share one DB for the run. **Do not permanently mutate core seed data** (default tier, first admin, system superuser). Rate-limit HTTP tests must use a disposable tier.
 
-- Tests are located in the `tests` directory, organized by the structure of the `src` directory (e.g., `src/apps/system/users/tests/test_v1.py`).
+The mold `.agents/examples/subapp/tests/` is not collected.
 
-- Use the [pytest](https://docs.pytest.org/en/stable/) testing framework and [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/) for writing asynchronous tests.
-  
-- Since tests share the same session-scoped database state, **do not permanently mutate core seed data** (like the default Tier) that other tests might rely on.
-  
-- Use the provided `client` fixture (an `httpx.AsyncClient`) for making API requests.
+## Typing
 
-- Aim to cover different aspects of your application, including unit tests, integration tests, and any other relevant scenarios.
+From `backend/`:
+
+```bash
+poetry run mypy src
+```
+
+`backend/mypy.ini` sets `disallow_untyped_defs` and `check_untyped_defs` for `src/` (`apps/`, `core/`, `_overrides/`), with the SQLAlchemy mypy plugin. Tests and Alembic revisions are excluded. This is not `mypy --strict`. SQLModel/SQLAlchemy stub mismatches (`Field()`, `exec()`, `Row["col"]`, `ConfigDict`) stay listed in `disable_error_code` with a comment — `var-annotated` is left on. `_overrides/pydantic/optional.py` is ignored as a whole (`create_model`).
 
 ## Continuous Integration
 
-The project may be set up with continuous integration (CI) tools that automatically run tests upon each commit. Be sure to check the CI status for the latest test results.
+[`.github/workflows/tests.yml`](../.github/workflows/tests.yml) runs on push/PR:
 
-By following these testing practices, you contribute to the reliability and stability of the project.
+- **checks** (no Docker): `ruff format --check .`, `ruff check src`, `mypy src`, `pytest -m unit -v`
+- **test** (Testcontainers): `pytest -v --cov --cov-report=term-missing --cov-fail-under=80`
+
+Dummy `SECRET_KEY` and broker settings come from the pytest plugin — CI does not need repository secrets. Dependabot updates pip (`/backend`) and GitHub Actions weekly.
 
 ---
 

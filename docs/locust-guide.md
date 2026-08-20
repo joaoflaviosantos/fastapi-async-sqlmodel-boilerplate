@@ -51,7 +51,7 @@ From the **root project directory**, run:
 python3 setup.py
 ```
 
-Select option **3 - Load Testing (Locust)** and the CLI will handle the setup and execution automatically.
+Select option **3 - Load Testing (Locust)** (or `python setup.py locust`). The CLI installs dependencies and starts Locust for you.
 
 ### Manual Setup
 
@@ -92,6 +92,8 @@ You can override the target host directly when running Locust:
 ```bash
 poetry run locust --host http://your-api-host:8000
 ```
+
+Login and token refresh are rate-limited by **client IP** using `DEFAULT_RATE_LIMIT_LIMIT` / `DEFAULT_RATE_LIMIT_PERIOD`. Locust users on one machine share one IP. Raise those defaults for a soak (the shared `login()` helper must **not** treat HTTP 429 as success — that would hide real auth failures). The pytest plugin already uses a high default so the HTTP suite is not blocked.
 
 ## 🎯 Running Tests
 

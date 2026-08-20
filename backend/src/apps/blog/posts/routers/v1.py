@@ -10,19 +10,20 @@ import fastapi
 # Local Dependencies
 from src.apps.system.auth.deps import get_current_user, get_current_superuser
 from src.apps.blog.posts.deps import get_post_service, post_filters, post_sort_order
-from src.apps.system.users.schemas import UserRead
 from src.apps.blog.posts.services import PostService
 from src.core.db.session import async_get_db
 from src.core.utils.cache import cache
 from src.apps.blog.posts.schemas import PostCreate, PostUpdate, PostRead
 from src.core.common.schemas import PaginatedListResponse
 
-# TODO: Improve the cache strategy on composite routes. Eg: '/blog/posts/{post_id}/user/{user_id}' is not good.
-
 router = fastapi.APIRouter(tags=["Blog - Posts"])
 
 
 @router.post("/blog/posts/user/{user_id}", response_model=PostRead, status_code=201)
+@cache(
+    key_prefix="blog:post",
+    pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"],
+)
 async def write_post(
     request: Request,
     user_id: UUID,
@@ -38,8 +39,11 @@ async def write_post(
 
 @router.get("/blog/posts/user/{user_id}", response_model=PaginatedListResponse[PostRead])
 @cache(
-    key_prefix="blog:posts:user:{user_id}:page_{page}:items_per_page:{items_per_page}:filters_{filters}:sort_by_{sort_by}",
-    resource_id_name="user_id",
+    key_prefix=(
+        "blog:posts:user:{user_id}:items_per_page_{items_per_page}"
+        ":filters_{filters}:sort_by_{sort_by}:page"
+    ),
+    resource_id_name="page",
     expiration=60,
 )
 async def read_posts(
@@ -63,7 +67,7 @@ async def read_posts(
 
 
 @router.get("/blog/posts/{post_id}/user/{user_id}", response_model=PostRead)
-@cache(key_prefix="blog:posts:user:{user_id}:post_cache", resource_id_name="post_id")
+@cache(key_prefix="blog:post", resource_id_name="post_id")
 async def read_post(
     request: Request,
     user_id: UUID,
@@ -76,7 +80,7 @@ async def read_post(
 
 @router.patch("/blog/posts/{post_id}/user/{user_id}")
 @cache(
-    "blog:posts:user:{user_id}:post_cache",
+    key_prefix="blog:post",
     resource_id_name="post_id",
     pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"],
 )
@@ -96,7 +100,7 @@ async def patch_post(
 
 @router.delete("/blog/posts/{post_id}/user/{user_id}")
 @cache(
-    "blog:posts:user:{user_id}:post_cache",
+    key_prefix="blog:post",
     resource_id_name="post_id",
     pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"],
 )
@@ -118,7 +122,7 @@ async def erase_post(
     dependencies=[Depends(get_current_superuser)],
 )
 @cache(
-    "blog:posts:user:{user_id}:post_cache",
+    key_prefix="blog:post",
     resource_id_name="post_id",
     pattern_to_invalidate_extra=["blog:posts:user:{user_id}:*"],
 )

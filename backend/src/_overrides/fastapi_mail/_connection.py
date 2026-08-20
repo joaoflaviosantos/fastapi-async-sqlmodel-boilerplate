@@ -26,7 +26,9 @@ class Connection:
         await self._configure_connection()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: object
+    ) -> None:
         """
         Closing the connection
         """

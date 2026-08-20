@@ -11,7 +11,7 @@ When the task matches, read the skill:
 - [fastapi](.agents/skills/fastapi/SKILL.md) — `routers/v1.py`, `deps.py`, `services.py`
 - [celery](.agents/skills/celery/SKILL.md) — `tasks.py`, worker `include`
 - [alembic](.agents/skills/alembic/SKILL.md) — `core/db/__init__.py` + migrations
-- [write-tests](.agents/skills/write-tests/SKILL.md) — `tests/test_v1.py`
+- [write-tests](.agents/skills/write-tests/SKILL.md) — `tests/test_v1.py` (HTTP), `tests/test_<resource>_service.py` (unit), and `src/core/tests/` (infra unit)
 - [locust](.agents/skills/locust/SKILL.md) — load tests in `locust/`
 
 Human setup and extra-skill CLI notes: [Coding Agents](docs/ai-coding-guide.md).
@@ -31,7 +31,7 @@ backend/src/apps/<app>/<subapp>/
   _management/commands/       # only if a seed is needed
 ```
 
-Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixins, `RepositoryBase`, API mount). Domain code stays in `apps/`.
+Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixins, `RepositoryBase`, API mount). Domain code stays in `apps/`. Pytest `testpaths = src` collects `apps/<app>/<subapp>/tests/` and `core/tests/` (always `unit`). Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). `src/conftest.py` is empty (no nested plugins). The mold `.agents/examples/` is not collected. Service unit tests cover every domain `raise` and a happy path per public method.
 
 ## Layers
 
@@ -53,12 +53,12 @@ Raise domain errors in the service (`NotFoundException`, `ForbiddenException`, `
 - Deps: `get_<entity>_service`, `<entity>_filters`, `<entity>_sort_order`.
 - Singletons: `user_repository`, `user_service` (module-level).
 - Auth: `get_current_user` / `get_current_superuser` / `get_optional_user` / `async_get_user_context_db` from `src.apps.system.auth.deps`. DB session: `async_get_db` (public GETs, hard delete) or `async_get_user_context_db` (authenticated writes that stamp `updated_by_user_id`). `async_get_user_context_db` already authenticates — do not also inject `Depends(get_current_user)` on the same handler; read `getattr(db, "current_user", {})`.
-- OpenAPI tags: `"System - Users"`, `"System - Auth"`, `"Example - Items"`.
-- Paths include the app prefix on the route itself (`/example/items/...`), not on the subapp `APIRouter`.
+- OpenAPI tags: `"System - Users"`, `"System - Auth"`, `"System - Health"`, `"Example - Items"`.
+- Paths include the app prefix on the route itself (`/example/items/...`), not on the subapp `APIRouter`. Exception: liveness/readiness probes in `system/health` are `/health` and `/ready` at the app root (no `/api/v1`), registered in `backend/src/core/api/__init__.py`.
 
 ## Registration checklist (new resource)
 
-1. Include the router in `backend/src/core/api/v1.py`.
+1. Include the router in `backend/src/core/api/v1.py` (probes: `system/health` in `backend/src/core/api/__init__.py`, not under `/api/v1`).
 2. Import the `table=True` model in `backend/src/core/db/__init__.py` (required for Alembic autogenerate).
 3. If Celery: add the module string to `include=[...]` in `backend/src/worker.py`.
 4. If seed: add a command under `_management/commands/` and hook it in `backend/src/apps/_management/commands/seed.py`.
@@ -71,6 +71,12 @@ Do not register `.agents/examples/subapp/` itself.
 
 ```bash
 poetry run pytest -v
+poetry run pytest -m unit -v
+poetry run pytest -m integration -v
+poetry run pytest -v --cov --cov-report=term-missing --cov-fail-under=80
+poetry run mypy src
+poetry run ruff format --check .
+poetry run ruff check src
 poetry run alembic revision --autogenerate -m "description"
 poetry run alembic upgrade head
 ```

@@ -13,7 +13,7 @@ Do not copy `backend/src/apps/system/users/tasks.py` for a new resource (that is
 
 ## Where tasks live
 
-Colocate `tasks.py` in the subapp that owns the work (`src.apps.<app>.<subapp>.tasks`). Shared samples already on the worker: `src.apps.system.tasks.tasks`, `src.core.common.tasks`.
+Colocate `tasks.py` in the subapp that owns the work (`src.apps.<app>.<subapp>.tasks`). Shared samples already on the worker: `src.apps.system.tasks.tasks`, `src.apps.system.users.tasks`.
 
 ## Define a task
 
@@ -47,7 +47,6 @@ After copying into `apps/`, add the **apps** module to `include=[...]` in `backe
 include=[
     "src.apps.system.tasks.tasks",
     "src.apps.system.users.tasks",
-    "src.core.common.tasks",
     "src.apps.<app>.<subapp>.tasks",
 ]
 ```

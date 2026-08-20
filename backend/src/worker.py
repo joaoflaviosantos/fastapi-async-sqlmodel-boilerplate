@@ -1,6 +1,7 @@
 # Built-in Dependencies
 import platform
 import asyncio
+from typing import Any
 
 # Third-Party Dependencies
 from sqlalchemy.pool import NullPool
@@ -39,7 +40,6 @@ app = Celery(
     include=[
         "src.apps.system.tasks.tasks",
         "src.apps.system.users.tasks",
-        "src.core.common.tasks",
     ],
 )
 
@@ -119,18 +119,26 @@ app.conf.beat_schedule = {
 # ------- WORKER STARTUP SIGNALS ---------
 # ----------------------------------------
 @celeryd_init.connect
-def configure_worker(sender=None, instance=None, conf=None, options=None, **kwargs):
+def configure_worker(
+    sender: Any = None,
+    instance: Any = None,
+    conf: Any = None,
+    options: Any = None,
+    **kwargs: Any,
+) -> None:
     logger_worker.info(f"Worker setup started: {sender}")
     log_system_info(logger=logger_worker)
 
 
 @celeryd_after_setup.connect
-def setup_direct_queue(sender=None, instance=None, conf=None, **kwargs):
+def setup_direct_queue(
+    sender: Any = None, instance: Any = None, conf: Any = None, **kwargs: Any
+) -> None:
     logger_worker.info(f"Worker setup complete: {sender}")
 
 
 @worker_ready.connect
-def on_worker_ready(sender=None, **kwargs):
+def on_worker_ready(sender: Any = None, **kwargs: Any) -> None:
     # NOTE: On Windows, Celery's 'celery@hostname ready.' banner text may not appear
     # in the terminal output due to stdout interleaving from the subprocess shell.
     # This signal is the reliable indicator that the worker is ready to accept tasks.
@@ -138,5 +146,7 @@ def on_worker_ready(sender=None, **kwargs):
 
 
 @worker_shutting_down.connect
-def on_worker_shutting_down(sender=None, sig=None, how=None, exitcode=None, **kwargs):
+def on_worker_shutting_down(
+    sender: Any = None, sig: Any = None, how: Any = None, exitcode: Any = None, **kwargs: Any
+) -> None:
     logger_worker.info(f"Worker shutting down — sig={sig}, how={how}")

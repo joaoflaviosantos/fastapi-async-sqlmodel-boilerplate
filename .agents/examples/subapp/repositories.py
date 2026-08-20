@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Tuple
 
 # Third-Party Dependencies
+from sqlalchemy import Select
 from sqlalchemy.engine.row import Row
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -21,6 +22,14 @@ from src.apps.system.users.models import User
 class ItemRepository(
     RepositoryBase[Item, ItemCreateInternal, ItemUpdate, ItemUpdateInternal, ItemDelete]
 ):
+    def _stmt_with_main_relations(self) -> Select:
+        return select(
+            self._model,
+            User.name.label("updated_by_user_name"),
+            User.email.label("updated_by_user_email"),
+            User.profile_image_url.label("updated_by_user_profile_image_url"),
+        ).outerjoin(User, User.id == self._model.updated_by_user_id)
+
     async def get_single_with_main_relations(
         self, db: AsyncSession, **kwargs: Any
     ) -> Dict[str, Any] | None:
@@ -28,13 +37,7 @@ class ItemRepository(
         if not item_id:
             return None
 
-        stmt = select(
-            self._model,
-            User.name.label("updated_by_user_name"),
-            User.email.label("updated_by_user_email"),
-            User.profile_image_url.label("updated_by_user_profile_image_url"),
-        ).outerjoin(User, User.id == self._model.updated_by_user_id)
-
+        stmt = self._stmt_with_main_relations()
         stmt = stmt.filter(self._model.id == item_id)
         stmt = self.exclude_deleted(stmt)
 
@@ -62,13 +65,7 @@ class ItemRepository(
         sort_by: List[Tuple[str, str]] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
-        stmt = select(
-            self._model,
-            User.name.label("updated_by_user_name"),
-            User.email.label("updated_by_user_email"),
-            User.profile_image_url.label("updated_by_user_profile_image_url"),
-        ).outerjoin(User, User.id == self._model.updated_by_user_id)
-
+        stmt = self._stmt_with_main_relations()
         stmt = self.apply_filtering(stmt, **kwargs)
         stmt_without_pagination = stmt
         stmt = self.apply_sorting(stmt, sort_by)

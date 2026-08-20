@@ -1,5 +1,5 @@
 # Built-in Dependencies
-from typing import Any, List, Union
+from typing import Any, List
 from enum import Enum
 import os
 
@@ -29,14 +29,14 @@ class AppSettings(BaseSettings):
 
 
 class WebServerSettings(BaseSettings):
-    API_BASE_URL: str = config("API_BASE_URL", default="http://localhost:8000")
+    API_BASE_URL: str = config("API_BASE_URL", default="http://127.0.0.1:8000")
     WEB_CONCURRENCY: int = config("WEB_CONCURRENCY", default=1)  # Number of worker processes for handling requests # fmt: skip
 
 
 class CryptSettings(BaseSettings):
     SECRET_KEY: str = config("SECRET_KEY")
     ALGORITHM: str = config("ALGORITHM", default="HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=1440)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = config("ACCESS_TOKEN_EXPIRE_MINUTES", default=15)
     REFRESH_TOKEN_EXPIRE_DAYS: int = config("REFRESH_TOKEN_EXPIRE_DAYS", default=7)
 
 
@@ -82,11 +82,11 @@ class EmailSettings(BaseSettings):
         if isinstance(v, str) and v != "smtp":
             # Valor vazio ou não reconhecido, verificar credenciais
             if (
-                info.data["SMTP_HOST"] == None
-                or info.data["SMTP_USER"] == None
-                or info.data["SMTP_PASSWORD"] == None
-                or info.data["EMAILS_FROM_EMAIL"] == None
-                or info.data["EMAILS_FROM_NAME"] == None
+                info.data["SMTP_HOST"] is None
+                or info.data["SMTP_USER"] is None
+                or info.data["SMTP_PASSWORD"] is None
+                or info.data["EMAILS_FROM_EMAIL"] is None
+                or info.data["EMAILS_FROM_NAME"] is None
             ):
                 print(
                     "WARNING: Using logger email sender, because SMTP_HOST, SMTP_USER, SMTP_PASSWORD, EMAILS_FROM_EMAIL, EMAILS_FROM_NAME are not set"
@@ -103,7 +103,7 @@ class PostgresSettings(BaseSettings):
     # Variables related to database connection details
     POSTGRES_USER: str = config("POSTGRES_USER", default="postgres")
     POSTGRES_PASSWORD: str = config("POSTGRES_PASSWORD", default="postgres")
-    POSTGRES_SERVER: str = config("POSTGRES_SERVER", default="localhost")
+    POSTGRES_SERVER: str = config("POSTGRES_SERVER", default="127.0.0.1")
     POSTGRES_PORT: int = config("POSTGRES_PORT", default=5432)
     POSTGRES_DB: str = config("POSTGRES_DB", default="postgres")
     POSTGRES_ASYNC_URI: PostgresDsn | str = ""
@@ -167,14 +167,13 @@ class TestSettings(BaseSettings):
 
 
 class RedisCacheSettings(BaseSettings):
-    REDIS_CACHE_HOST: str = config("REDIS_CACHE_HOST", default="localhost")
+    REDIS_CACHE_HOST: str = config("REDIS_CACHE_HOST", default="127.0.0.1")
     REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
+    REDIS_CACHE_DB: int = config("REDIS_CACHE_DB", default=0)
     REDIS_CACHE_USERNAME: str = config("REDIS_CACHE_USERNAME", default="")
     REDIS_CACHE_PASSWORD: str = config("REDIS_CACHE_PASSWORD", default="nosecurity")
     REDIS_CACHE_USE_SSL: bool = config("REDIS_CACHE_USE_SSL", default=False)
-    REDIS_CACHE_URL: str = (
-        f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
-    )
+    REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_USERNAME}:{REDIS_CACHE_PASSWORD}@{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}/{REDIS_CACHE_DB}"
 
     @field_validator("REDIS_CACHE_URL", mode="after")
     def assemble_redis_cache_connection(cls, v: str | None, info: ValidationInfo) -> Any:
@@ -184,22 +183,21 @@ class RedisCacheSettings(BaseSettings):
                 v = v.replace("redis://", "rediss://")
             # If username and password are not set, use Redis URL connection string without security credentials
             if info.data["REDIS_CACHE_USERNAME"] == "" and info.data["REDIS_CACHE_PASSWORD"] == "":
-                return f"redis://{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}"
+                return f"redis://{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
             # If username and password are set, but without security, use Redis URL connection string without password
             if info.data["REDIS_CACHE_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_CACHE_USERNAME']}@{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}"
+                return f"redis://{info.data['REDIS_CACHE_USERNAME']}@{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
         return v
 
 
 class RedisBrokerSettings(BaseSettings):
     REDIS_BROKER_HOST: str = config("REDIS_BROKER_HOST", default="")
     REDIS_BROKER_PORT: int = config("REDIS_BROKER_PORT", default=6379)
+    REDIS_BROKER_DB: int = config("REDIS_BROKER_DB", default=0)
     REDIS_BROKER_USERNAME: str = config("REDIS_BROKER_USERNAME", default="")
     REDIS_BROKER_PASSWORD: str = config("REDIS_BROKER_PASSWORD", default="")
     REDIS_BROKER_USE_SSL: bool = config("REDIS_BROKER_USE_SSL", default=False)
-    REDIS_BROKER_URL: str = (
-        f"redis://{REDIS_BROKER_USERNAME}:{REDIS_BROKER_PASSWORD}@{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}"
-    )
+    REDIS_BROKER_URL: str = f"redis://{REDIS_BROKER_USERNAME}:{REDIS_BROKER_PASSWORD}@{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}/{REDIS_BROKER_DB}"
 
     @field_validator("REDIS_BROKER_URL", mode="after")
     def assemble_redis_broker_connection(cls, v: str | None, info: ValidationInfo) -> Any:
@@ -216,22 +214,21 @@ class RedisBrokerSettings(BaseSettings):
                 info.data["REDIS_BROKER_USERNAME"] == ""
                 and info.data["REDIS_BROKER_PASSWORD"] == ""
             ):
-                return f"redis://{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}"
+                return f"redis://{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
             # If username and password are set, but without security, use Redis URL connection string without password
             if info.data["REDIS_BROKER_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_BROKER_USERNAME']}@{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}"
+                return f"redis://{info.data['REDIS_BROKER_USERNAME']}@{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
         return v
 
 
 class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="")
     REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
+    REDIS_RATE_LIMIT_DB: int = config("REDIS_RATE_LIMIT_DB", default=0)
     REDIS_RATE_LIMIT_USERNAME: str = config("REDIS_RATE_LIMIT_USERNAME", default="")
     REDIS_RATE_LIMIT_PASSWORD: str = config("REDIS_RATE_LIMIT_PASSWORD", default="")
     REDIS_RATE_LIMIT_USE_SSL: bool = config("REDIS_RATE_LIMIT_USE_SSL", default=False)
-    REDIS_RATE_LIMIT_URL: str = (
-        f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
-    )
+    REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_USERNAME}:{REDIS_RATE_LIMIT_PASSWORD}@{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}/{REDIS_RATE_LIMIT_DB}"
 
     @field_validator("REDIS_RATE_LIMIT_URL", mode="after")
     def assemble_redis_rate_limit_connection(cls, v: str | None, info: ValidationInfo) -> Any:
@@ -248,10 +245,10 @@ class RedisRateLimiterSettings(BaseSettings):
                 info.data["REDIS_RATE_LIMIT_USERNAME"] == ""
                 and info.data["REDIS_RATE_LIMIT_PASSWORD"] == ""
             ):
-                return f"redis://{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}"
+                return f"redis://{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
             # If username and password are set, but without security, use Redis URL connection string without password
             if info.data["REDIS_RATE_LIMIT_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_RATE_LIMIT_USERNAME']}@{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}"
+                return f"redis://{info.data['REDIS_RATE_LIMIT_USERNAME']}@{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
         return v
 
 
@@ -262,6 +259,7 @@ class RedisHashSettings(BaseSettings):
 class DefaultRateLimitSettings(BaseSettings):
     DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
     DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
+    TRUST_PROXY_HEADERS: bool = str(config("TRUST_PROXY_HEADERS", default="False")).lower() == "true"  # fmt: skip
 
 
 class ClientSideCacheSettings(BaseSettings):
@@ -275,6 +273,19 @@ class CORSSettings(BaseSettings):
     CORS_ALLOW_CREDENTIALS: bool = config("CORS_ALLOW_CREDENTIALS", default="False").lower() == "true"  # fmt: skip
     CORS_EXPOSE_HEADERS: List[str] | str = config("CORS_EXPOSE_HEADERS", default="").split(",")
     CORS_MAX_AGE: int = int(config("CORS_MAX_AGE", default="600"))
+
+
+class LoggingSettings(BaseSettings):
+    LOG_FORMAT: str = str(config("LOG_FORMAT", default="text")).lower()
+    LOG_TO_FILE: bool = str(config("LOG_TO_FILE", default="True")).lower() == "true"
+    LOG_LEVEL: str = str(config("LOG_LEVEL", default="DEBUG")).upper()
+
+    @field_validator("LOG_FORMAT", mode="after")
+    @classmethod
+    def validate_log_format(cls, v: str) -> str:
+        if v not in {"text", "json"}:
+            raise ValueError("LOG_FORMAT must be 'text' or 'json'")
+        return v
 
 
 class EnvironmentOption(Enum):
@@ -306,6 +317,7 @@ class Settings(
     RedisRateLimiterSettings,
     RedisHashSettings,
     DefaultRateLimitSettings,
+    LoggingSettings,
     EnvironmentSettings,
 ):
     pass

@@ -5,3 +5,5 @@ from src.apps.system.tasks.models import Task, TaskSet
 from src.apps.system.tiers.models import Tier
 from src.apps.system.rate_limits.models import RateLimit
 from src.apps.blog.posts.models import Post
+from src.apps.blog.tags.models import Tag
+from src.apps.blog.posts_tags_assoc.models import PostTagAssoc

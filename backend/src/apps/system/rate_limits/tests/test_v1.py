@@ -6,186 +6,217 @@ import pytest
 from httpx import AsyncClient
 
 # Local Dependencies
+from src.core.exceptions.problem import problem_body
 from src.core.utils.rate_limit import sanitize_path
-from src.core.config import settings
-from tests.helper import _get_token
+from tests.helper import _create_regular_user
 
-# Test data: admin/superuser 'test' credentials
-ADMIN_USERNAME = settings.USER_FIRST_ADMIN_USERNAME
-ADMIN_PASSWORD = settings.USER_FIRST_ADMIN_PASSWORD
-
-# Test global variables
-test_related_tier_id = None
-test_rate_limit_id = None
-test_rate_limit = {
-    "name": "Test Rate Limit",
-    "path": "/api/v1/system/tasks",
-    "limit": 100,
-    "period": 3600,
-}
+pytestmark = pytest.mark.integration
 
 
-@pytest.mark.asyncio
-async def test_get_related_tier_data(client: AsyncClient) -> None:
-    global test_related_tier_id
-    assert test_related_tier_id is None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    response = await client.get(
-        url="/api/v1/system/tiers",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
-    )
-
-    tiers_data = response.json()["data"]
-
-    # Create a dictionary to map tier names to IDs
-    tiers_map = dict((tier["name"], tier["id"]) for tier in tiers_data)
-
-    # Get the ID of the related tier using the mapping
-    test_related_tier_id = tiers_map.get(settings.TIER_NAME_DEFAULT)
-
-    assert response.status_code == 200
-    assert test_related_tier_id is not None
+async def _create_disposable_tier(client: AsyncClient, admin_headers: dict[str, str]) -> str:
+    payload = {"name": f"tier-{uuid4().hex[:12]}"}
+    response = await client.post("/api/v1/system/tiers", json=payload, headers=admin_headers)
+    assert response.status_code == 201, response.text
+    return response.json()["id"]
 
 
-@pytest.mark.asyncio
-async def test_post_rate_limit(client: AsyncClient) -> None:
-    global test_related_tier_id
-    global test_rate_limit_id
-    assert test_related_tier_id is not None
-    assert test_rate_limit_id is None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def _create_rate_limit(
+    client: AsyncClient, admin_headers: dict[str, str], tier_id: str
+) -> dict:
+    payload = {
+        "name": f"rl-{uuid4().hex[:12]}",
+        "path": "/api/v1/system/tasks",
+        "limit": 100,
+        "period": 3600,
+    }
     response = await client.post(
-        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
-        json=test_rate_limit,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/tier/{tier_id}",
+        json=payload,
+        headers=admin_headers,
     )
-    test_rate_limit_id = response.json()["id"]
-
-    assert response.status_code == 201
-    assert test_rate_limit_id is not None
+    assert response.status_code == 201, response.text
+    return {"id": response.json()["id"], "payload": payload, "tier_id": tier_id}
 
 
-@pytest.mark.asyncio
-async def test_post_invalid_rate_limit_related_tier_id(client: AsyncClient) -> None:
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
+async def test_post_rate_limit(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
+    assert created["id"]
 
-    invalid_related_tier_id = f"{uuid4()}"
 
+async def test_post_rate_limit_unauthorized(client: AsyncClient) -> None:
     response = await client.post(
-        url=f"/api/v1/system/rate-limits/tier/{invalid_related_tier_id}",
-        json=test_rate_limit,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/tier/{uuid4()}",
+        json={
+            "name": f"rl-{uuid4().hex[:12]}",
+            "path": "/api/v1/system/tasks",
+            "limit": 100,
+            "period": 3600,
+        },
     )
+    assert response.status_code == 401
 
+
+async def test_post_rate_limit_forbidden_for_regular_user(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    _, regular_headers = await _create_regular_user(client, admin_headers)
+    response = await client.post(
+        f"/api/v1/system/rate-limits/tier/{uuid4()}",
+        json={
+            "name": f"rl-{uuid4().hex[:12]}",
+            "path": "/api/v1/system/tasks",
+            "limit": 100,
+            "period": 3600,
+        },
+        headers=regular_headers,
+    )
+    assert response.status_code == 403
+    assert response.json() == problem_body("You do not have enough privileges.", 403, "forbidden")
+
+
+async def test_post_invalid_rate_limit_related_tier_id(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    response = await client.post(
+        f"/api/v1/system/rate-limits/tier/{uuid4()}",
+        json={
+            "name": f"rl-{uuid4().hex[:12]}",
+            "path": "/api/v1/system/tasks",
+            "limit": 100,
+            "period": 3600,
+        },
+        headers=admin_headers,
+    )
     assert response.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_post_invalid_rate_limit_path(client: AsyncClient) -> None:
-    global test_related_tier_id
-    assert test_related_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    invalid_test_rate_limit = test_rate_limit.copy()
-    invalid_test_rate_limit["path"] = "/api/v1/invalid/route"
-
+async def test_post_invalid_rate_limit_path(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
     response = await client.post(
-        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
-        json=invalid_test_rate_limit,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/tier/{tier_id}",
+        json={
+            "name": f"rl-{uuid4().hex[:12]}",
+            "path": "/api/v1/invalid/route",
+            "limit": 100,
+            "period": 3600,
+        },
+        headers=admin_headers,
     )
-
     assert response.status_code == 422
 
 
-@pytest.mark.asyncio
-async def test_get_multiple_rate_limits(client: AsyncClient) -> None:
-    global test_related_tier_id
-    assert test_related_tier_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_get_multiple_rate_limits(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
     response = await client.get(
-        url=f"/api/v1/system/rate-limits/tier/{test_related_tier_id}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/tier/{tier_id}",
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
     result = response.json()
     assert "data" in result
     assert isinstance(result["data"], list)
+    assert created["id"] in [item["id"] for item in result["data"]]
     assert "total_count" in result
     assert "has_more" in result
     assert "page" in result
     assert "items_per_page" in result
 
 
-@pytest.mark.asyncio
-async def test_get_rate_limit(client: AsyncClient) -> None:
-    global test_related_tier_id
-    global test_rate_limit_id
-    assert test_related_tier_id is not None
-    assert test_rate_limit_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_get_rate_limit(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
     response = await client.get(
-        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}",
+        headers=admin_headers,
     )
-
-    rate_limit = response.json()
-
     assert response.status_code == 200
-    assert rate_limit["name"] == test_rate_limit["name"]
-    assert rate_limit["path"] == sanitize_path(test_rate_limit["path"])
-    assert rate_limit["limit"] == test_rate_limit["limit"]
-    assert rate_limit["period"] == test_rate_limit["period"]
+    rate_limit = response.json()
+    assert rate_limit["name"] == created["payload"]["name"]
+    assert rate_limit["path"] == sanitize_path(created["payload"]["path"])
+    assert rate_limit["limit"] == created["payload"]["limit"]
+    assert rate_limit["period"] == created["payload"]["period"]
 
 
-@pytest.mark.asyncio
-async def test_update_rate_limit(client: AsyncClient) -> None:
-    global test_related_tier_id
-    global test_rate_limit_id
-    assert test_related_tier_id is not None
-    assert test_rate_limit_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
-    updated_rate_limit = {
-        "name": "Updated Test Rate Limit",
-        "limit": 200,
-        "period": 7200,
-    }
-
+async def test_update_rate_limit(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
     response = await client.patch(
-        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}",
-        json=updated_rate_limit,
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}",
+        json={
+            "name": f"updated-{uuid4().hex[:12]}",
+            "limit": 200,
+            "period": 7200,
+        },
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
     assert response.json() == {"message": "Rate Limit updated"}
 
 
-@pytest.mark.asyncio
-async def test_erase_db_rate_limit(client: AsyncClient) -> None:
-    global test_related_tier_id
-    global test_rate_limit_id
-    assert test_related_tier_id is not None
-    assert test_rate_limit_id is not None
-
-    token = await _get_token(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, client=client)
-
+async def test_erase_db_rate_limit(client: AsyncClient, admin_headers: dict[str, str]) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
     response = await client.delete(
-        url=f"/api/v1/system/rate-limits/{test_rate_limit_id}/tier/{test_related_tier_id}/db",
-        headers={"Authorization": f'Bearer {token.json()["access_token"]}'},
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}/db",
+        headers=admin_headers,
     )
-
     assert response.status_code == 200
     assert response.json() == {"message": "Rate Limit deleted from the database"}
+
+
+async def test_erase_db_rate_limit_forbidden_for_regular_user(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
+    _, regular_headers = await _create_regular_user(client, admin_headers)
+    response = await client.delete(
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}/db",
+        headers=regular_headers,
+    )
+    assert response.status_code == 403
+    assert response.json() == problem_body("You do not have enough privileges.", 403, "forbidden")
+
+
+async def test_update_rate_limit_same_path(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
+    response = await client.patch(
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}",
+        json={"path": created["payload"]["path"]},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {"message": "Rate Limit updated"}
+
+
+async def test_update_invalid_rate_limit_path(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    created = await _create_rate_limit(client, admin_headers, tier_id)
+    response = await client.patch(
+        f"/api/v1/system/rate-limits/{created['id']}/tier/{tier_id}",
+        json={"path": "/api/v1/invalid/route"},
+        headers=admin_headers,
+    )
+    assert response.status_code == 422
+    assert response.json() == problem_body("Invalid path", 422, "unprocessable_entity")
+
+
+async def test_erase_missing_rate_limit_is_not_found(
+    client: AsyncClient, admin_headers: dict[str, str]
+) -> None:
+    tier_id = await _create_disposable_tier(client, admin_headers)
+    response = await client.delete(
+        f"/api/v1/system/rate-limits/{uuid4()}/tier/{tier_id}/db",
+        headers=admin_headers,
+    )
+    assert response.status_code == 404
+    assert response.json() == problem_body("Rate Limit not found", 404, "not_found")

@@ -12,7 +12,6 @@
 # must be set in backend/.env or via the platform's environment variables UI.
 
 services:
-
   # ---------------------------------------------------------------------------
   # Migration (runs once, then exits)
   # ---------------------------------------------------------------------------
@@ -44,6 +43,10 @@ services:
     restart: always
     env_file:
       - ../../../backend/.env
+    environment:
+      # Platform / ingress proxy (Dokploy, Coolify, nginx, …). Override to False
+      # only if the API is reached without a reverse proxy.
+      TRUST_PROXY_HEADERS: "True"
     command: >
       uvicorn src.main:app
       --host 0.0.0.0

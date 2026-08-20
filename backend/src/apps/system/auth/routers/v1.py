@@ -9,6 +9,7 @@ import fastapi
 
 # Local Dependencies
 from src.apps.system.auth.schemas import Token
+from src.apps.system.rate_limits.deps import rate_limiter
 from src.core.db.session import async_get_db
 from src.core.security import oauth2_scheme
 from src.apps.system.auth.services import AuthService
@@ -17,7 +18,11 @@ from src.apps.system.auth.deps import get_auth_service
 router = fastapi.APIRouter(tags=["System - Auth"])
 
 
-@router.post("/system/auth/login", response_model=Token)
+@router.post(
+    "/system/auth/login",
+    response_model=Token,
+    dependencies=[Depends(rate_limiter)],
+)
 async def login_for_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -29,7 +34,7 @@ async def login_for_access_token(
     )
 
 
-@router.post("/system/auth/refresh")
+@router.post("/system/auth/refresh", dependencies=[Depends(rate_limiter)])
 async def refresh_access_token(
     request: Request,
     db: AsyncSession = Depends(async_get_db),

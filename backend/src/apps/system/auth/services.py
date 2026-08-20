@@ -5,7 +5,7 @@ from datetime import timedelta
 # Third-party Dependencies
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import Response, Request
-from jose import JWTError
+from jwt import InvalidTokenError
 
 # Local Dependencies
 from src.core.exceptions.http_exceptions import UnauthorizedException
@@ -21,7 +21,7 @@ from src.core.security import (
 
 
 class AuthService:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     async def login(
@@ -55,11 +55,14 @@ class AuthService:
         if not refresh_token:
             raise UnauthorizedException(detail="Refresh token missing.")
 
-        user_data = await verify_token(refresh_token, db)
+        user_data = await verify_token(refresh_token, db, expected_type="refresh")
         if not user_data:
             raise UnauthorizedException(detail="Invalid refresh token.")
 
-        new_access_token = await create_access_token(data={"sub": user_data.username_or_email})
+        new_access_token = await create_access_token(
+            data={"sub": user_data.username_or_email},
+            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
         return {"access_token": new_access_token, "token_type": "bearer"}
 
     async def logout(
@@ -71,7 +74,7 @@ class AuthService:
 
             return {"message": "Logged out successfully"}
 
-        except JWTError:
+        except InvalidTokenError:
             raise UnauthorizedException(detail="Invalid token.")
 
 

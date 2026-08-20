@@ -21,7 +21,7 @@ The fastest way to get started is using the project CLI from the **repository ro
 python3 setup.py
 ```
 
-This automates setup tasks like installing dependencies, configuring the environment, and running migrations.
+This automates Poetry, `backend/.env` (copy from `.env.example` + `SECRET_KEY`), and process startup. Choose **1 – Local Development**. The Setup wizard appears only when required env values are missing (press ENTER to keep defaults). Equivalent: `python setup.py local`.
 
 ## Manual Setup
 
@@ -39,8 +39,8 @@ cp backend/.env.example backend/.env
 ```
 
 Edit `backend/.env` and fill in your local database credentials:
-- `POSTGRES_SERVER=localhost`
-- `REDIS_CACHE_HOST=localhost`, `REDIS_BROKER_HOST=localhost`, etc.
+- `POSTGRES_SERVER=127.0.0.1`
+- `REDIS_CACHE_HOST=127.0.0.1` (Celery broker falls back to cache if `REDIS_BROKER_HOST` is empty)
 
 ### 3. Run database migrations
 

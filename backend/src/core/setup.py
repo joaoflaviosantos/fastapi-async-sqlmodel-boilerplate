@@ -21,6 +21,7 @@ from src.core.utils.log import log_system_info
 from src.apps._management.commands import seed
 from src.core.utils import cache, rate_limit
 from src.core.config import settings
+from src.core.exceptions.handlers import register_exception_handlers
 from src.core.logger import logger_api
 from src.core.config import (
     PostgresSettings,
@@ -65,7 +66,7 @@ async def ensure_database_migrations() -> None:
     Raises:
         Exception: If the schema doesn't exist or migrations are not up to date.
     """
-    error_message = "Please run migrations with the command: " "'poetry run alembic upgrade head'"
+    error_message = "Please run migrations with the command: 'poetry run alembic upgrade head'"
 
     async with engine.begin() as conn:
         # Check if the 'public' schema exists
@@ -280,6 +281,7 @@ def create_application(
 
     # Create and configure FastAPI application with lifespan
     application = FastAPI(lifespan=lifespan, **kwargs)
+    register_exception_handlers(application)
 
     # --------------------------------------
     # -------- APPLICATION CREATED ---------

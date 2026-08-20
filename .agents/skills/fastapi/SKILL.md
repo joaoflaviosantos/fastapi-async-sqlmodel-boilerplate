@@ -47,10 +47,14 @@ def item_sort_order(sort_by: Optional[List[str]] = Query(None)) -> List[Tuple[st
 - Public GETs and hard delete (`erase_db_*`) keep `async_get_db`.
 - Inject `Depends(get_*_service)`.
 - Soft delete on `DELETE ...`; hard delete on `DELETE .../db` for superuser only.
-- Optional `@cache(...)` from `src.core.utils.cache`. Two namespaces: item `key_prefix="example:item"` + `resource_id_name="item_id"`; list `key_prefix="example:items:...:page"` + `resource_id_name="page"` (the decorator requires a `resource_id`; the list route has no path id, so `page` is the stand-in). On PATCH/DELETE invalidate with `pattern_to_invalidate_extra=["example:items:*"]`. Do not invent prefixes.
+- Optional `@cache(...)` from `src.core.utils.cache`. Two namespaces: item `key_prefix="example:item"` + `resource_id_name="item_id"`; list `key_prefix="example:items:...:page"` + `resource_id_name="page"` (the decorator appends `:{resource_id}`; the list route has no path id, so `page` is the stand-in). On POST/PATCH/DELETE invalidate lists with `pattern_to_invalidate_extra=["example:items:*"]`. POST/create may omit `resource_id_name` (invalidation only). Do not invent prefixes.
 
 ```python
 @router.post("/example/items", response_model=ItemRead, status_code=201)
+@cache(
+    key_prefix="example:item",
+    pattern_to_invalidate_extra=["example:items:*"],
+)
 async def write_item(
     ...,
     db: Annotated[AsyncSession, Depends(async_get_user_context_db)],
@@ -63,6 +67,10 @@ async def write_item(
 Register the router in `backend/src/core/api/v1.py`. Do not register the example tree itself.
 
 To drop tracking (session dep + join GETs), follow `.agents/examples/README.md` (Resource without user tracking).
+
+## Errors
+
+HTTP errors from `CustomException`, FastAPI `HTTPException`, and `RequestValidationError` are RFC 9457 Problem Details (`application/problem+json`): `type`, `title`, `status`, `detail`, `code`. Validation failures use `code=validation_error` and an `errors` list. Do not return FastAPI's default `{"detail": ...}` envelope. `/health` and `/ready` success bodies stay as they are.
 
 ## Do not
 

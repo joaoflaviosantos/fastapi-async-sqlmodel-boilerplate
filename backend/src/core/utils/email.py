@@ -59,7 +59,7 @@ class EmailSender(ABC):
         html_content: str,
         from_name: str | None = None,
         from_email_addr: str | None = None,
-        email_headers: dict[str, str] = {},
+        email_headers: dict[str, str] | None = None,
         reply_to_name: str | None = None,
         reply_to_email_addr: str | None = None,
     ) -> None:
@@ -75,7 +75,7 @@ class LoggingEmailSender(EmailSender):
         html_content: str,
         from_name: str | None = None,
         from_email_addr: str | None = None,
-        email_headers: dict[str, str] = {},
+        email_headers: dict[str, str] | None = None,
         reply_to_name: str | None = None,
         reply_to_email_addr: str | None = None,
     ) -> None:
@@ -103,7 +103,7 @@ class FastApiMailSender(EmailSender):
         html_content: str,
         from_name: str | None = None,
         from_email_addr: str | None = None,
-        email_headers: dict[str, str] = {},
+        email_headers: dict[str, str] | None = None,
         reply_to_name: str | None = None,
         reply_to_email_addr: str | None = None,
     ) -> None:
@@ -112,7 +112,7 @@ class FastApiMailSender(EmailSender):
             recipients=[to_email_addr],
             body=html_content,
             subtype=MessageType.html,
-            headers=email_headers,
+            headers=email_headers or {},
             reply_to=f"{reply_to_name} <{reply_to_email_addr}>" if reply_to_email_addr else [],
         )
 

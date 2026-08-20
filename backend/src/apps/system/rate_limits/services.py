@@ -15,7 +15,6 @@ from src.core.exceptions.http_exceptions import (
     UnprocessableEntityException,
     DuplicateValueException,
     InternalErrorException,
-    RateLimitException,
     ForbiddenException,
     NotFoundException,
 )
@@ -43,14 +42,19 @@ class RateLimitService:
         rate_limit_internal_dict = rate_limit.model_dump()
         rate_limit_internal_dict["tier_id"] = db_tier["id"]
 
-        # Checks if the path is a valid route
         if not is_valid_path(path=rate_limit.path, app=app):
             raise UnprocessableEntityException(detail="Invalid path")
 
-        db_rate_limit = await self.rate_limit_repo.exists(
-            db=db, name=rate_limit_internal_dict["name"]
+        path_taken = await self.rate_limit_repo.exists(
+            db=db, tier_id=tier_id, path=rate_limit_internal_dict["path"]
         )
-        if db_rate_limit:
+        if path_taken:
+            raise DuplicateValueException(detail="There is already a rate limit for this path")
+
+        name_taken = await self.rate_limit_repo.exists(
+            db=db, tier_id=tier_id, name=rate_limit_internal_dict["name"]
+        )
+        if name_taken:
             raise DuplicateValueException(detail="Rate Limit Name not available")
 
         rate_limit_internal = RateLimitCreateInternal(**rate_limit_internal_dict)
@@ -112,23 +116,23 @@ class RateLimitService:
             raise NotFoundException(detail="Rate Limit not found")
 
         if values.path is not None:
-            # Checks if the path is a valid route
             if not is_valid_path(path=values.path, app=app):
-                raise NotFoundException(detail="Invalid path")
+                raise UnprocessableEntityException(detail="Invalid path")
 
-            # Checks if there is already a rate limit for this path
-            db_rate_limit_path = await self.rate_limit_repo.exists(
-                db=db, tier_id=tier_id, path=values.path
-            )
-            if db_rate_limit_path:
-                raise DuplicateValueException(detail="There is already a rate limit for this path")
+            if values.path != db_rate_limit["path"]:
+                path_taken = await self.rate_limit_repo.get(
+                    db=db, schema_to_select=RateLimitRead, tier_id=tier_id, path=values.path
+                )
+                if path_taken is not None:
+                    raise DuplicateValueException(
+                        detail="There is already a rate limit for this path"
+                    )
 
-        if values.name is not None:
-            db_rate_limit_name = await self.rate_limit_repo.exists(
-                db=db,
-                name=values.name,
+        if values.name is not None and values.name != db_rate_limit["name"]:
+            name_taken = await self.rate_limit_repo.get(
+                db=db, schema_to_select=RateLimitRead, tier_id=tier_id, name=values.name
             )
-            if db_rate_limit_name:
+            if name_taken is not None:
                 raise DuplicateValueException(detail="There is already a rate limit with this name")
 
         await self.rate_limit_repo.update(db=db, object=values, id=rate_limit_id)
@@ -145,13 +149,13 @@ class RateLimitService:
             db=db, schema_to_select=RateLimitRead, tier_id=tier_id, id=rate_limit_id
         )
         if db_rate_limit is None:
-            raise RateLimitException(detail="Rate Limit not found")
+            raise NotFoundException(detail="Rate Limit not found")
 
         try:
             await self.rate_limit_repo.db_delete(db=db, id=rate_limit_id)
         except IntegrityError:
             raise ForbiddenException(detail="Rate Limit cannot be deleted")
-        except Exception as e:
+        except Exception:
             raise InternalErrorException(
                 detail="An unexpected error occurred. Please try again later or contact support if the problem persists."
             )
