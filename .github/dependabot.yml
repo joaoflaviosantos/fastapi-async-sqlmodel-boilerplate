@@ -8,6 +8,10 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    # Skip until SMTP / NameEmail on fastapi-mail 1.6.x can be validated.
+    # Remove this ignore to resume bumps.
+    ignore:
+      - dependency-name: "fastapi-mail"
     groups:
       python-dependencies:
         patterns:
