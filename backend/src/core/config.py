@@ -47,7 +47,7 @@ class EmailSettings(BaseSettings):
     SMTP_PASSWORD: str | None = config("SMTP_PASSWORD", default=None)
     EMAILS_FROM_EMAIL: str | None = config("EMAILS_FROM_EMAIL", default=None)
     EMAILS_FROM_NAME: str | None = config("EMAILS_FROM_NAME", default=None)
-    EMAIL_SENDER: EmailSenderType | str = config("EMAIL_SENDER", default=None)
+    EMAIL_SENDER: EmailSenderType | str = config("EMAIL_SENDER", default="logger")
 
     @field_validator(
         "SMTP_HOST",

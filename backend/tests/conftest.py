@@ -61,6 +61,7 @@ def _patch_dummy_env() -> None:
     os.environ["REDIS_BROKER_USERNAME"] = ""
     os.environ["REDIS_BROKER_PASSWORD"] = ""
     os.environ["SECRET_KEY"] = _TEST_SECRET_KEY
+    os.environ["EMAIL_SENDER"] = "logger"
     os.environ["ENVIRONMENT"] = "test"
     os.environ["DEFAULT_RATE_LIMIT_LIMIT"] = "10000"
     os.environ["DEFAULT_RATE_LIMIT_PERIOD"] = "3600"
@@ -88,6 +89,7 @@ def _patch_container_env(postgres: PostgresContainer, redis: RedisContainer) -> 
     os.environ["REDIS_BROKER_USERNAME"] = ""
     os.environ["REDIS_BROKER_PASSWORD"] = ""
     os.environ["SECRET_KEY"] = _TEST_SECRET_KEY
+    os.environ["EMAIL_SENDER"] = "logger"
     os.environ["ENVIRONMENT"] = "test"
     os.environ["DEFAULT_RATE_LIMIT_LIMIT"] = "10000"
     os.environ["DEFAULT_RATE_LIMIT_PERIOD"] = "3600"
