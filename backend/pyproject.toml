@@ -72,7 +72,6 @@ ignore = [
 source = ["src"]
 omit = [
     "*/tests/*",
-    "src/conftest.py",
     "src/migrations/*",
 ]
 

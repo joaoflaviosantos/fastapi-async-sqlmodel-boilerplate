@@ -284,19 +284,19 @@ def test_redis_cache_url_ssl_with_password_uses_rediss() -> None:
     assert cache.REDIS_CACHE_URL == "rediss://u:secret@cache.local:6379/4"
 
 
-def test_redis_cache_url_ssl_with_empty_credentials_stays_redis() -> None:
+def test_redis_cache_url_ssl_with_empty_credentials_uses_rediss() -> None:
     cache = _redis_cache(REDIS_CACHE_DB=2, REDIS_CACHE_USE_SSL=True)
-    assert cache.REDIS_CACHE_URL == "redis://cache.local:6379/2"
+    assert cache.REDIS_CACHE_URL == "rediss://cache.local:6379/2"
 
 
-def test_redis_cache_url_ssl_with_nosecurity_stays_redis() -> None:
+def test_redis_cache_url_ssl_with_nosecurity_uses_rediss() -> None:
     cache = _redis_cache(
         REDIS_CACHE_DB=2,
         REDIS_CACHE_USERNAME="cacheuser",
         REDIS_CACHE_PASSWORD="nosecurity",
         REDIS_CACHE_USE_SSL=True,
     )
-    assert cache.REDIS_CACHE_URL == "redis://cacheuser@cache.local:6379/2"
+    assert cache.REDIS_CACHE_URL == "rediss://cacheuser@cache.local:6379/2"
 
 
 def test_redis_broker_empty_host_uses_cache_url() -> None:
@@ -323,6 +323,32 @@ def test_redis_broker_nosecurity_includes_db() -> None:
     assert broker.REDIS_BROKER_URL == "redis://brokeruser@broker.local:6379/3"
 
 
+def test_redis_broker_url_ssl_with_password_uses_rediss() -> None:
+    broker = _redis_broker(
+        REDIS_BROKER_DB=3,
+        REDIS_BROKER_USERNAME="u",
+        REDIS_BROKER_PASSWORD="secret",
+        REDIS_BROKER_USE_SSL=True,
+        REDIS_BROKER_URL="redis://u:secret@broker.local:6379/3",
+    )
+    assert broker.REDIS_BROKER_URL == "rediss://u:secret@broker.local:6379/3"
+
+
+def test_redis_broker_url_ssl_with_empty_credentials_uses_rediss() -> None:
+    broker = _redis_broker(REDIS_BROKER_DB=3, REDIS_BROKER_USE_SSL=True)
+    assert broker.REDIS_BROKER_URL == "rediss://broker.local:6379/3"
+
+
+def test_redis_broker_url_ssl_with_nosecurity_uses_rediss() -> None:
+    broker = _redis_broker(
+        REDIS_BROKER_DB=3,
+        REDIS_BROKER_USERNAME="brokeruser",
+        REDIS_BROKER_PASSWORD="nosecurity",
+        REDIS_BROKER_USE_SSL=True,
+    )
+    assert broker.REDIS_BROKER_URL == "rediss://brokeruser@broker.local:6379/3"
+
+
 def test_redis_rate_limit_empty_host_uses_cache_url() -> None:
     rate_limit = _redis_rate_limit(
         REDIS_RATE_LIMIT_HOST="",
@@ -345,6 +371,32 @@ def test_redis_rate_limit_nosecurity_includes_db() -> None:
         REDIS_RATE_LIMIT_PASSWORD="nosecurity",
     )
     assert rate_limit.REDIS_RATE_LIMIT_URL == "redis://limituser@limit.local:6379/5"
+
+
+def test_redis_rate_limit_url_ssl_with_password_uses_rediss() -> None:
+    rate_limit = _redis_rate_limit(
+        REDIS_RATE_LIMIT_DB=5,
+        REDIS_RATE_LIMIT_USERNAME="u",
+        REDIS_RATE_LIMIT_PASSWORD="secret",
+        REDIS_RATE_LIMIT_USE_SSL=True,
+        REDIS_RATE_LIMIT_URL="redis://u:secret@limit.local:6379/5",
+    )
+    assert rate_limit.REDIS_RATE_LIMIT_URL == "rediss://u:secret@limit.local:6379/5"
+
+
+def test_redis_rate_limit_url_ssl_with_empty_credentials_uses_rediss() -> None:
+    rate_limit = _redis_rate_limit(REDIS_RATE_LIMIT_DB=5, REDIS_RATE_LIMIT_USE_SSL=True)
+    assert rate_limit.REDIS_RATE_LIMIT_URL == "rediss://limit.local:6379/5"
+
+
+def test_redis_rate_limit_url_ssl_with_nosecurity_uses_rediss() -> None:
+    rate_limit = _redis_rate_limit(
+        REDIS_RATE_LIMIT_DB=5,
+        REDIS_RATE_LIMIT_USERNAME="limituser",
+        REDIS_RATE_LIMIT_PASSWORD="nosecurity",
+        REDIS_RATE_LIMIT_USE_SSL=True,
+    )
+    assert rate_limit.REDIS_RATE_LIMIT_URL == "rediss://limituser@limit.local:6379/5"
 
 
 def test_postgres_uris_assembled_when_empty() -> None:

@@ -21,6 +21,7 @@ router = fastapi.APIRouter(tags=["System - Auth"])
 @router.post(
     "/system/auth/login",
     response_model=Token,
+    status_code=200,
     dependencies=[Depends(rate_limiter)],
 )
 async def login_for_access_token(
@@ -34,7 +35,12 @@ async def login_for_access_token(
     )
 
 
-@router.post("/system/auth/refresh", dependencies=[Depends(rate_limiter)])
+@router.post(
+    "/system/auth/refresh",
+    response_model=Token,
+    status_code=200,
+    dependencies=[Depends(rate_limiter)],
+)
 async def refresh_access_token(
     request: Request,
     db: AsyncSession = Depends(async_get_db),
@@ -43,7 +49,11 @@ async def refresh_access_token(
     return await auth_service.refresh_access_token(request=request, db=db)
 
 
-@router.post("/system/auth/logout")
+@router.post(
+    "/system/auth/logout",
+    response_model=Dict[str, str],
+    status_code=200,
+)
 async def logout(
     response: Response,
     access_token: str = Depends(oauth2_scheme),

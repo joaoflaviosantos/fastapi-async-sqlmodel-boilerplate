@@ -31,7 +31,7 @@ backend/src/apps/<app>/<subapp>/
   _management/commands/       # only if a seed is needed
 ```
 
-Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixins, `RepositoryBase`, API mount). Domain code stays in `apps/`. Pytest `testpaths = src` collects `apps/<app>/<subapp>/tests/` and `core/tests/` (always `unit`). Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). `src/conftest.py` is empty (no nested plugins). The mold `.agents/examples/` is not collected. Service unit tests cover every domain `raise` and a happy path per public method.
+Shared infrastructure is `backend/src/core/` (config, session, exceptions, mixins, `RepositoryBase`, API mount). Domain code stays in `apps/`. Pytest `testpaths = src` collects `apps/<app>/<subapp>/tests/` and `core/tests/` (always `unit`). Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). The mold `.agents/examples/` is not collected. Service unit tests cover every domain `raise` and a happy path per public method.
 
 ## Layers
 

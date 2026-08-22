@@ -94,10 +94,10 @@ def upgrade() -> None:
     op.create_table(
         "system_rate_limit",
         sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
         sa.Column("limit", sa.Integer(), nullable=False),
         sa.Column("period", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
         sa.Column("tier_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -207,6 +207,9 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_blog_post_is_deleted"), table_name="blog_post")
     op.drop_index(op.f("ix_blog_post_id"), table_name="blog_post")
     op.drop_table("blog_post")
+    op.drop_index(op.f("ix_blog_tag_is_deleted"), table_name="blog_tag")
+    op.drop_index(op.f("ix_blog_tag_id"), table_name="blog_tag")
+    op.drop_table("blog_tag")
     op.drop_index(op.f("ix_system_users_username"), table_name="system_users")
     op.drop_index(op.f("ix_system_users_tier_id"), table_name="system_users")
     op.drop_index(op.f("ix_system_users_is_deleted"), table_name="system_users")
@@ -223,9 +226,6 @@ def downgrade() -> None:
     op.drop_table("system_tier")
     op.drop_table("system_taskset_meta")
     op.drop_table("system_task_meta")
-    op.drop_index(op.f("ix_blog_tag_is_deleted"), table_name="blog_tag")
-    op.drop_index(op.f("ix_blog_tag_id"), table_name="blog_tag")
-    op.drop_table("blog_tag")
     # ### end Alembic commands ###
 
     # Drop sequences

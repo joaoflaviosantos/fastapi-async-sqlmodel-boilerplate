@@ -9,6 +9,16 @@ from sqlalchemy import UniqueConstraint
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
 
 
+class RateLimitNameBase(Base):
+    name: str = Field(
+        min_length=2,
+        max_length=100,
+        nullable=False,
+        description="Rate limit name",
+        schema_extra={"examples": ["users:5:60"]},
+    )
+
+
 class RateLimitConfigBase(Base):
     path: str = Field(
         min_length=2,
@@ -29,16 +39,6 @@ class RateLimitConfigBase(Base):
     )
 
 
-class RateLimitNameBase(Base):
-    name: str = Field(
-        min_length=2,
-        max_length=100,
-        nullable=False,
-        description="Rate limit name",
-        schema_extra={"examples": ["users:5:60"]},
-    )
-
-
 class RateLimitRelationshipBase(Base):
     tier_id: UUID = Field(
         description="Tier ID to which the rate limit is associated",
@@ -50,8 +50,8 @@ class RateLimitRelationshipBase(Base):
 class RateLimit(
     TimestampMixin,
     RateLimitRelationshipBase,
-    RateLimitNameBase,
     RateLimitConfigBase,
+    RateLimitNameBase,
     UUIDMixin,
     table=True,
 ):

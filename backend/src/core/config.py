@@ -178,15 +178,15 @@ class RedisCacheSettings(BaseSettings):
     @field_validator("REDIS_CACHE_URL", mode="after")
     def assemble_redis_cache_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
+            # If username and password are not set, use Redis URL connection string without security credentials
+            if info.data["REDIS_CACHE_USERNAME"] == "" and info.data["REDIS_CACHE_PASSWORD"] == "":
+                v = f"redis://{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
+            # If username and password are set, but without security, use Redis URL connection string without password
+            elif info.data["REDIS_CACHE_PASSWORD"] == "nosecurity":
+                v = f"redis://{info.data['REDIS_CACHE_USERNAME']}@{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
             # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
             if info.data["REDIS_CACHE_USE_SSL"]:
                 v = v.replace("redis://", "rediss://")
-            # If username and password are not set, use Redis URL connection string without security credentials
-            if info.data["REDIS_CACHE_USERNAME"] == "" and info.data["REDIS_CACHE_PASSWORD"] == "":
-                return f"redis://{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
-            # If username and password are set, but without security, use Redis URL connection string without password
-            if info.data["REDIS_CACHE_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_CACHE_USERNAME']}@{info.data['REDIS_CACHE_HOST']}:{info.data['REDIS_CACHE_PORT']}/{info.data['REDIS_CACHE_DB']}"
         return v
 
 
@@ -202,22 +202,22 @@ class RedisBrokerSettings(BaseSettings):
     @field_validator("REDIS_BROKER_URL", mode="after")
     def assemble_redis_broker_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
-            # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
-            if info.data["REDIS_BROKER_USE_SSL"]:
-                v = v.replace("redis://", "rediss://")
             # If host is not set, use 'REDIS_CACHE_URL' as Redis Broker URL connection string
             if info.data["REDIS_BROKER_HOST"] == "":
                 redis_cache_settings = RedisCacheSettings()
-                return redis_cache_settings.REDIS_CACHE_URL
+                v = redis_cache_settings.REDIS_CACHE_URL
             # If username and password are not set, use Redis URL connection string without security credentials
-            if (
+            elif (
                 info.data["REDIS_BROKER_USERNAME"] == ""
                 and info.data["REDIS_BROKER_PASSWORD"] == ""
             ):
-                return f"redis://{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
+                v = f"redis://{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
             # If username and password are set, but without security, use Redis URL connection string without password
-            if info.data["REDIS_BROKER_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_BROKER_USERNAME']}@{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
+            elif info.data["REDIS_BROKER_PASSWORD"] == "nosecurity":
+                v = f"redis://{info.data['REDIS_BROKER_USERNAME']}@{info.data['REDIS_BROKER_HOST']}:{info.data['REDIS_BROKER_PORT']}/{info.data['REDIS_BROKER_DB']}"
+            # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
+            if info.data["REDIS_BROKER_USE_SSL"]:
+                v = v.replace("redis://", "rediss://")
         return v
 
 
@@ -233,22 +233,22 @@ class RedisRateLimiterSettings(BaseSettings):
     @field_validator("REDIS_RATE_LIMIT_URL", mode="after")
     def assemble_redis_rate_limit_connection(cls, v: str | None, info: ValidationInfo) -> Any:
         if isinstance(v, str):
-            # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
-            if info.data["REDIS_RATE_LIMIT_USE_SSL"]:
-                v = v.replace("redis://", "rediss://")
             # If host is not set, use 'REDIS_CACHE_URL' as Redis Queue URL connection string
             if info.data["REDIS_RATE_LIMIT_HOST"] == "":
                 redis_cache_settings = RedisCacheSettings()
-                return redis_cache_settings.REDIS_CACHE_URL
+                v = redis_cache_settings.REDIS_CACHE_URL
             # If username and password are not set, use Redis URL connection string without security credentials
-            if (
+            elif (
                 info.data["REDIS_RATE_LIMIT_USERNAME"] == ""
                 and info.data["REDIS_RATE_LIMIT_PASSWORD"] == ""
             ):
-                return f"redis://{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
+                v = f"redis://{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
             # If username and password are set, but without security, use Redis URL connection string without password
-            if info.data["REDIS_RATE_LIMIT_PASSWORD"] == "nosecurity":
-                return f"redis://{info.data['REDIS_RATE_LIMIT_USERNAME']}@{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
+            elif info.data["REDIS_RATE_LIMIT_PASSWORD"] == "nosecurity":
+                v = f"redis://{info.data['REDIS_RATE_LIMIT_USERNAME']}@{info.data['REDIS_RATE_LIMIT_HOST']}:{info.data['REDIS_RATE_LIMIT_PORT']}/{info.data['REDIS_RATE_LIMIT_DB']}"
+            # If SSL is enabled, change the protocol from 'redis://' to 'rediss://' to ensure the connection is encrypted using SSL/TLS.
+            if info.data["REDIS_RATE_LIMIT_USE_SSL"]:
+                v = v.replace("redis://", "rediss://")
         return v
 
 

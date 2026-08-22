@@ -59,9 +59,10 @@ class AuthService:
         if not user_data:
             raise UnauthorizedException(detail="Invalid refresh token.")
 
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         new_access_token = await create_access_token(
             data={"sub": user_data.username_or_email},
-            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+            expires_delta=access_token_expires,
         )
         return {"access_token": new_access_token, "token_type": "bearer"}
 

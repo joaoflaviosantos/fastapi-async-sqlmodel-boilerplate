@@ -2,7 +2,7 @@
 
 ## Overview
 
-The suite is fully asynchronous (`pytest-asyncio`, `asyncio_mode = auto`). Pytest collects tests natively from `backend/src/` (`testpaths = src`, `--import-mode=importlib`): domain tests under `apps/<app>/<subapp>/tests/` and infra unit tests under `core/tests/`. Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). `src/conftest.py` is empty (no nested plugins). There is no aggregator file.
+The suite is fully asynchronous (`pytest-asyncio`, `asyncio_mode = auto`). Pytest collects tests natively from `backend/src/` (`testpaths = src`, `--import-mode=importlib`): domain tests under `apps/<app>/<subapp>/tests/` and infra unit tests under `core/tests/`. Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). There is no aggregator file.
 
 Classification is **explicit** on each test module:
 
@@ -41,7 +41,7 @@ From the repository root, the same commands are available under **Project Tools*
 
 `pytest -m unit` is what pre-commit runs. It must pass without Docker and without `--cov`.
 
-The coverage gate (`--cov-fail-under=80`) applies only to the **full** suite. Do not put `--cov` in `pytest.ini` `addopts`. Config lives in `[tool.coverage.*]` in `pyproject.toml` (`source = ["src"]`; tests, `src/conftest.py`, and Alembic revisions are omitted).
+The coverage gate (`--cov-fail-under=80`) applies only to the **full** suite. Do not put `--cov` in `pytest.ini` `addopts`. Config lives in `[tool.coverage.*]` in `pyproject.toml` (`source = ["src"]`; tests and Alembic revisions are omitted).
 
 Do not use `poetry run pytest tests/` as the full suite. That directory has no `test_*.py`.
 

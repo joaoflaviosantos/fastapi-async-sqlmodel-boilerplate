@@ -7,7 +7,7 @@ description: Write colocated tests in apps/<app>/<subapp>/tests/ (API test_v1.py
 
 Follow `AGENTS.md`. This skill is the recipe for colocated tests under `apps/<app>/<subapp>/tests/` and infra tests under `src/core/tests/`.
 
-CRUD template: `.agents/examples/subapp/tests/test_v1.py`. Service unit template: `.agents/examples/subapp/tests/test_item_service.py`. Live auth/client usage: `backend/src/apps/system/users/tests/test_v1.py`. Live service unit: `backend/src/apps/system/users/tests/test_user_service.py`. Unit-test example (deps): `backend/src/apps/system/auth/tests/test_user_context_db.py`. Infra unit: `backend/src/core/tests/`. Fixtures: `backend/tests/conftest.py` (`client`, `admin_headers`, `settings`). Helpers: `backend/tests/helper.py`. Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). `src/conftest.py` is empty (no nested plugins). Guide: `docs/testing-guide.md`.
+CRUD template: `.agents/examples/subapp/tests/test_v1.py`. Service unit template: `.agents/examples/subapp/tests/test_item_service.py`. Live auth/client usage: `backend/src/apps/system/users/tests/test_v1.py`. Live service unit: `backend/src/apps/system/users/tests/test_user_service.py`. Unit-test example (deps): `backend/src/apps/system/auth/tests/test_user_context_db.py`. Infra unit: `backend/src/core/tests/`. Fixtures: `backend/tests/conftest.py` (`client`, `admin_headers`, `settings`). Helpers: `backend/tests/helper.py`. Plugin: `backend/conftest.py` (`pytest_plugins = ["tests.conftest"]`). Guide: `docs/testing-guide.md`.
 
 ## Location
 
