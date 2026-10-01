@@ -36,7 +36,7 @@ def upgrade() -> None:
         sa.Column("task_id", sqlmodel.sql.sqltypes.AutoString(length=155), nullable=False),
         sa.Column("status", sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
         sa.Column("result", sa.PickleType(), nullable=True),
-        sa.Column("date_done", sa.DateTime(), nullable=True),
+        sa.Column("date_done", sa.DateTime(timezone=True), nullable=True),
         sa.Column("traceback", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(length=155), nullable=True),
         sa.Column("args", sa.LargeBinary(), nullable=True),
@@ -48,6 +48,9 @@ def upgrade() -> None:
         sa.UniqueConstraint("task_id"),
         comment="Celery Task result/status",
     )
+    op.create_index(
+        op.f("ix_system_task_meta_date_done"), "system_task_meta", ["date_done"], unique=False
+    )
     op.create_table(
         "system_taskset_meta",
         sa.Column(
@@ -58,10 +61,13 @@ def upgrade() -> None:
         ),
         sa.Column("taskset_id", sqlmodel.sql.sqltypes.AutoString(length=155), nullable=False),
         sa.Column("result", sa.PickleType(), nullable=True),
-        sa.Column("date_done", sa.DateTime(), nullable=True),
+        sa.Column("date_done", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("taskset_id"),
         comment="Celery TaskSet result",
+    )
+    op.create_index(
+        op.f("ix_system_taskset_meta_date_done"), "system_taskset_meta", ["date_done"], unique=False
     )
     op.create_table(
         "system_tier",
@@ -79,7 +85,7 @@ def upgrade() -> None:
         "system_token_blacklist",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("token", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("expires_at", sa.DateTime(), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -224,7 +230,9 @@ def downgrade() -> None:
     op.drop_table("system_token_blacklist")
     op.drop_index(op.f("ix_system_tier_id"), table_name="system_tier")
     op.drop_table("system_tier")
+    op.drop_index(op.f("ix_system_taskset_meta_date_done"), table_name="system_taskset_meta")
     op.drop_table("system_taskset_meta")
+    op.drop_index(op.f("ix_system_task_meta_date_done"), table_name="system_task_meta")
     op.drop_table("system_task_meta")
     # ### end Alembic commands ###
 

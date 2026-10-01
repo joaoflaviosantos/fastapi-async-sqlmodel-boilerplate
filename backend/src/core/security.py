@@ -165,7 +165,7 @@ async def verify_token(
 # Function to blacklist a token by storing it in the database
 async def blacklist_token(token: str, db: AsyncSession) -> None:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    expires_at = datetime.fromtimestamp(payload.get("exp"))
+    expires_at = datetime.fromtimestamp(payload.get("exp"), tz=UTC)
     await token_blacklist_repository.create(
         db,
         object=TokenBlacklistCreate(**{"token": token, "expires_at": expires_at}),

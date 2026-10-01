@@ -2,7 +2,7 @@
 from datetime import datetime
 
 # Third-Party Dependencies
-from sqlmodel import Field
+from sqlmodel import Field, DateTime
 
 # Local Dependencies
 from src.core.common.models import TimestampMixin, UUIDMixin, Base
@@ -16,6 +16,7 @@ class TokenBlacklistBase(Base):
         description="Token value for authentication",
     )
     expires_at: datetime = Field(
+        sa_type=DateTime(timezone=True),
         nullable=False,
         default=None,
         description="Timestamp indicating the expiration date and time of the token",

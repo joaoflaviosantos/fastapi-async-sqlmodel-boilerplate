@@ -14,6 +14,7 @@ from src.core.security import (
     TOKEN_TYPE_ACCESS,
     TOKEN_TYPE_REFRESH,
     authenticate_user,
+    blacklist_token,
     create_access_token,
     create_refresh_token,
     get_password_hash,
@@ -101,3 +102,14 @@ async def test_verify_token_accepts_matching_typ() -> None:
 
     assert token_data is not None
     assert token_data.username_or_email == "admin"
+
+
+async def test_blacklist_token_uses_aware_expires_at() -> None:
+    access = await create_access_token({"sub": "admin"}, expires_delta=timedelta(minutes=5))
+    with patch("src.core.security.token_blacklist_repository") as repo:
+        repo.create = AsyncMock()
+        await blacklist_token(token=access, db=object())
+
+    create_kwargs = repo.create.await_args.kwargs
+    expires_at = create_kwargs["object"].expires_at
+    assert expires_at.tzinfo is not None

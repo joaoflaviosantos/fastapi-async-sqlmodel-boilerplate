@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from typing import Optional, Any
 
 # Third-Party Dependencies
-from sqlmodel import Field, Column, Sequence, Integer
-from sqlalchemy.types import PickleType
+from sqlmodel import Field, Column, Sequence, Integer, DateTime
+from sqlalchemy.types import PickleType, LargeBinary
 from celery import states
 
 # Local Dependencies
@@ -16,8 +16,17 @@ task_id_sequence = Sequence("task_id_sequence", start=1)
 taskset_id_sequence = Sequence("taskset_id_sequence", start=1)
 
 
+def _get_utc_now() -> datetime:
+    """UTC now evaluated at INSERT/UPDATE time (matches Celery's database backend)."""
+    return datetime.now(timezone.utc)
+
+
 class Task(Base, table=True):
-    """Shared Task result/status with extended attributes."""
+    """Celery task result/status mirror for Alembic + CRUD.
+
+    Schema matches Celery 5.6 ``Task`` + ``TaskExtended`` (``result_extended=True``).
+    Runtime persistence is done by Celery's own ORM against this table name.
+    """
 
     __tablename__ = "system_task_meta"
     __table_args__ = {
@@ -38,13 +47,19 @@ class Task(Base, table=True):
     task_id: str = Field(max_length=155, unique=True)
     status: str = Field(default=states.PENDING, max_length=50)
     result: Optional[Any] = Field(sa_column=Column(PickleType, nullable=True))
-    date_done: Optional[datetime] = Field(default=datetime.now(timezone.utc), nullable=True)
+    date_done: Optional[datetime] = Field(
+        sa_type=DateTime(timezone=True),
+        default_factory=_get_utc_now,
+        sa_column_kwargs={"onupdate": _get_utc_now},
+        nullable=True,
+        index=True,
+    )
     traceback: Optional[str] = Field(nullable=True)
 
-    # Campos estendidos
+    # TaskExtended fields (Celery result_extended=True)
     name: Optional[str] = Field(default=None, max_length=155)
-    args: Optional[bytes] = Field(nullable=True)
-    kwargs: Optional[bytes] = Field(nullable=True)
+    args: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
+    kwargs: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
     worker: Optional[str] = Field(default=None, max_length=155)
     retries: Optional[int] = Field(default=None)
     queue: Optional[str] = Field(default=None, max_length=155)
@@ -78,7 +93,7 @@ class Task(Base, table=True):
 
 
 class TaskSet(Base, table=True):
-    """Shared TaskSet result."""
+    """Celery TaskSet result mirror for Alembic + CRUD."""
 
     __tablename__ = "system_taskset_meta"
     __table_args__ = {"comment": "Celery TaskSet result"}
@@ -96,7 +111,12 @@ class TaskSet(Base, table=True):
     )
     taskset_id: str = Field(max_length=155, unique=True)
     result: Optional[Any] = Field(sa_column=Column(PickleType, nullable=True))
-    date_done: Optional[datetime] = Field(default=datetime.now(timezone.utc), nullable=True)
+    date_done: Optional[datetime] = Field(
+        sa_type=DateTime(timezone=True),
+        default_factory=_get_utc_now,
+        nullable=True,
+        index=True,
+    )
 
     def __init__(self, taskset_id: str, result: Optional[Any] = None) -> None:
         self.taskset_id = taskset_id

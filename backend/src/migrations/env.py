@@ -11,7 +11,21 @@ from alembic import context
 # Local Dependencies
 from src.core.common.models import Base
 from src.core.config import settings
-from src.core.db import *
+
+# Naming conventions must be set BEFORE importing table=True models.
+# CheckConstraints use short tokens (name="role"); the "ck" pattern expands
+# them to ck_<table>_<token> on after_parent_attach. Setting this after
+# model import leaves short tokens on metadata and breaks autogenerate.
+target_metadata = Base.metadata
+target_metadata.naming_convention = {
+    "ix": "ix_%(column_0_label)s",  # Index
+    "uq": "uq_%(table_name)s_%(column_0_name)s",  # Unique constraint
+    "ck": "ck_%(table_name)s_%(constraint_name)s",  # Check constraint
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",  # Foreign key
+    "pk": "pk_%(table_name)s",  # Primary key
+}
+
+from src.core.db import *  # noqa: E402  — after naming_convention
 
 # Define the custom Alembic version table name
 custom_alembic_version_table_name = "_alembic_version"
@@ -26,18 +40,6 @@ config.set_main_option(name="sqlalchemy.url", value=f"{settings.POSTGRES_ASYNC_U
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-# Add your model's MetaData object here (for 'autogenerate' support)
-target_metadata = Base.metadata
-
-# Setting naming conventions for SQLModel/SQLAlchemy
-target_metadata.naming_convention = {
-    "ix": "ix_%(column_0_label)s",  # Index
-    "uq": "uq_%(table_name)s_%(column_0_name)s",  # Unique constraint
-    "ck": "ck_%(table_name)s_%(constraint_name)s",  # Check constraint
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",  # Foreign key
-    "pk": "pk_%(table_name)s",  # Primary key
-}
 
 # Other values from the config, defined by the needs of env.py,
 # can be acquired:
