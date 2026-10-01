@@ -25,7 +25,7 @@ target_metadata.naming_convention = {
     "pk": "pk_%(table_name)s",  # Primary key
 }
 
-from src.core.db import *  # noqa: E402  — after naming_convention
+from src.core.db import *  # noqa: E402, F403
 
 # Define the custom Alembic version table name
 custom_alembic_version_table_name = "_alembic_version"
@@ -48,21 +48,21 @@ if config.config_file_name is not None:
 
 
 def filter_db_objects(
-    object,  # noqa: indirect usage
+    _object,
     name,
     type_,
-    *args,  # noqa: indirect usage
-    **kwargs,  # noqa: indirect usage
+    *_args,
+    **_kwargs,
 ):
     """
     Filter the database objects based on the given criteria.
 
     Args:
-        object: The database object to be filtered. # noqa: indirect usage
+        _object: The database object to be filtered.
         name: The name of the database object.
         type_: The type of the database object.
-        *args: Additional positional arguments. # noqa: indirect usage
-        **kwargs: Additional keyword arguments. # noqa: indirect usage
+        *_args: Additional positional arguments.
+        **_kwargs: Additional keyword arguments.
 
     Returns:
         bool: True if the object should be included, False if it should be filtered out.
